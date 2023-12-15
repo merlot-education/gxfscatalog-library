@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
@@ -16,6 +17,9 @@ import org.springframework.stereotype.Service;
 public class GxfsCatalogService {
     @Autowired
     private GxfsCatalogClient gxfsCatalogClient;
+
+    @Autowired
+    private GxfsSignerService gxfsSignerService;
 
     public SelfDescriptionsCreateResponse revokeSelfDescriptionByHash(String sdHash) {
         return this.gxfsCatalogClient.postRevokeSelfDescriptionByHash(sdHash);
@@ -48,20 +52,29 @@ public class GxfsCatalogService {
     }
 
     public SelfDescriptionsCreateResponse addServiceOffering(
-            ServiceOfferingCredentialSubject serviceOfferingCredentialSubject) {
-        return this.gxfsCatalogClient.postAddSelfDescription("");
+            ServiceOfferingCredentialSubject serviceOfferingCredentialSubject) throws JsonProcessingException {
+        String signedVp = gxfsSignerService
+                .presentVerifiableCredential(serviceOfferingCredentialSubject,
+                        "did:web:merlot-education.eu");
+        return this.gxfsCatalogClient.postAddSelfDescription(signedVp);
     }
 
     public ParticipantItem addParticipant(
-            MerlotOrganizationCredentialSubject merlotOrganizationCredentialSubject) {
-        return this.gxfsCatalogClient.postAddParticipant("");
+            MerlotOrganizationCredentialSubject merlotOrganizationCredentialSubject) throws JsonProcessingException {
+        String signedVp = gxfsSignerService
+                .presentVerifiableCredential(merlotOrganizationCredentialSubject,
+                        merlotOrganizationCredentialSubject.getId());
+        return this.gxfsCatalogClient.postAddParticipant(signedVp);
     }
 
     public ParticipantItem updateParticipant(
-            MerlotOrganizationCredentialSubject merlotOrganizationCredentialSubject) {
+            MerlotOrganizationCredentialSubject merlotOrganizationCredentialSubject) throws JsonProcessingException {
+        String signedVp = gxfsSignerService
+                .presentVerifiableCredential(merlotOrganizationCredentialSubject,
+                        merlotOrganizationCredentialSubject.getId());
         return this.gxfsCatalogClient.putUpdateParticipant(
                 merlotOrganizationCredentialSubject.getId(),
-                "");
+                signedVp);
     }
 
     public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(Pageable pageable) {
