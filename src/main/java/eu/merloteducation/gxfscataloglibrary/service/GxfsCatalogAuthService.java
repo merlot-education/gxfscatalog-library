@@ -16,9 +16,9 @@ import org.springframework.web.reactive.function.client.WebClientRequestExceptio
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
-public class AuthService {
+public class GxfsCatalogAuthService {
 
-    private final Logger logger = LoggerFactory.getLogger(AuthService.class);
+    private final Logger logger = LoggerFactory.getLogger(GxfsCatalogAuthService.class);
     private final WebClient webClient;
     private final String keycloakTokenUri;
     private final String keycloakLogoutUri;
@@ -32,14 +32,14 @@ public class AuthService {
     private String authToken;
     private String refreshToken;
 
-    public AuthService(@Value("${keycloak.token-uri}") String keycloakTokenUri,
-                       @Value("${keycloak.logout-uri}") String keycloakLogoutUri,
-                       @Value("${keycloak.client-id}") String clientId,
-                       @Value("${keycloak.client-secret}") String clientSecret,
-                       @Value("${keycloak.authorization-grant-type}") String grantType,
-                       @Value("${keycloak.gxfscatalog-user}") String keycloakGXFScatalogUser,
-                       @Value("${keycloak.gxfscatalog-pass}") String keycloakGXFScatalogPass,
-                       @Autowired WebClient.Builder webClientBuilder) {
+    public GxfsCatalogAuthService(@Value("${keycloak.token-uri}") String keycloakTokenUri,
+                                  @Value("${keycloak.logout-uri}") String keycloakLogoutUri,
+                                  @Value("${keycloak.client-id}") String clientId,
+                                  @Value("${keycloak.client-secret}") String clientSecret,
+                                  @Value("${keycloak.authorization-grant-type}") String grantType,
+                                  @Value("${keycloak.gxfscatalog-user}") String keycloakGXFScatalogUser,
+                                  @Value("${keycloak.gxfscatalog-pass}") String keycloakGXFScatalogPass,
+                                  @Autowired WebClient.Builder webClientBuilder) {
         this.keycloakTokenUri = keycloakTokenUri;
         this.keycloakLogoutUri = keycloakLogoutUri;
         this.clientId = clientId;

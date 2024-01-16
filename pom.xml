@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.merlot-education</groupId>
 	<artifactId>gxfscatalog-library</artifactId>
-	<version>0.0.9</version>
+	<version>0.0.35</version>
 	<name>gxfscatalog-library</name>
 	<description>Library for interacting with the gxfs catalog.</description>
 	<url>https://merlot-education.eu/</url>
@@ -87,7 +87,7 @@
 		<dependency>
 			<groupId>eu.merloteducation.modelslib</groupId>
 			<artifactId>modelslib</artifactId>
-			<version>0.1.5</version>
+			<version>0.1.23</version>
 		</dependency>
 
 		<dependency>

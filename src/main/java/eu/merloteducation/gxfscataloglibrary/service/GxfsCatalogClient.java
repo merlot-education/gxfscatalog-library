@@ -3,7 +3,6 @@ package eu.merloteducation.gxfscataloglibrary.service;
 import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionCredentialSubject;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionItem;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionsCreateResponse;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +21,7 @@ public interface GxfsCatalogClient {
     //                gxfscatalogSelfdescriptionsUri + "/" + extension.getCurrentSdHash() + "/revoke",
     //                "",
     //                null);
-    @PostExchange("/self-descriptions/{sdHash}")
+    @PostExchange("/self-descriptions/{sdHash}/revoke")
     SelfDescriptionsCreateResponse postRevokeSelfDescriptionByHash(@PathVariable String sdHash);
 
     // keycloakAuthService.webCallAuthenticated(
@@ -48,12 +47,11 @@ public interface GxfsCatalogClient {
     // TODO more generic type?
     @GetExchange("/self-descriptions")
     GXFSCatalogListResponse
-            <SelfDescriptionItem
-                    <SelfDescriptionCredentialSubject>> getSelfDescriptionList(
-                            @RequestParam("withContent") boolean withContent,
-                            @RequestParam("statuses") String[] statuses,
-                            @RequestParam("ids") String[] ids,
-                            @RequestParam("hashes") String[] hashes);
+            <SelfDescriptionItem> getSelfDescriptionList(
+                            @RequestParam(name = "withContent", required = false) boolean withContent,
+                            @RequestParam(name = "statuses", required = false) String[] statuses,
+                            @RequestParam(name = "ids", required = false) String[] ids,
+                            @RequestParam(name = "hashes", required = false) String[] hashes);
 
 
     // response = keycloakAuthService.webCallAuthenticated(
