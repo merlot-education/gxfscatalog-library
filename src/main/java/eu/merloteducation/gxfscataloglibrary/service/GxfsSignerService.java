@@ -127,6 +127,14 @@ public class GxfsSignerService {
         vp.setJsonObjectKeyValue("proof", vp.getLdProof().getJsonObject());
     }
 
+    /**
+     * Given a credential, add a signature with the key of the service.
+     *
+     * @param credential credential to check
+     * @throws IOException              IOException
+     * @throws GeneralSecurityException GeneralSecurityException
+     * @throws JsonLDException          JsonLDException
+     */
     private LdProof sign(JsonLDObject credential)
             throws IOException, GeneralSecurityException, JsonLDException {
         KeyPair kp = new KeyPair(null, prk);

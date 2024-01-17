@@ -1,6 +1,7 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import eu.merloteducation.gxfscataloglibrary.models.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.SelfDescriptionStatus;
 import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
@@ -104,8 +105,8 @@ public class GxfsCatalogService {
         return this.gxfsCatalogClient.postAddSelfDescription(vp);
     }
 
-    public ParticipantItem addParticipant(
-            GaxTrustLegalPersonCredentialSubject participantCredentialSubject) throws Exception {
+    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
+            throws Exception {
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
@@ -113,8 +114,8 @@ public class GxfsCatalogService {
         return this.gxfsCatalogClient.postAddParticipant(vp);
     }
 
-    public ParticipantItem updateParticipant(
-            GaxTrustLegalPersonCredentialSubject participantCredentialSubject) throws Exception {
+    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
+            throws Exception {
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
@@ -133,7 +134,7 @@ public class GxfsCatalogService {
                 }
         """;
         return this.gxfsCatalogClient.postQuery(
-                null,
+                QueryLanguage.OPENCYPHER,
                 5,
                 true,
                 query);
