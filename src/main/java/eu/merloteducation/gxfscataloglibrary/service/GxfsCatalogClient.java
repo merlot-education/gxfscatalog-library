@@ -7,7 +7,7 @@ import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionItem;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionsCreateResponse;
+import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionMeta;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,7 +36,7 @@ public interface GxfsCatalogClient {
     );
 
     @PostExchange("/self-descriptions")
-    SelfDescriptionsCreateResponse postAddSelfDescription(@RequestBody VerifiablePresentation body);
+    SelfDescriptionMeta postAddSelfDescription(@RequestBody VerifiablePresentation body);
 
     @GetExchange("/self-descriptions/{sdHash}")
     GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionByHash(@PathVariable String sdHash);
@@ -45,7 +45,7 @@ public interface GxfsCatalogClient {
     void deleteSelfDescriptionByHash(@PathVariable String sdHash);
 
     @PostExchange("/self-descriptions/{sdHash}/revoke")
-    SelfDescriptionsCreateResponse postRevokeSelfDescriptionByHash(@PathVariable String sdHash);
+    SelfDescriptionMeta postRevokeSelfDescriptionByHash(@PathVariable String sdHash);
 
     // Query
     // TODO check if media type is necessary

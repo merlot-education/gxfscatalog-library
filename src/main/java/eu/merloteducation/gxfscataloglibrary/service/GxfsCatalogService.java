@@ -7,7 +7,7 @@ import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionItem;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionsCreateResponse;
+import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionMeta;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class GxfsCatalogService {
     @Autowired
     private GxfsSignerService gxfsSignerService;
 
-    public SelfDescriptionsCreateResponse revokeSelfDescriptionByHash(String sdHash) {
+    public SelfDescriptionMeta revokeSelfDescriptionByHash(String sdHash) {
         return this.gxfsCatalogClient.postRevokeSelfDescriptionByHash(sdHash);
     }
 
@@ -96,7 +96,7 @@ public class GxfsCatalogService {
                 hashes.length);
     }
 
-    public SelfDescriptionsCreateResponse addServiceOffering(
+    public SelfDescriptionMeta addServiceOffering(
             GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject) throws Exception {
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(serviceOfferingCredentialSubject,
