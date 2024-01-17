@@ -1,18 +1,17 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import eu.merloteducation.gxfscataloglibrary.models.QueryLanguage;
-import eu.merloteducation.gxfscataloglibrary.models.SelfDescriptionStatus;
-import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
-import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionItem;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionMeta;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.participants.GaxTrustLegalPersonCredentialSubject;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
+import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.participants.GaxTrustLegalPersonCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.data.domain.Pageable;
 
 @Service
 public class GxfsCatalogService {
@@ -125,11 +124,11 @@ public class GxfsCatalogService {
                 vp);
     }
 
-    public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(Pageable pageable) {
+    public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(long offset, long size) {
         String query = """
                 {
                     "statement": "MATCH (p:MerlotOrganization) return p.uri ORDER BY toLower(p.orgaName)"""
-                + " SKIP " + pageable.getOffset() + " LIMIT " + pageable.getPageSize() + """
+                + " SKIP " + offset + " LIMIT " + size + """
                     "
                 }
         """;

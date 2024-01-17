@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.merlot-education</groupId>
 	<artifactId>gxfscatalog-library</artifactId>
-	<version>0.0.38</version>
+	<version>0.0.41</version>
 	<name>gxfscatalog-library</name>
 	<description>Library for interacting with the gxfs catalog.</description>
 	<url>https://merlot-education.eu/</url>
@@ -85,12 +85,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>eu.merloteducation.modelslib</groupId>
-			<artifactId>modelslib</artifactId>
-			<version>0.1.25</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-text</artifactId>
 			<version>1.10.0</version>
@@ -118,6 +112,12 @@
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk15on</artifactId>
 			<version>1.50</version>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
+			<version>3.1.0-M1</version>
 		</dependency>
 	</dependencies>
 

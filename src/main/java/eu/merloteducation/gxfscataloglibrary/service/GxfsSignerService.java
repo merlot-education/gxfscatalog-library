@@ -9,7 +9,7 @@ import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
@@ -75,7 +75,7 @@ public class GxfsSignerService {
      * @throws JsonProcessingException json mapping exception
      */
     public VerifiablePresentation presentVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
-                                              String issuer) throws JsonProcessingException {
+                                                              String issuer) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         String credentialSubjectJson = mapper.writeValueAsString(credentialSubject);

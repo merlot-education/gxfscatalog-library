@@ -1,13 +1,13 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import eu.merloteducation.gxfscataloglibrary.models.QueryLanguage;
-import eu.merloteducation.gxfscataloglibrary.models.SelfDescriptionStatus;
-import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
-import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionItem;
-import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.SelfDescriptionMeta;
+import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
+import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,7 +48,6 @@ public interface GxfsCatalogClient {
     SelfDescriptionMeta postRevokeSelfDescriptionByHash(@PathVariable String sdHash);
 
     // Query
-    // TODO check if media type is necessary
     @PostExchange("/query")
     GXFSCatalogListResponse<GXFSQueryUriItem> postQuery(
             @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
