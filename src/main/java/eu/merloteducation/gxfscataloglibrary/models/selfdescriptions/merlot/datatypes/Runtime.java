@@ -1,6 +1,8 @@
-package eu.merloteducation.gxfscataloglibrary.models.datatypes;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.datatypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NumberTypeValue;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.StringTypeValue;
 import lombok.Getter;
 import lombok.Setter;
 

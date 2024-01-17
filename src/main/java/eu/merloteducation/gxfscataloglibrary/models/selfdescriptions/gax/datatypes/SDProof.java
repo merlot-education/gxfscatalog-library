@@ -1,4 +1,4 @@
-package eu.merloteducation.gxfscataloglibrary.models.datatypes;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package eu.merloteducation.gxfscataloglibrary.models.datatypes;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
@@ -9,17 +9,21 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-public class NumberTypeValue {
+public class StringTypeValue {
     @NotNull
     @JsonProperty("@type")
     private String type;
-
     @NotNull
     @JsonProperty("@value")
-    private int value;
+    private String value;
 
-    public NumberTypeValue(int value) {
-        this.type = "xsd:integer";
+    public StringTypeValue(String value) {
         this.value = value;
+        this.type = "xsd:string";
+    }
+
+    public StringTypeValue(String value, String type) {
+        this.value = value;
+        this.type = type;
     }
 }

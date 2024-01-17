@@ -1,9 +1,9 @@
-package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.participants;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.merloteducation.gxfscataloglibrary.models.datatypes.RegistrationNumber;
-import eu.merloteducation.gxfscataloglibrary.models.datatypes.StringTypeValue;
-import eu.merloteducation.gxfscataloglibrary.models.datatypes.VCard;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.RegistrationNumber;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.StringTypeValue;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

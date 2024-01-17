@@ -1,10 +1,10 @@
-package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.serviceofferings;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.merloteducation.gxfscataloglibrary.models.datatypes.DataExchangeCount;
-import eu.merloteducation.gxfscataloglibrary.models.datatypes.StringTypeValue;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.datatypes.DataExchangeCount;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.StringTypeValue;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.serviceofferings;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
