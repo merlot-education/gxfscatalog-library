@@ -67,12 +67,19 @@ public class GxfsSignerService {
         }
     }
 
-    public String presentVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
+    /**
+     * Given a credential subject and an issuer, wrap it in an unsigned verifiable presentation.
+     *
+     * @param credentialSubject credential subject to wrap
+     * @param issuer issuer of the presentation
+     * @throws JsonProcessingException json mapping exception
+     */
+    public VerifiablePresentation presentVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
                                               String issuer) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         String credentialSubjectJson = mapper.writeValueAsString(credentialSubject);
-        return """
+        return VerifiablePresentation.fromJson("""
             {
                 "@context": ["https://www.w3.org/2018/credentials/v1"],
                 "@id": "http://example.edu/verifiablePresentation/self-description1",
@@ -88,20 +95,20 @@ public class GxfsSignerService {
             "credentialSubject":\s""" + credentialSubjectJson + """
                 }
             }
-            """;
+            """);
     }
 
     /**
-     * Given a verifiable presentation, sign and return it.
+     * Given a verifiable presentation, sign it with the key provided to the service.
      *
-     * @param verifiablePresentationJson presentation to sign
-     * @return signed presentation
-     * @throws Exception signature/check exception
+     * @param vp presentation to sign
+     * @throws JsonLDException signature/check exception
+     * @throws GeneralSecurityException signature/check exception
+     * @throws IOException signature/check exception
      */
-    public String signVerifiablePresentation(String verifiablePresentationJson) throws Exception {
+    public void signVerifiablePresentation(VerifiablePresentation vp)
+            throws JsonLDException, GeneralSecurityException, IOException {
         Security.addProvider(new BouncyCastleProvider());
-
-        VerifiablePresentation vp = VerifiablePresentation.fromJson(verifiablePresentationJson);
         VerifiableCredential vc = vp.getVerifiableCredential();
 
         logger.debug("Signing VC");
@@ -118,11 +125,10 @@ public class GxfsSignerService {
         logger.debug("Signed");
 
         vp.setJsonObjectKeyValue("proof", vp.getLdProof().getJsonObject());
-
-        return vp.toString();
     }
 
-    private LdProof sign(JsonLDObject credential) throws IOException, GeneralSecurityException, JsonLDException {
+    private LdProof sign(JsonLDObject credential)
+            throws IOException, GeneralSecurityException, JsonLDException {
         KeyPair kp = new KeyPair(null, prk);
         PrivateKeySigner<?> privateKeySigner = new RSA_PS256_PrivateKeySigner(kp);
 
@@ -144,7 +150,8 @@ public class GxfsSignerService {
      * @throws GeneralSecurityException GeneralSecurityException
      * @throws JsonLDException          JsonLDException
      */
-    private void check(JsonLDObject credential, LdProof proof) throws IOException, GeneralSecurityException, JsonLDException {
+    private void check(JsonLDObject credential, LdProof proof)
+            throws IOException, GeneralSecurityException, JsonLDException {
         for (X509Certificate cert : certs) {
             PublicKey puk = cert.getPublicKey();
             PublicKeyVerifier<?> pkVerifier = new RSA_PS256_PublicKeyVerifier((RSAPublicKey) puk);

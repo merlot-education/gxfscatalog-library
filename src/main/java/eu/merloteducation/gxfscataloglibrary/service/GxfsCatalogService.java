@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.SelfDescriptionStatus;
 import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
@@ -96,34 +97,31 @@ public class GxfsCatalogService {
 
     public SelfDescriptionsCreateResponse addServiceOffering(
             GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject) throws Exception {
-        String vp = gxfsSignerService
+        VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(serviceOfferingCredentialSubject,
                         serviceOfferingCredentialSubject.getOfferedBy().getId());
-        String signedVp = gxfsSignerService
-                .signVerifiablePresentation(vp);
-        return this.gxfsCatalogClient.postAddSelfDescription(signedVp);
+        gxfsSignerService.signVerifiablePresentation(vp);
+        return this.gxfsCatalogClient.postAddSelfDescription(vp);
     }
 
     public ParticipantItem addParticipant(
             GaxTrustLegalPersonCredentialSubject participantCredentialSubject) throws Exception {
-        String vp = gxfsSignerService
+        VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
-        String signedVp = gxfsSignerService
-                .signVerifiablePresentation(vp);
-        return this.gxfsCatalogClient.postAddParticipant(signedVp);
+        gxfsSignerService.signVerifiablePresentation(vp);
+        return this.gxfsCatalogClient.postAddParticipant(vp);
     }
 
     public ParticipantItem updateParticipant(
             GaxTrustLegalPersonCredentialSubject participantCredentialSubject) throws Exception {
-        String vp = gxfsSignerService
+        VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
-        String signedVp = gxfsSignerService
-                .signVerifiablePresentation(vp);
+        gxfsSignerService.signVerifiablePresentation(vp);
         return this.gxfsCatalogClient.putUpdateParticipant(
                 participantCredentialSubject.getId(),
-                signedVp);
+                vp);
     }
 
     public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(Pageable pageable) {
