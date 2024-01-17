@@ -57,7 +57,6 @@ public class GxfsSignerService {
             prk = converter.getPrivateKey(privateKeyInfo);
         }
 
-        //---extract Expiration Date--- https://stackoverflow.com/a/11621488
         try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(certPath) ?
                 GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
                 : new FileInputStream(certPath)) {
@@ -101,7 +100,6 @@ public class GxfsSignerService {
      */
     public String signVerifiablePresentation(String verifiablePresentationJson) throws Exception {
         Security.addProvider(new BouncyCastleProvider());
-
 
         VerifiablePresentation vp = VerifiablePresentation.fromJson(verifiablePresentationJson);
         VerifiableCredential vc = vp.getVerifiableCredential();

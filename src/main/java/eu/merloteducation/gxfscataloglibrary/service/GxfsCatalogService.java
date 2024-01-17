@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import eu.merloteducation.gxfscataloglibrary.models.SelfDescriptionStatus;
 import eu.merloteducation.modelslib.gxfscatalog.participants.ParticipantItem;
 import eu.merloteducation.modelslib.gxfscatalog.query.GXFSQueryUriItem;
 import eu.merloteducation.modelslib.gxfscatalog.selfdescriptions.GXFSCatalogListResponse;
@@ -32,17 +33,65 @@ public class GxfsCatalogService {
     }
 
     public GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionsByIds(String[] ids) {
-        return this.gxfsCatalogClient.getSelfDescriptionList(true,
-                new String[]{"ACTIVE", "REVOKED"},
+        return this.gxfsCatalogClient.getSelfDescriptionList(
+                null,
+                null,
+                null,
+                null,
+                new SelfDescriptionStatus[]{SelfDescriptionStatus.ACTIVE},
                 ids,
-                null);
+                null,
+                true,
+                true,
+                0,
+                ids.length);
+    }
+
+    public GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionsByIds(String[] ids,
+                                                                                 SelfDescriptionStatus[] selfDescriptionStatuses) {
+        return this.gxfsCatalogClient.getSelfDescriptionList(
+                null,
+                null,
+                null,
+                null,
+                selfDescriptionStatuses,
+                ids,
+                null,
+                true,
+                true,
+                0,
+                ids.length);
     }
 
     public GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionsByHashes(String[] hashes) {
-        return this.gxfsCatalogClient.getSelfDescriptionList(true,
-                new String[]{"ACTIVE", "REVOKED"},
+        return this.gxfsCatalogClient.getSelfDescriptionList(
                 null,
-                hashes);
+                null,
+                null,
+                null,
+                new SelfDescriptionStatus[]{SelfDescriptionStatus.ACTIVE},
+                null,
+                hashes,
+                true,
+                true,
+                0,
+                hashes.length);
+    }
+
+    public GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionsByHashes(String[] hashes,
+                                                                                    SelfDescriptionStatus[] selfDescriptionStatuses) {
+        return this.gxfsCatalogClient.getSelfDescriptionList(
+                null,
+                null,
+                null,
+                null,
+                selfDescriptionStatuses,
+                null,
+                hashes,
+                true,
+                true,
+                0,
+                hashes.length);
     }
 
     public SelfDescriptionsCreateResponse addServiceOffering(
@@ -85,6 +134,10 @@ public class GxfsCatalogService {
                     "
                 }
         """;
-        return this.gxfsCatalogClient.postQuery(query);
+        return this.gxfsCatalogClient.postQuery(
+                null,
+                5,
+                true,
+                query);
     }
 }
