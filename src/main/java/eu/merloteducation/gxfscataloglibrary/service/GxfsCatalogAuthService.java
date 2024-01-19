@@ -39,7 +39,7 @@ public class GxfsCatalogAuthService {
                                   @Value("${keycloak.authorization-grant-type}") String grantType,
                                   @Value("${keycloak.gxfscatalog-user}") String keycloakGXFScatalogUser,
                                   @Value("${keycloak.gxfscatalog-pass}") String keycloakGXFScatalogPass,
-                                  @Autowired WebClient.Builder webClientBuilder) {
+                                  @Autowired WebClient webClient) {
         this.keycloakTokenUri = keycloakTokenUri;
         this.keycloakLogoutUri = keycloakLogoutUri;
         this.clientId = clientId;
@@ -47,7 +47,7 @@ public class GxfsCatalogAuthService {
         this.grantType = grantType;
         this.keycloakGXFScatalogUser = keycloakGXFScatalogUser;
         this.keycloakGXFScatalogPass = keycloakGXFScatalogPass;
-        this.webClient = webClientBuilder.build();
+        this.webClient = webClient;
         this.refreshLogin();
     }
 

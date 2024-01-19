@@ -39,7 +39,7 @@ public interface GxfsCatalogClient {
     SelfDescriptionMeta postAddSelfDescription(@RequestBody VerifiablePresentation body);
 
     @GetExchange("/self-descriptions/{sdHash}")
-    GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionByHash(@PathVariable String sdHash);
+    SelfDescriptionItem getSelfDescriptionByHash(@PathVariable String sdHash);
 
     @DeleteExchange("/self-descriptions/{sdHash}")
     void deleteSelfDescriptionByHash(@PathVariable String sdHash);
@@ -81,12 +81,7 @@ public interface GxfsCatalogClient {
     @DeleteExchange("/participants/{participantId}")
     ParticipantItem deleteParticipant(@PathVariable String participantId);
 
-    @GetExchange("/participants/{participantId}/users")
-    ParticipantItem getParticipantUsers(
-            @PathVariable String participantId,
-            @RequestParam(name = "offset", required = false) int offset,
-            @RequestParam(name = "limit", required = false) int limit
-    );
+    // TODO GET /participants/{participantId}/users
 
     // TODO Users
     // TODO Roles

@@ -58,4 +58,9 @@ public class GxfsCatalogLibConfig {
                 .build();
         return httpServiceProxyFactory.createClient(GxfsCatalogClient.class);
     }
+
+    @Bean
+    public WebClient webClient(WebClient.Builder webClientBuilder) {
+        return webClientBuilder.build();
+    }
 }
