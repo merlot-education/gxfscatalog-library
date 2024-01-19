@@ -46,8 +46,8 @@ public class GxfsSignerService {
     private final PrivateKey prk;
     private final List<X509Certificate> certs;
 
-    public GxfsSignerService(@Value("${gxfscatalog.cert-path}") String certPath,
-                             @Value("${gxfscatalog.private-key-path}") String privateKeyPath) throws IOException, CertificateException {
+    public GxfsSignerService(@Value("${gxfscatalog.cert-path:#{null}}") String certPath,
+                             @Value("${gxfscatalog.private-key-path:#{null}}") String privateKeyPath) throws IOException, CertificateException {
         try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(privateKeyPath) ?
                 GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
                 : new FileInputStream(privateKeyPath)) {

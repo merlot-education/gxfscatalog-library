@@ -12,10 +12,19 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatyp
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class GxfsCatalogClientFake implements GxfsCatalogClient {
+
+    private final List<SelfDescriptionItem> selfDescriptionItems = new ArrayList<>();
+
+    private final List<ParticipantItem> participantItems = new ArrayList<>();
 
     private SelfDescriptionItem generateBasicOfferingSdItem(String id,
                                                         String issuer,
@@ -24,6 +33,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         SelfDescriptionItem item = new SelfDescriptionItem();
         item.setMeta(new SelfDescriptionMeta());
         item.getMeta().setId(id);
+        item.getMeta().setSdHash(id);
         item.getMeta().setIssuer(issuer);
         item.getMeta().setStatus(status.getValue());
         item.getMeta().setContent(new SelfDescription());
@@ -61,18 +71,28 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         return item;
     }
 
-    private SelfDescriptionMeta generateSdMetaNoContent(String id,
-                                                        String issuer,
-                                                        SelfDescriptionStatus status) {
-        SelfDescriptionMeta meta = new SelfDescriptionMeta();
-        meta.setContent(null);
-        meta.setId(id);
-        meta.setSubjectId(id);
-        meta.setStatus(status.getValue());
-        meta.setIssuer(issuer);
-        meta.setSdHash("1234");
+    private void checkError(String request) {
+        if (request.equals("error")) {
+            throw new WebClientResponseException(HttpStatus.INTERNAL_SERVER_ERROR.value(), "error", null, null, null);
+        }
+    }
 
-        return meta;
+    private SelfDescriptionItem findSelfDescriptionItemByHash(String sdHash) {
+        List<SelfDescriptionItem> result =
+                selfDescriptionItems.stream().filter(sdi -> sdi.getMeta().getSdHash().equals(sdHash)).toList();
+        if (result.isEmpty()) {
+            throw new WebClientResponseException(HttpStatus.NOT_FOUND.value(), "missing", null, null, null);
+        }
+        return result.get(0);
+    }
+
+    private ParticipantItem findParticipantItemById(String participantId) {
+        List<ParticipantItem> result =
+                participantItems.stream().filter(pi -> pi.getId().equals(participantId)).toList();
+        if (result.isEmpty()) {
+            throw new WebClientResponseException(HttpStatus.NOT_FOUND.value(), "missing", null, null, null);
+        }
+        return result.get(0);
     }
 
     @Override
@@ -90,54 +110,51 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
             int limit) {
 
         GXFSCatalogListResponse<SelfDescriptionItem> response = new GXFSCatalogListResponse<>();
+        List<String> reqIds = ids == null ? Collections.emptyList() : Arrays.asList(ids);
+        List<String> reqHashes = hashes == null ? Collections.emptyList() : Arrays.asList(hashes);
+        List<String> reqStatuses = Arrays.asList(statuses).stream().map(s -> s.getValue()).toList();
+        List<SelfDescriptionItem> items = selfDescriptionItems.stream().filter(sdi ->
+                reqStatuses.contains(sdi.getMeta().getStatus()) &&
+                (reqIds.contains(sdi.getMeta().getId()) || reqHashes.contains(sdi.getMeta().getSdHash()))
+                ).toList();
 
-
-        response.setItems(List.of(
-                generateBasicOfferingSdItem(
-                "1234",
-                "2345",
-                "2345",
-                SelfDescriptionStatus.ACTIVE),
-                generateBasicOfferingSdItem(
-                        "5678",
-                        "6789",
-                        "6789",
-                        SelfDescriptionStatus.ACTIVE)));
-        response.setTotalCount(2);
+        response.setItems(items);
+        response.setTotalCount(items.size());
 
         return response;
     }
 
     @Override
     public SelfDescriptionMeta postAddSelfDescription(VerifiablePresentation body) {
-
-        return generateSdMetaNoContent(
-                body.getVerifiableCredential().getCredentialSubject().getId().toString(),
+        SelfDescriptionItem item = generateBasicOfferingSdItem(
+                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("@id").toString(),
+                body.getVerifiableCredential().getIssuer().toString(),
                 body.getVerifiableCredential().getIssuer().toString(),
                 SelfDescriptionStatus.ACTIVE
         );
+        selfDescriptionItems.add(item);
+        return item.getMeta();
     }
 
     @Override
     public SelfDescriptionItem getSelfDescriptionByHash(String sdHash) {
-        return generateBasicOfferingSdItem(
-                "1234",
-                "2345",
-                "2345",
-                SelfDescriptionStatus.ACTIVE);
+        checkError(sdHash);
+        return findSelfDescriptionItemByHash(sdHash);
     }
 
     @Override
     public void deleteSelfDescriptionByHash(String sdHash) {
+        checkError(sdHash);
+        SelfDescriptionItem item = findSelfDescriptionItemByHash(sdHash);
+        selfDescriptionItems.remove(item);
     }
 
     @Override
     public SelfDescriptionMeta postRevokeSelfDescriptionByHash(String sdHash) {
-        return generateSdMetaNoContent(
-                "1234",
-                "2345",
-                SelfDescriptionStatus.REVOKED
-        );
+        checkError(sdHash);
+        SelfDescriptionItem item = findSelfDescriptionItemByHash(sdHash);
+        item.getMeta().setStatus(SelfDescriptionStatus.REVOKED.getValue());
+        return item.getMeta();
     }
 
     @Override
@@ -146,60 +163,62 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
             int timeout,
             boolean withTotalCount,
             String query) {
+        List<GXFSQueryUriItem> uris = participantItems.stream().map(pi -> {
+            GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
+            uriItem.setUri(pi.getId());
+            return uriItem;
+        }).toList();
         GXFSCatalogListResponse<GXFSQueryUriItem> response = new GXFSCatalogListResponse<>();
-        GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
-        uriItem.setUri("2345");
-        GXFSQueryUriItem uriItem2 = new GXFSQueryUriItem();
-        uriItem2.setUri("6789");
-        response.setItems(List.of(uriItem, uriItem2));
-        response.setTotalCount(2);
+        response.setItems(uris);
+        response.setTotalCount(uris.size());
         return response;
     }
 
     @Override
     public GXFSCatalogListResponse<ParticipantItem> getParticipants(int offset, int limit) {
         GXFSCatalogListResponse<ParticipantItem> response = new GXFSCatalogListResponse<>();
-        response.setItems(List.of(
-                generateParticipantItem("2345", "Participant1"),
-                generateParticipantItem("6789", "Participant2")
-        ));
-        response.setTotalCount(2);
+        response.setItems(participantItems);
+        response.setTotalCount(participantItems.size());
         return response;
     }
 
     @Override
     public ParticipantItem postAddParticipant(VerifiablePresentation body) {
-        return generateParticipantItem(
+        ParticipantItem item = generateParticipantItem(
                 body.getId().toString(),
                 ((StringTypeValue) body.getVerifiableCredential()
                         .getCredentialSubject().getClaims()
                         .get("gax-trust-framework:legalName")).getValue());
+        participantItems.add(item);
+        return item;
     }
 
     @Override
     public ParticipantItem getParticipantById(String participantId) {
-        return generateParticipantItem(
-                participantId,
-                "Participant"
-        );
+        checkError(participantId);
+        return findParticipantItemById(participantId);
     }
 
     @Override
     public ParticipantItem putUpdateParticipant(String participantId, VerifiablePresentation body) {
-        return generateParticipantItem(
-                participantId,
+        checkError(participantId);
+        ParticipantItem item = findParticipantItemById(participantId);
+        GaxTrustLegalPersonCredentialSubject credentialSubject =
+                (GaxTrustLegalPersonCredentialSubject)
+                        item.getSelfDescription().getVerifiableCredential().getCredentialSubject();
+        credentialSubject.setLegalName(
                 ((StringTypeValue) body.getVerifiableCredential()
-                        .getCredentialSubject().getClaims()
-                        .get("gax-trust-framework:legalName")).getValue()
-        );
+                .getCredentialSubject().getClaims()
+                .get("gax-trust-framework:legalName")));
+        return item;
     }
 
     @Override
     public ParticipantItem deleteParticipant(String participantId) {
-        return generateParticipantItem(
-                participantId,
-                "Participant"
-        );
+        checkError(participantId);
+        ParticipantItem item = findParticipantItemById(participantId);
+        participantItems.remove(item);
+        return item;
     }
 
 }
