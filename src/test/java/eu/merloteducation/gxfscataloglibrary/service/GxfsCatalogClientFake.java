@@ -15,10 +15,7 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.service
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
@@ -60,6 +57,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         credentialSubject.setId(id);
         credentialSubject.setType("gax-trust-framework:LegalPerson");
         credentialSubject.setRegistrationNumber(new RegistrationNumber());
+        credentialSubject.setLegalName(new StringTypeValue(name));
         credentialSubject.getRegistrationNumber().setLocal(new StringTypeValue("12345"));
         VCard address = new VCard();
         address.setCountryName(new StringTypeValue("DE"));
@@ -185,10 +183,9 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     @Override
     public ParticipantItem postAddParticipant(VerifiablePresentation body) {
         ParticipantItem item = generateParticipantItem(
-                body.getId().toString(),
-                ((StringTypeValue) body.getVerifiableCredential()
-                        .getCredentialSubject().getClaims()
-                        .get("gax-trust-framework:legalName")).getValue());
+                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("@id").toString(),
+                ((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
+                        .get("gax-trust-framework:legalName")).get("@value"));
         participantItems.add(item);
         return item;
     }
@@ -206,10 +203,9 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         GaxTrustLegalPersonCredentialSubject credentialSubject =
                 (GaxTrustLegalPersonCredentialSubject)
                         item.getSelfDescription().getVerifiableCredential().getCredentialSubject();
-        credentialSubject.setLegalName(
-                ((StringTypeValue) body.getVerifiableCredential()
-                .getCredentialSubject().getClaims()
-                .get("gax-trust-framework:legalName")));
+        credentialSubject.setLegalName(new StringTypeValue(
+                ((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
+                        .get("gax-trust-framework:legalName")).get("@value")));
         return item;
     }
 

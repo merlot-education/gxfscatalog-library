@@ -2,10 +2,16 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import eu.merloteducation.gxfscataloglibrary.config.GxfsCatalogLibConfig;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NodeKindIRITypeId;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.RegistrationNumber;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.StringTypeValue;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +52,23 @@ public class GxfsCatalogServiceTests {
         credentialSubject.setId(id);
         credentialSubject.setOfferedBy(new NodeKindIRITypeId(offeredBy));
         credentialSubject.setContext(new HashMap<>());
+        return credentialSubject;
+    }
+
+    private GaxTrustLegalPersonCredentialSubject generateParticipantCredentialSubject(String id, String name) {
+        GaxTrustLegalPersonCredentialSubject credentialSubject = new GaxTrustLegalPersonCredentialSubject();
+        credentialSubject.setType("gax-trust-framework:LegalPerson");
+        credentialSubject.setId(id);
+        credentialSubject.setRegistrationNumber(new RegistrationNumber());
+        credentialSubject.getRegistrationNumber().setLocal(new StringTypeValue("12345"));
+        credentialSubject.setLegalName(new StringTypeValue(name));
+        VCard address = new VCard();
+        address.setCountryName(new StringTypeValue("DE"));
+        address.setStreetAddress(new StringTypeValue("Some Street 3"));
+        address.setLocality(new StringTypeValue("Berlin"));
+        address.setPostalCode(new StringTypeValue("12345"));
+        credentialSubject.setHeadquarterAddress(address);
+        credentialSubject.setLegalAddress(address);
         return credentialSubject;
     }
 
@@ -191,6 +214,75 @@ public class GxfsCatalogServiceTests {
     void addInvalidServiceOffering() {
         assertThrows(NullPointerException.class, () ->
                 gxfsCatalogService.addServiceOffering(new GaxCoreServiceOfferingCredentialSubject()));
+    }
+
+    @Test
+    void getExistingParticipantById() throws Exception {
+        gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"));
+
+        ParticipantItem item = gxfsCatalogService.getParticipantById("2345");
+        assertNotNull(item);
+    }
+
+    @Test
+    void getMissingParticipantById() {
+        WebClientResponseException e = assertThrows(WebClientResponseException.class,
+                () -> gxfsCatalogService.getParticipantById("missing"));
+        assertEquals(HttpStatus.NOT_FOUND, e.getStatusCode());
+    }
+
+    @Test
+    void getParticipantByIdCatalogError() {
+        WebClientResponseException e = assertThrows(WebClientResponseException.class,
+                () -> gxfsCatalogService.getParticipantById("error"));
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, e.getStatusCode());
+    }
+
+    @Test
+    void addValidParticipant() throws Exception {
+        ParticipantItem item = gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"));
+        assertNotNull(item);
+    }
+
+    @Test
+    void addInvalidParticipant() {
+        assertThrows(NullPointerException.class, () ->
+                gxfsCatalogService.addParticipant(new GaxTrustLegalPersonCredentialSubject()));
+    }
+
+    @Test
+    void updateExistingParticipant() throws Exception {
+        ParticipantItem item = gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"));
+
+        GaxTrustLegalPersonCredentialSubject credentialSubject = (GaxTrustLegalPersonCredentialSubject) item
+                .getSelfDescription().getVerifiableCredential().getCredentialSubject();
+        credentialSubject.setLegalName(new StringTypeValue("MyNewParticipant"));
+        ParticipantItem item2 = gxfsCatalogService.updateParticipant(credentialSubject);
+        assertNotNull(item2);
+        assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
+                .getVerifiableCredential().getCredentialSubject()).getLegalName().getValue());
+    }
+
+    @Test
+    void updateNonExistentParticipant() {
+        WebClientResponseException e = assertThrows(WebClientResponseException.class,
+                () -> gxfsCatalogService.updateParticipant(
+                        generateParticipantCredentialSubject("missing", "MyParticipant")));
+        assertEquals(HttpStatus.NOT_FOUND, e.getStatusCode());
+    }
+
+    @Test
+    void getParticipantsUriPage() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            gxfsCatalogService
+                    .addParticipant(generateParticipantCredentialSubject("" + i, "MyParticipant"));
+        }
+        GXFSCatalogListResponse<GXFSQueryUriItem> uriPage = gxfsCatalogService.getParticipantUriPage(0, 3);
+
+        assertEquals(3, uriPage.getTotalCount());
+        assertEquals(3, uriPage.getItems().size());
     }
 
 }
