@@ -2,6 +2,7 @@ package eu.merloteducation.gxfscataloglibrary.config;
 
 import eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogAuthService;
 import eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogClient;
+import eu.merloteducation.gxfscataloglibrary.service.GxfsWizardApiClient;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,11 +23,11 @@ public class GxfsCatalogLibConfig {
     @Value("${gxfscatalog.base-uri}")
     private String gxfsCatalogBaseUri;
 
-    @Autowired
-    private GxfsCatalogAuthService gxfsCatalogAuthService;
+    @Value("${gxfscatalog.base-uri:#{null}}")
+    private String gxfsWizardApiBaseUri;
 
     @Bean
-    public GxfsCatalogClient gxfsCatalogClient() {
+    public GxfsCatalogClient gxfsCatalogClient(@Autowired GxfsCatalogAuthService gxfsCatalogAuthService) {
         WebClient webClient = WebClient.builder()
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON.toString())
                 .defaultHeader("Accept", MediaType.APPLICATION_JSON.toString())
@@ -57,6 +58,17 @@ public class GxfsCatalogLibConfig {
                 .builderFor(WebClientAdapter.create(webClient))
                 .build();
         return httpServiceProxyFactory.createClient(GxfsCatalogClient.class);
+    }
+
+    @Bean
+    public GxfsWizardApiClient gxfsWizardApiClient() {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(gxfsWizardApiBaseUri)
+                .build();
+        HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
+                .builderFor(WebClientAdapter.create(webClient))
+                .build();
+        return httpServiceProxyFactory.createClient(GxfsWizardApiClient.class);
     }
 
     @Bean

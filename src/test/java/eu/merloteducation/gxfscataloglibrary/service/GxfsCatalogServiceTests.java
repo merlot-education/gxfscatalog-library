@@ -44,6 +44,9 @@ public class GxfsCatalogServiceTests {
     private GxfsCatalogClient gxfsCatalogClient;
 
     @MockBean
+    private GxfsWizardApiService gxfsWizardApiService;
+
+    @MockBean
     private GxfsCatalogLibConfig gxfsCatalogLibConfig;
 
     private GaxCoreServiceOfferingCredentialSubject generateOfferingCredentialSubject(String id, String offeredBy) {
