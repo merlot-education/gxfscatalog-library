@@ -158,9 +158,9 @@ Since the library has no knowledge of this field yet, we can use simple inherita
 Once we have done this we can use our custom class for all the existing library service methods due to the
 inheritance.
 
-An exemplary extension of the basic Gaia-X schemas can be found [here](https://github.com/merlot-education/catalog-shapes/tree/main)
-as well as in the code of this library at `src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/merlot`
-which contains the models of the schemas used in the MERLOT project.
+An exemplary extension of the basic Gaia-X schemas can be found [here](https://github.com/merlot-education/catalog-shapes/tree/main/shacl/shapes/merlot)
+as well as in the code of this library [here](https://github.com/merlot-education/gxfscatalog-library/tree/main/src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/merlot) 
+which contains the models of the schemas used in the [MERLOT project](https://github.com/merlot-education).
 
 
 
