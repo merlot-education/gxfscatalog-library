@@ -8,9 +8,30 @@ In particular it provides the following features:
 - **Easy self-description creation** using the ready-made models for the basic Gaia-X Trust Framework credential shapes (based on [v22.10](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/tree/v22.10))
 - **Extensibility with custom models** building on top of the the Gaia-X Trust Framework models
 - **Easy-to-use signature** of credentials to be published in the catalogue
-- **Optional [SD Creation Wizard API](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-api) pass-through** and interaction for easy [Creation Wizard Frontend](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-frontend) shape retrieval
+- **Optional [SD Creation Wizard API](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-api) pass-through** and interaction for easy [SD Creation Wizard Frontend](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-frontend) shape retrieval
 
 ## Library structure
+
+The most important parts for usage and extension of the library are summarized below:
+
+```
+├── src/main/java/eu/merloteducation/gxfscataloglibrary
+│   ├── models
+│   │   ├── participants                 # models relevant to the /participants API endpoint
+│   │   ├── query                        # models relevant to the /query API endpoint
+│   │   ├── selfdescriptions             # models relevant to the /self-descriptions API endpoint
+│   │   │   ├── gax                      # data models of the participant/offering shapes as defined by Gaia-X
+│   │   │   ├── merlot                   # exemplary extension of the gax data models for the MERLOT project
+│   │   │   ├── (...)             
+│   │   ├── (...)             
+│   ├── service   
+│   │   ├── GxfsCatalogService.java      # main exposed service for interacting with the catalogue
+│   │   ├── GxfsWizardApiClient.java     # main exposed service for interacting with the wizard          
+│   │   ├── *Client.java                 # internal client interfaces for the catalogue/wizard
+│   │   ├── GxfsSignerService.java       # internal service for signing credentials
+│   │   ├── GxfsCatalogAuthService.java  # internal service keeping the catalog user logged in
+│   ├── (...)
+```
 
 ## How to use
 
@@ -58,7 +79,90 @@ The following table describes the expected values:
 
 ### Service Usage
 
+In general to use this library in another Spring project we would include one of the services exposed by this library in some service of your project, for example like this:
+```
+public class MyBusinessService {
+
+    @Autowired
+    private GxfsCatalogService gxfsCatalogService;
+    (...)
+}
+```
+To understand how to use this service, let's consider a simple use case.
+
+Say we want to create a new Participant in the catalogue (which was initialized with the Gaia-X schemas).
+For this we can use the method `gxfsCatalogService.addParticipant(...)`.
+As we can see in the method signature, this method expects a credential subject of type `GaxTrustLegalPersonCredentialSubject`.
+Hence we could build and publish our participant to the catalogue like this:
+```
+public class MyBusinessService {
+    (...)
+    
+    public void addMyNewParticipant() {
+        GaxTrustLegalPersonCredentialSubject subject = new GaxTrustLegalPersonCredentialSubject();
+        subject.setType("gax-trust-framework:LegalPerson");
+        subject.setId("did:web:some-participant.example");
+        subject.setLegalName(new StringTypeValue("My Participant Ltd."));
+        
+        (...) // set all other fields as required
+        
+        gxfsCatalogService.addParticipant(subject);
+    }
+    
+    (...)
+}
+```
+Thats it! At the library service call the credential subject will be automatically wrapped in a presentation, signed
+with the private key given to the library and sent to the catalogue.
+At this point we can easily retrieve access participant data again using the service:
+
+```
+public class MyBusinessService {
+    (...)
+    
+    public void getMyNewParticipant() {
+        ParticipantItem item = gxfsCatalogService
+            .getParticipantById("did:web:some-participant.example");
+        
+        // since the item contains a generic self-description,
+        // we will need to cast in order to access the full credential subject
+        GaxTrustLegalPersonCredentialSubject credentialSubject = 
+            (GaxTrustLegalPersonCredentialSubject) item
+                .getSelfDescription().getVerifiableCredential().getCredentialSubject();
+        
+        (...) // do something with the data
+    }
+    
+    (...)
+}
+```
+
+All the other methods of the service can be used in a similar manner, 
+e.g. to add/retrieve service offering self-descriptions, revoke/delete participants
+and offerings and so on.
+
 ### Extension
+
+As we saw in the previous section, the library service methods typically accept some kind
+of credential subject type, e.g. a basic legal person as defined by Gaia-X or a general service offering.
+We can find the respective models for these types [here](https://github.com/merlot-education/gxfscatalog-library/tree/main/src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/gax).
+
+Since the catalog allows to specify arbitrary schemas, we can easily extend upon this concept.
+For example we could define our own schemas that extend the basic legal person found [here](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/blob/v22.10/single-point-of-truth/yaml/gax-trust-framework/gax-participant/legal-person.yaml?ref_type=tags) 
+with an e-mail address field, generate the respective ttl files and upload them to the catalog. 
+
+Since the library has no knowledge of this field yet, we can use simple inheritance and extend upon the
+`GaxTrustLegalPersonCredentialSubject` model and add it to the decorator of the generic 
+`SelfDescriptionCredentialSubject` for automatic deserialization.
+
+Once we have done this we can use our custom class for all the existing library service methods due to the
+inheritance.
+
+An exemplary extension of the basic Gaia-X schemas can be found [here](https://github.com/merlot-education/catalog-shapes/tree/main)
+as well as in the code of this library at `src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/merlot`
+which contains the models of the schemas used in the MERLOT project.
+
+
 
 ## Limitations
 Currently, the following catalogue API endpoints are not yet mapped:
