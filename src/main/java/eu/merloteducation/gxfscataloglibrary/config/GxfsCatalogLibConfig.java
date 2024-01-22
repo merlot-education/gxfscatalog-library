@@ -23,7 +23,7 @@ public class GxfsCatalogLibConfig {
     @Value("${gxfscatalog.base-uri}")
     private String gxfsCatalogBaseUri;
 
-    @Value("${gxfscatalog.base-uri:#{null}}")
+    @Value("${gxfswizardapi.base-uri:#{null}}")
     private String gxfsWizardApiBaseUri;
 
     @Bean

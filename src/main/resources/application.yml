@@ -1,0 +1,18 @@
+gxfscatalog:
+  base-uri: ""
+  cert-path: ""
+  private-key-path: ""
+
+gxfswizardapi:
+  base-uri: ""
+
+keycloak:
+  client-id: "federated-catalogue"
+  authorization-grant-type: "password"
+  base-uri: "http://key-server:8080"
+  client-secret: "somesecret"
+  gxfscatalog-user: "gxfscatalog"
+  gxfscatalog-pass: "gxfscatalog"
+  oidc-base-uri: "${keycloak.base-uri}/realms/gxfscatalog/protocol/openid-connect"
+  token-uri: "${keycloak.oidc-base-uri}/token"
+  logout-uri: "${keycloak.oidc-base-uri}/logout"
