@@ -9,6 +9,8 @@ import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
+import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
@@ -72,13 +74,20 @@ public class GxfsSignerService {
      *
      * @param credentialSubject credential subject to wrap
      * @param issuer issuer of the presentation
-     * @throws JsonProcessingException json mapping exception
+     * @throws CredentialPresentationException exception during the presentation of the credential
      */
     public VerifiablePresentation presentVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
-                                                              String issuer) throws JsonProcessingException {
+                                                              String issuer) throws CredentialPresentationException {
         ObjectMapper mapper = new ObjectMapper();
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        String credentialSubjectJson = mapper.writeValueAsString(credentialSubject);
+        String credentialSubjectJson;
+
+        try {
+            credentialSubjectJson = mapper.writeValueAsString(credentialSubject);
+        } catch (JsonProcessingException e) {
+            throw new CredentialPresentationException(e.getMessage());
+        }
+
         return VerifiablePresentation.fromJson("""
             {
                 "@context": ["https://www.w3.org/2018/credentials/v1"],
@@ -102,27 +111,28 @@ public class GxfsSignerService {
      * Given a verifiable presentation, sign it with the key provided to the service.
      *
      * @param vp presentation to sign
-     * @throws JsonLDException signature/check exception
-     * @throws GeneralSecurityException signature/check exception
-     * @throws IOException signature/check exception
+     * @throws CredentialSignatureException exception during the signature of the vp
      */
-    public void signVerifiablePresentation(VerifiablePresentation vp)
-            throws JsonLDException, GeneralSecurityException, IOException {
+    public void signVerifiablePresentation(VerifiablePresentation vp) throws CredentialSignatureException {
         Security.addProvider(new BouncyCastleProvider());
         VerifiableCredential vc = vp.getVerifiableCredential();
 
-        logger.debug("Signing VC");
-        LdProof vcProof = sign(vc);
-        check(vc, vcProof);
-        logger.debug("Signed");
+        try {
+            logger.debug("Signing VC");
+            LdProof vcProof = sign(vc);
+            check(vc, vcProof);
+            logger.debug("Signed");
 
-        vc.setJsonObjectKeyValue("proof", vc.getLdProof().getJsonObject());
-        vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
+            vc.setJsonObjectKeyValue("proof", vc.getLdProof().getJsonObject());
+            vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
 
-        logger.debug("Signing VP");
-        LdProof vpProof = sign(vp);
-        check(vp, vpProof);
-        logger.debug("Signed");
+            logger.debug("Signing VP");
+            LdProof vpProof = sign(vp);
+            check(vp, vpProof);
+            logger.debug("Signed");
+        } catch (IOException | GeneralSecurityException | JsonLDException e) {
+            throw new CredentialSignatureException(e.getMessage());
+        }
 
         vp.setJsonObjectKeyValue("proof", vp.getLdProof().getJsonObject());
     }

@@ -3,6 +3,8 @@ package eu.merloteducation.gxfscataloglibrary.service;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
+import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
@@ -149,10 +151,13 @@ public class GxfsCatalogService {
      * wrap it in a verifiable presentation, sign it using the key that was provided to this library and send it to the catalog.
      *
      * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject) throws Exception {
+            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject)
+            throws CredentialPresentationException, CredentialSignatureException {
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(serviceOfferingCredentialSubject,
                         serviceOfferingCredentialSubject.getOfferedBy().getId());
@@ -165,10 +170,12 @@ public class GxfsCatalogService {
      * wrap it in a verifiable presentation, sign it using the key that was provided to this library and send it to the catalog.
      *
      * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
     public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
-            throws Exception {
+            throws CredentialPresentationException, CredentialSignatureException {
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
@@ -183,10 +190,12 @@ public class GxfsCatalogService {
      * to update it.
      *
      * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
     public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
-            throws Exception {
+            throws CredentialPresentationException, CredentialSignatureException {
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
