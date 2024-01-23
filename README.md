@@ -152,7 +152,7 @@ For example, we could define our own schemas that extend the basic legal person 
 with an e-mail address field, generate the respective ttl files and upload them to the catalog. 
 
 Since the library has no knowledge of this field yet, we can use simple inheritance and extend upon the
-`GaxTrustLegalPersonCredentialSubject` model and add it to the decorator of the generic 
+`GaxTrustLegalPersonCredentialSubject` model and add it to the annotation of the generic 
 `SelfDescriptionCredentialSubject` for automatic deserialization.
 
 Once we have done this we can use our custom class for all the existing library service methods due to the
