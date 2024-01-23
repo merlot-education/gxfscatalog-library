@@ -19,13 +19,11 @@ import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class GxfsCatalogAuthServiceTests {
-
-
     @Mock
     private WebClient webClient;
 
     @Mock
-    WebClient.RequestBodyUriSpec loginRequestBodyUriSpec;
+    WebClient.RequestBodyUriSpec requestBodyUriSpec;
 
     @Mock
     WebClient.RequestHeadersSpec loginRequestHeadersSpec;
@@ -35,9 +33,6 @@ class GxfsCatalogAuthServiceTests {
 
     @Mock
     WebClient.ResponseSpec loginResponseSpec;
-
-    @Mock
-    WebClient.RequestBodyUriSpec logoutRequestBodyUriSpec;
 
     @Mock
     WebClient.RequestHeadersSpec logoutRequestHeadersSpec;
@@ -68,14 +63,14 @@ class GxfsCatalogAuthServiceTests {
                 """;
         ObjectMapper mapper = new ObjectMapper();
 
-        lenient().when(webClient.post()).thenReturn(loginRequestBodyUriSpec);
-        lenient().when(loginRequestBodyUriSpec.uri(eq(keycloakTokenUri))).thenReturn(loginRequestBodySpec);
+        lenient().when(webClient.post()).thenReturn(requestBodyUriSpec);
+        lenient().when(requestBodyUriSpec.uri(eq(keycloakTokenUri))).thenReturn(loginRequestBodySpec);
         lenient().when(loginRequestBodySpec.body(any())).thenReturn(loginRequestHeadersSpec);
         lenient().when(loginRequestHeadersSpec.retrieve()).thenReturn(loginResponseSpec);
         lenient().when(loginResponseSpec.bodyToMono(eq(JsonNode.class)))
                 .thenReturn(Mono.just(mapper.readTree(loginResponse)));
 
-        lenient().when(loginRequestBodyUriSpec.uri(eq(keycloakLogoutUri))).thenReturn(logoutRequestBodySpec);
+        lenient().when(requestBodyUriSpec.uri(eq(keycloakLogoutUri))).thenReturn(logoutRequestBodySpec);
         lenient().when(logoutRequestBodySpec.body(any())).thenReturn(logoutRequestHeadersSpec);
         lenient().when(logoutRequestHeadersSpec.retrieve()).thenReturn(logoutResponseSpec);
         lenient().when(logoutResponseSpec.toBodilessEntity())
