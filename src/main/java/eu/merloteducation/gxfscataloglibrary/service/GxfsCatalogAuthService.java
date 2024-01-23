@@ -1,6 +1,7 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.netty.util.internal.StringUtil;
 import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,13 +33,13 @@ public class GxfsCatalogAuthService {
     private String authToken;
     private String refreshToken;
 
-    public GxfsCatalogAuthService(@Value("${keycloak.token-uri}") String keycloakTokenUri,
-                                  @Value("${keycloak.logout-uri}") String keycloakLogoutUri,
-                                  @Value("${keycloak.client-id}") String clientId,
-                                  @Value("${keycloak.client-secret}") String clientSecret,
-                                  @Value("${keycloak.authorization-grant-type}") String grantType,
-                                  @Value("${keycloak.gxfscatalog-user}") String keycloakGXFScatalogUser,
-                                  @Value("${keycloak.gxfscatalog-pass}") String keycloakGXFScatalogPass,
+    public GxfsCatalogAuthService(@Value("${keycloak.token-uri:#{null}}") String keycloakTokenUri,
+                                  @Value("${keycloak.logout-uri:#{null}}") String keycloakLogoutUri,
+                                  @Value("${keycloak.client-id:#{null}}") String clientId,
+                                  @Value("${keycloak.client-secret:#{null}}") String clientSecret,
+                                  @Value("${keycloak.authorization-grant-type:#{null}}") String grantType,
+                                  @Value("${keycloak.gxfscatalog-user:#{null}}") String keycloakGXFScatalogUser,
+                                  @Value("${keycloak.gxfscatalog-pass:#{null}}") String keycloakGXFScatalogPass,
                                   @Autowired WebClient webClient) {
         this.keycloakTokenUri = keycloakTokenUri;
         this.keycloakLogoutUri = keycloakLogoutUri;
@@ -54,10 +55,13 @@ public class GxfsCatalogAuthService {
     @Scheduled(fixedDelay = 120 * 1000)
     public void refreshLogin() {
         // TODO compute delay dynamically from token
-        try {
-            loginAsGXFSCatalog();
-        } catch (WebClientRequestException | WebClientResponseException e) {
-            logger.warn("Failed to refresh authentication token", e);
+        if (!(StringUtil.isNullOrEmpty(this.keycloakGXFScatalogUser)
+                || StringUtil.isNullOrEmpty(this.keycloakGXFScatalogPass))) {
+            try {
+                loginAsGXFSCatalog();
+            } catch (WebClientRequestException | WebClientResponseException e) {
+                logger.warn("Failed to refresh authentication token", e);
+            }
         }
     }
 

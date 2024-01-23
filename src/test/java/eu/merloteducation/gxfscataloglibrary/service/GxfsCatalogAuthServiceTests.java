@@ -76,7 +76,15 @@ class GxfsCatalogAuthServiceTests {
         lenient().when(logoutResponseSpec.toBodilessEntity())
                 .thenReturn(Mono.empty());
 
-        gxfsCatalogAuthService = new GxfsCatalogAuthService(keycloakTokenUri, keycloakLogoutUri, "", "", "", "", "", webClient);
+        gxfsCatalogAuthService = new GxfsCatalogAuthService(
+                keycloakTokenUri,
+                keycloakLogoutUri,
+                "client",
+                "secret",
+                "password",
+                "user",
+                "pass",
+                webClient);
     }
 
     @Test
