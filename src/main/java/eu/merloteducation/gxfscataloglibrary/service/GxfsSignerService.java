@@ -39,6 +39,7 @@ import java.security.interfaces.RSAPublicKey;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -53,6 +54,12 @@ public class GxfsSignerService {
         try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(privateKeyPath) ?
                 GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
                 : new FileInputStream(privateKeyPath)) {
+            if (privateKeyStream == null) {
+                logger.warn("Could not load private key for SD signing. Signing will not work.");
+                prk = null;
+                certs = Collections.emptyList();
+                return;
+            }
             PEMParser pemParser = new PEMParser(new InputStreamReader(privateKeyStream));
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
             PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
@@ -62,6 +69,11 @@ public class GxfsSignerService {
         try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(certPath) ?
                 GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
                 : new FileInputStream(certPath)) {
+            if (publicKeyStream == null) {
+                logger.warn("Could not load certificate for SD signing. Signing will not work.");
+                certs = Collections.emptyList();
+                return;
+            }
             String certString = new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
             ByteArrayInputStream certStream = new ByteArrayInputStream(certString.getBytes(StandardCharsets.UTF_8));
             CertificateFactory certFactory = CertificateFactory.getInstance("X.509");

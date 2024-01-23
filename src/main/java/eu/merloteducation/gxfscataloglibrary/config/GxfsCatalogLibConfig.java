@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.MediaType;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -18,9 +19,10 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory;
 import reactor.core.publisher.Mono;
 
 @Configuration
+@PropertySource("classpath:application.yml")
 @EnableScheduling
 public class GxfsCatalogLibConfig {
-    @Value("${gxfscatalog.base-uri}")
+    @Value("${gxfscatalog.base-uri:#{null}}")
     private String gxfsCatalogBaseUri;
 
     @Value("${gxfswizardapi.base-uri:#{null}}")

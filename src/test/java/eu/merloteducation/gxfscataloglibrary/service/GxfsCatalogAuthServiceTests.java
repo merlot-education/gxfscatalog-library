@@ -45,16 +45,11 @@ class GxfsCatalogAuthServiceTests {
 
     private GxfsCatalogAuthService gxfsCatalogAuthService;
 
-    @Value("${keycloak.token-uri}")
-    private String keycloakTokenUri;
-    @Value("${keycloak.logout-uri}")
-    private String keycloakLogoutUri;
-
 
     @BeforeEach
     public void setUp() throws JsonProcessingException {
-        keycloakTokenUri = "http://example.com/token";
-        keycloakLogoutUri = "http://example.com/logout";
+        String keycloakTokenUri = "http://example.com/token";
+        String keycloakLogoutUri = "http://example.com/logout";
         String loginResponse = """
                 {
                     "access_token": "1234",

@@ -62,6 +62,8 @@ public class GxfsCatalogAuthService {
             } catch (WebClientRequestException | WebClientResponseException e) {
                 logger.warn("Failed to refresh authentication token", e);
             }
+        } else {
+            logger.warn("No valid credentials found for the catalog user. Requests to the catalog will not work.");
         }
     }
 
