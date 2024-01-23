@@ -93,7 +93,7 @@ public class GxfsCatalogServiceTests {
         assertEquals(1, items.getTotalCount());
         assertEquals(SelfDescriptionStatus.ACTIVE.getValue(), items.getItems().get(0).getMeta().getStatus());
 
-        meta = gxfsCatalogService.revokeSelfDescriptionByHash(meta.getId());
+        meta = gxfsCatalogService.revokeSelfDescriptionByHash(meta.getSdHash());
         assertNotNull(meta);
         assertEquals(offeringId, meta.getId());
         assertEquals(SelfDescriptionStatus.REVOKED.getValue(), meta.getStatus());
