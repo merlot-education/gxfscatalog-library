@@ -6,7 +6,7 @@ In particular, it provides the following features:
 - **Abstracted communication** with the catalogue API using simple Spring Services
 - **Automated login and token refresh** of the provided user interacting with the catalogue
 - **Easy self-description creation** using the ready-made models for the basic Gaia-X Trust Framework credential shapes (based on [v22.10](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/tree/v22.10))
-- **Extensibility with custom models** building on top of the the Gaia-X Trust Framework models
+- **Extensibility with custom models** building on top of the Gaia-X Trust Framework models
 - **Easy-to-use signature** of credentials to be published in the catalogue
 - **Optional [SD Creation Wizard API](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-api) pass-through** and interaction for easy [SD Creation Wizard Frontend](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-frontend) shape retrieval
 
@@ -55,7 +55,7 @@ http://maven.apache.org/xsd/settings-1.0.0.xsd">
 ```
 which can be placed in your maven root (typically `~/.m2/settings.xml`).
 
-Afterwards you can head over to the released [packages](https://github.com/merlot-education/gxfscatalog-library/packages/) and add the library to your maven or gradle build pipeline.
+Afterward you can head over to the released [packages](https://github.com/merlot-education/gxfscatalog-library/packages/) and add the library to your maven or gradle build pipeline.
 
 ### Configuration
 The library expects a range of configuration options to be set in the `application.yml` of your project.
@@ -93,7 +93,7 @@ To understand how to use this service, let's consider a simple use case.
 Say we want to create a new Participant in the catalogue (which was initialized with the Gaia-X schemas).
 For this we can use the method `gxfsCatalogService.addParticipant(...)`.
 As we can see in the method signature, this method expects a credential subject of type `GaxTrustLegalPersonCredentialSubject`.
-Hence we could build and publish our participant to the catalogue like this:
+Hence, we could build and publish our participant to the catalogue like this:
 ```
 public class MyBusinessService {
     (...)
@@ -112,7 +112,7 @@ public class MyBusinessService {
     (...)
 }
 ```
-Thats it! At the library service call the credential subject will be automatically wrapped in a presentation, signed
+That's it! At the library service call the credential subject will be automatically wrapped in a presentation, signed
 with the private key given to the library and sent to the catalogue.
 At this point we can easily retrieve access participant data again using the service:
 
