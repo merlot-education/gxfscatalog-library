@@ -2,7 +2,7 @@
 
 ## Description
 This Java-Spring based library intends to simplify interaction with the [federated catalogue](https://gitlab.eclipse.org/eclipse/xfsc/cat/fc-service) (currently supported in version 1.0.1).
-In particular it provides the following features:
+In particular, it provides the following features:
 - **Abstracted communication** with the catalogue API using simple Spring Services
 - **Automated login and token refresh** of the provided user interacting with the catalogue
 - **Easy self-description creation** using the ready-made models for the basic Gaia-X Trust Framework credential shapes (based on [v22.10](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/tree/v22.10))
@@ -148,7 +148,7 @@ of credential subject type, e.g. a basic legal person as defined by Gaia-X or a 
 We can find the respective models for these types [here](https://github.com/merlot-education/gxfscatalog-library/tree/main/src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/gax).
 
 Since the catalog allows to specify arbitrary schemas, we can easily extend upon this concept.
-For example we could define our own schemas that extend the basic legal person found [here](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/blob/v22.10/single-point-of-truth/yaml/gax-trust-framework/gax-participant/legal-person.yaml?ref_type=tags) 
+For example, we could define our own schemas that extend the basic legal person found [here](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/blob/v22.10/single-point-of-truth/yaml/gax-trust-framework/gax-participant/legal-person.yaml?ref_type=tags) 
 with an e-mail address field, generate the respective ttl files and upload them to the catalog. 
 
 Since the library has no knowledge of this field yet, we can use simple inheritance and extend upon the
