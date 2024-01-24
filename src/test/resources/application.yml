@@ -1,10 +1,10 @@
 gxfscatalog:
-  base-uri: ""
+  base-uri: "http://localhost:8101"
   cert-path: ""
   private-key-path: ""
 
 gxfswizardapi:
-  base-uri: ""
+  base-uri: "http://localhost:8102"
 
 keycloak:
   client-id: "federated-catalogue"

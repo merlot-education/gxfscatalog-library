@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.merlot-education</groupId>
 	<artifactId>gxfscatalog-library</artifactId>
-	<version>0.1.1</version>
+	<version>0.1.2</version>
 	<name>gxfscatalog-library</name>
 	<description>Library for interacting with the gxfs catalog.</description>
 	<url>https://merlot-education.eu/</url>
@@ -118,6 +118,19 @@
 			<groupId>jakarta.validation</groupId>
 			<artifactId>jakarta.validation-api</artifactId>
 			<version>3.1.0-M1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock-standalone</artifactId>
+			<version>3.3.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.24.2</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
