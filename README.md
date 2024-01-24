@@ -1,4 +1,7 @@
 # Gaia-X Federated Services (GXFS) Federated Catalogue (FC) client library
+[![Quality Gate Status](https://sonarqube.common.merlot-education.eu/api/project_badges/measure?project=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ&metric=alert_status&token=sqb_f2890eb5b13e8ddf59f2792cd7a7423258344abe)](https://sonarqube.common.merlot-education.eu/dashboard?id=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ)
+[![Lines of Code](https://sonarqube.common.merlot-education.eu/api/project_badges/measure?project=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ&metric=ncloc&token=sqb_f2890eb5b13e8ddf59f2792cd7a7423258344abe)](https://sonarqube.common.merlot-education.eu/dashboard?id=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ)
+[![Reliability Rating](https://sonarqube.common.merlot-education.eu/api/project_badges/measure?project=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ&metric=reliability_rating&token=sqb_f2890eb5b13e8ddf59f2792cd7a7423258344abe)](https://sonarqube.common.merlot-education.eu/dashboard?id=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ)
 
 ## Description
 This Java-Spring based library intends to simplify interaction with the [federated catalogue](https://gitlab.eclipse.org/eclipse/xfsc/cat/fc-service) (currently supported in version 1.0.1).
