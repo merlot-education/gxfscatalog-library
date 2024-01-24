@@ -206,7 +206,7 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given paging parameters, return a list (page) of participant URIs corresponding to these parameters.
+     * Given paging parameters, return a list (page) of MERLOT specific participant URIs corresponding to these parameters.
      * This is mainly used to access the participant self-descriptions in a second step, by using the
      * uris as IDs and requesting SDs with these IDs.
      *
