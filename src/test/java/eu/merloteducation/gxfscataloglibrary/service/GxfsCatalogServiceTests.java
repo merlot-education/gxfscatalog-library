@@ -177,8 +177,7 @@ public class GxfsCatalogServiceTests {
                 gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"));
         SelfDescriptionMeta meta2 =
                 gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("2", "2345"));
-        SelfDescriptionMeta meta3 =
-                gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("3", "2345"));
+        gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("3", "2345"));
 
         GXFSCatalogListResponse<SelfDescriptionItem> items =
                 gxfsCatalogService.getSelfDescriptionsByHashes(new String[]{
@@ -193,8 +192,7 @@ public class GxfsCatalogServiceTests {
                 gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"));
         SelfDescriptionMeta meta2 =
                 gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("2", "2345"));
-        SelfDescriptionMeta meta3 =
-                gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("3", "2345"));
+        gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("3", "2345"));
 
         gxfsCatalogService.revokeSelfDescriptionByHash(meta2.getSdHash());
 

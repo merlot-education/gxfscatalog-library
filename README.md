@@ -114,7 +114,7 @@ public class MyBusinessService {
 ```
 That's it! At the library service call the credential subject will be automatically wrapped in a presentation, signed
 with the private key given to the library and sent to the catalogue.
-At this point we can easily retrieve access participant data again using the service:
+At this point we can easily retrieve the participant data again using the service:
 
 ```
 public class MyBusinessService {
