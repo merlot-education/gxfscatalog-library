@@ -206,18 +206,23 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given paging parameters, return a list (page) of MERLOT specific participant URIs corresponding to these parameters.
+     * Given paging parameters, return a list (page) of participant URIs sorted by some field
+     * corresponding to these parameters.
      * This is mainly used to access the participant self-descriptions in a second step, by using the
      * uris as IDs and requesting SDs with these IDs.
      *
+     * @param participantType type of the participant to query for, e.g. LegalPerson or MerlotOrganisation
+     * @param sortField field of the participant to sort by
      * @param offset paging offset
      * @param size page size
      * @return list of participant uris corresponding to the paging parameters
      */
-    public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(long offset, long size) {
+    public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(
+            String participantType, String sortField, long offset, long size) {
         String query = """
                 {
-                    "statement": "MATCH (p:MerlotOrganization) return p.uri ORDER BY toLower(p.orgaName)"""
+                    "statement": "MATCH (p:""" + participantType + ")"
+                + " return p.uri ORDER BY toLower(p." + sortField + ")"
                 + " SKIP " + offset + " LIMIT " + size + """
                     "
                 }
