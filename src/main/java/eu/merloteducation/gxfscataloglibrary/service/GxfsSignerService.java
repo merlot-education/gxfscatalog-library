@@ -46,39 +46,37 @@ import java.util.List;
 @Service
 public class GxfsSignerService {
     private final Logger logger = LoggerFactory.getLogger(GxfsSignerService.class);
-    private final PrivateKey prk;
-    private final List<X509Certificate> certs;
+    private PrivateKey prk;
+    private List<X509Certificate> certs;
 
     public GxfsSignerService(@Value("${gxfscatalog.cert-path:#{null}}") String certPath,
-                             @Value("${gxfscatalog.private-key-path:#{null}}") String privateKeyPath) throws IOException, CertificateException {
-        try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(privateKeyPath) ?
-                GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
-                : new FileInputStream(privateKeyPath)) {
-            if (privateKeyStream == null) {
-                logger.warn("Could not load private key for SD signing. Signing will not work.");
-                prk = null;
-                certs = Collections.emptyList();
-                return;
+                             @Value("${gxfscatalog.private-key-path:#{null}}") String privateKeyPath)
+            throws IOException, CertificateException {
+        try {
+            try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(privateKeyPath) ?
+                    GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
+                    : new FileInputStream(privateKeyPath)) {
+                PEMParser pemParser = new PEMParser(new InputStreamReader(privateKeyStream));
+                JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+                PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
+                prk = converter.getPrivateKey(privateKeyInfo);
             }
-            PEMParser pemParser = new PEMParser(new InputStreamReader(privateKeyStream));
-            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
-            PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
-            prk = converter.getPrivateKey(privateKeyInfo);
+
+            try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(certPath) ?
+                    GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
+                    : new FileInputStream(certPath)) {
+                String certString = new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
+                ByteArrayInputStream certStream = new ByteArrayInputStream(certString.getBytes(StandardCharsets.UTF_8));
+                CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+                certs = (List<X509Certificate>) certFactory.generateCertificates(certStream);
+            }
+        } catch (FileNotFoundException e) {
+            logger.warn("Could not load private key or certificate for SD signing. Signing will not work. {}",
+                    e.getMessage());
+            prk = null;
+            certs = Collections.emptyList();
         }
 
-        try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(certPath) ?
-                GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
-                : new FileInputStream(certPath)) {
-            if (publicKeyStream == null) {
-                logger.warn("Could not load certificate for SD signing. Signing will not work.");
-                certs = Collections.emptyList();
-                return;
-            }
-            String certString = new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
-            ByteArrayInputStream certStream = new ByteArrayInputStream(certString.getBytes(StandardCharsets.UTF_8));
-            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-            certs = (List<X509Certificate>) certFactory.generateCertificates(certStream);
-        }
     }
 
     /**
