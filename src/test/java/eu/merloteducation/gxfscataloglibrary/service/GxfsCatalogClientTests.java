@@ -52,6 +52,8 @@ class GxfsCatalogClientTests {
                                 }
                                 """)));
 
+        stubFor(delete(urlMatching("/self-descriptions/[^/]*"))
+                .willReturn(ok()));
     }
 
     @Test
@@ -68,6 +70,12 @@ class GxfsCatalogClientTests {
                 null, null, true, true, 0, 0);
         verify(getRequestedFor(urlMatching("/self-descriptions[^/]*")));
         assertNotNull(items.getItems().get(0).getMeta().getContent().getId());
+    }
+
+    @Test
+    void clientRequestEmptyBody() {
+        gxfsCatalogClient.deleteSelfDescriptionByHash("hash");
+        verify(deleteRequestedFor(urlMatching("/self-descriptions/[^/]*")));
     }
 
 }

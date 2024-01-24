@@ -45,11 +45,14 @@ class GxfsCatalogAuthServiceTests {
 
     private GxfsCatalogAuthService gxfsCatalogAuthService;
 
+    private String keycloakTokenUri;
+    private String keycloakLogoutUri;
+
 
     @BeforeEach
     public void setUp() throws JsonProcessingException {
-        String keycloakTokenUri = "http://example.com/token";
-        String keycloakLogoutUri = "http://example.com/logout";
+        keycloakTokenUri = "http://example.com/token";
+        keycloakLogoutUri = "http://example.com/logout";
         String loginResponse = """
                 {
                     "access_token": "1234",
@@ -70,7 +73,10 @@ class GxfsCatalogAuthServiceTests {
         lenient().when(logoutRequestHeadersSpec.retrieve()).thenReturn(logoutResponseSpec);
         lenient().when(logoutResponseSpec.toBodilessEntity())
                 .thenReturn(Mono.empty());
+    }
 
+    @Test
+    void testRefresh(){
         gxfsCatalogAuthService = new GxfsCatalogAuthService(
                 keycloakTokenUri,
                 keycloakLogoutUri,
@@ -80,12 +86,24 @@ class GxfsCatalogAuthServiceTests {
                 "user",
                 "pass",
                 webClient);
+        gxfsCatalogAuthService.refreshLogin();
+        gxfsCatalogAuthService.refreshLogin(); // refresh twice to also trigger logout for testing
+        assertNotNull(gxfsCatalogAuthService.getAuthToken());
+        assertEquals("1234", gxfsCatalogAuthService.getAuthToken());
     }
 
     @Test
-    void testRefresh(){
+    void testNoUserCredentials(){
+        gxfsCatalogAuthService = new GxfsCatalogAuthService(
+                keycloakTokenUri,
+                keycloakLogoutUri,
+                "client",
+                "secret",
+                "password",
+                "",
+                "",
+                webClient);
         gxfsCatalogAuthService.refreshLogin();
-        assertNotNull(gxfsCatalogAuthService.getAuthToken());
-        assertEquals("1234", gxfsCatalogAuthService.getAuthToken());
+        assertNull(gxfsCatalogAuthService.getAuthToken());
     }
 }
