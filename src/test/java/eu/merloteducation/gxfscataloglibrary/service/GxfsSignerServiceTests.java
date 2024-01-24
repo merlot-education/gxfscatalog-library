@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,6 +36,7 @@ class GxfsSignerServiceTests {
                 gxfsSignerService
                         .presentVerifiableCredential(generateCredentialSubject(), "did:web:issuer.example.com");
         gxfsSignerService.signVerifiablePresentation(vp);
+        assertNotNull(vp);
     }
 
     @Test
