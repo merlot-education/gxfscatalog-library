@@ -1,10 +1,9 @@
 name: Quality Assurance
 
 on:
-  workflow_dispatch:
   push:
-    tags:
-      - "*"
+    branches:
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
@@ -12,6 +11,7 @@ jobs:
   analysis:
     name: Analysis
     runs-on: ubuntu-latest
+    permissions: read-all
     steps:
       - uses: actions/checkout@v2
         with:
@@ -34,8 +34,6 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build and analyze
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          GITHUB_USER: ${{ github.actor }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-        run: mvn -e -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=bla
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ -Dsonar.projectName='gxfscatalog-library'
