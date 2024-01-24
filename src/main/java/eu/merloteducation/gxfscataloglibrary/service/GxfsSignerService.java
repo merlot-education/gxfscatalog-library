@@ -70,7 +70,7 @@ public class GxfsSignerService {
                 CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
                 certs = (List<X509Certificate>) certFactory.generateCertificates(certStream);
             }
-        } catch (FileNotFoundException e) {
+        } catch (FileNotFoundException | NullPointerException e) {
             logger.warn("Could not load private key or certificate for SD signing. Signing will not work. {}",
                     e.getMessage());
             prk = null;
