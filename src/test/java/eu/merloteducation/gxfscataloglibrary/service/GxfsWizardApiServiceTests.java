@@ -21,7 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @EnableConfigurationProperties
-public class GxfsWizardApiServiceTests {
+class GxfsWizardApiServiceTests {
 
     @Autowired
     private GxfsWizardApiService gxfsWizardApiService;
@@ -31,7 +31,7 @@ public class GxfsWizardApiServiceTests {
     private GxfsCatalogService gxfsCatalogService;
     @MockBean
     private GxfsCatalogAuthService gxfsCatalogAuthService;
-    @MockBean
+    @Autowired
     private GxfsCatalogLibConfig gxfsCatalogLibConfig;
 
     @BeforeEach

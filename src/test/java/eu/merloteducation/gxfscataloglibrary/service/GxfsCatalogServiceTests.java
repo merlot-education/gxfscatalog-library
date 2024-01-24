@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @EnableConfigurationProperties
-public class GxfsCatalogServiceTests {
+class GxfsCatalogServiceTests {
 
     @Autowired
     private GxfsCatalogService gxfsCatalogService;
@@ -213,8 +213,9 @@ public class GxfsCatalogServiceTests {
 
     @Test
     void addInvalidServiceOffering() {
+        GaxCoreServiceOfferingCredentialSubject subject = new GaxCoreServiceOfferingCredentialSubject();
         assertThrows(NullPointerException.class, () ->
-                gxfsCatalogService.addServiceOffering(new GaxCoreServiceOfferingCredentialSubject()));
+                gxfsCatalogService.addServiceOffering(subject));
     }
 
     @Test
@@ -248,8 +249,9 @@ public class GxfsCatalogServiceTests {
 
     @Test
     void addInvalidParticipant() {
+        GaxTrustLegalPersonCredentialSubject subject = new GaxTrustLegalPersonCredentialSubject();
         assertThrows(NullPointerException.class, () ->
-                gxfsCatalogService.addParticipant(new GaxTrustLegalPersonCredentialSubject()));
+                gxfsCatalogService.addParticipant(subject));
     }
 
     @Test
@@ -268,9 +270,10 @@ public class GxfsCatalogServiceTests {
 
     @Test
     void updateNonExistentParticipant() {
+        GaxTrustLegalPersonCredentialSubject subject =
+                generateParticipantCredentialSubject("missing", "MyParticipant");
         WebClientResponseException e = assertThrows(WebClientResponseException.class,
-                () -> gxfsCatalogService.updateParticipant(
-                        generateParticipantCredentialSubject("missing", "MyParticipant")));
+                () -> gxfsCatalogService.updateParticipant(subject));
         assertEquals(HttpStatus.NOT_FOUND, e.getStatusCode());
     }
 
