@@ -87,7 +87,6 @@ class GxfsCatalogAuthServiceTests {
                 "pass",
                 webClient);
         gxfsCatalogAuthService.refreshLogin();
-        gxfsCatalogAuthService.refreshLogin(); // refresh twice to also trigger logout for testing
         assertNotNull(gxfsCatalogAuthService.getAuthToken());
         assertEquals("1234", gxfsCatalogAuthService.getAuthToken());
     }

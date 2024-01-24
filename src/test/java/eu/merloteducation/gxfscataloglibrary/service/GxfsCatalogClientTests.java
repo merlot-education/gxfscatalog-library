@@ -11,9 +11,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.lenient;
 
 @SpringBootTest
@@ -54,6 +56,9 @@ class GxfsCatalogClientTests {
 
         stubFor(delete(urlMatching("/self-descriptions/[^/]*"))
                 .willReturn(ok()));
+
+        stubFor(delete(urlMatching("/self-descriptions/error"))
+                .willReturn(notFound()));
     }
 
     @Test
@@ -76,6 +81,13 @@ class GxfsCatalogClientTests {
     void clientRequestEmptyBody() {
         gxfsCatalogClient.deleteSelfDescriptionByHash("hash");
         verify(deleteRequestedFor(urlMatching("/self-descriptions/[^/]*")));
+    }
+
+    @Test
+    void clientRequestError() {
+        assertThrows(WebClientResponseException.NotFound.class,
+                () -> gxfsCatalogClient.deleteSelfDescriptionByHash("error"));
+        verify(deleteRequestedFor(urlMatching("/self-descriptions/error")));
     }
 
 }
