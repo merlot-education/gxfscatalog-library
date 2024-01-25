@@ -2,6 +2,7 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
+import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
@@ -160,7 +161,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
             QueryLanguage queryLanguage,
             int timeout,
             boolean withTotalCount,
-            String query) {
+            QueryRequest query) {
         List<GXFSQueryUriItem> uris = participantItems.stream().map(pi -> {
             GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
             uriItem.setUri(pi.getId());

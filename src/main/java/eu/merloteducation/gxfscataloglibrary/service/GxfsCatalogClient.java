@@ -2,6 +2,7 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
+import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
@@ -53,7 +54,7 @@ public interface GxfsCatalogClient {
             @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
             @RequestParam(name = "timeout", required = false) int timeout,
             @RequestParam(name = "withTotalCount", required = false) boolean withTotalCount,
-            @RequestBody String query
+            @RequestBody QueryRequest query
     );
 
     // TODO Schemas

@@ -2,6 +2,7 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
+import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
@@ -219,14 +220,9 @@ public class GxfsCatalogService {
      */
     public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(
             String participantType, String sortField, long offset, long size) {
-        String query = """
-                {
-                    "statement": "MATCH (p:""" + participantType + ")"
+        QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
                 + " return p.uri ORDER BY toLower(p." + sortField + ")"
-                + " SKIP " + offset + " LIMIT " + size + """
-                    "
-                }
-        """;
+                + " SKIP " + offset + " LIMIT " + size);
         return this.gxfsCatalogClient.postQuery(
                 QueryLanguage.OPENCYPHER,
                 5,
