@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.*;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -78,8 +80,8 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:dependsOn")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(using = UriSerializer.class)
+    @JsonDeserialize(using = UriDeserializer.class)
     private List<String> trustDependsOn;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)

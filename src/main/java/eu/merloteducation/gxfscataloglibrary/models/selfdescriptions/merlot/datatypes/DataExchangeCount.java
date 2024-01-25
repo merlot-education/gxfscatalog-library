@@ -1,7 +1,10 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.datatypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NumberTypeValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.IntegerDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.IntegerSerializer;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,5 +16,7 @@ public class DataExchangeCount {
     private String type;
 
     @JsonProperty("merlot:exchangeCountUpTo")
-    private NumberTypeValue exchangeCountUpTo;
+    @JsonSerialize(using = IntegerSerializer.class)
+    @JsonDeserialize(using = IntegerDeserializer.class)
+    private int exchangeCountUpTo;
 }

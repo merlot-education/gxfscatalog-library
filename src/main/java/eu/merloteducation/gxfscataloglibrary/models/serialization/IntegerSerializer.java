@@ -6,22 +6,22 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
 
-public class StringSerializer extends StdSerializer<String> {
+public class IntegerSerializer extends StdSerializer<Integer> {
 
-    public StringSerializer() {
+    public IntegerSerializer() {
         this(null);
     }
 
-    public StringSerializer(Class<String> t) {
+    public IntegerSerializer(Class<Integer> t) {
         super(t);
     }
 
     @Override
-    public void serialize(String s, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
+    public void serialize(Integer i, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField("@type", "xsd:string");
-        jsonGenerator.writeStringField("@value", s);
+        jsonGenerator.writeStringField("@type", "xsd:integer");
+        jsonGenerator.writeStringField("@value", i.toString());
         jsonGenerator.writeEndObject();
     }
 }

@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +30,8 @@ public class Standard {
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:standardReference")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(using = UriSerializer.class)
+    @JsonDeserialize(using = UriDeserializer.class)
     private List<String> standardReference;
 
     @JsonProperty("gax-trust-framework:publisher")

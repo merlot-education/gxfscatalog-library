@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,8 +17,8 @@ public class TermsAndConditions {
 
     @NotNull
     @JsonProperty("gax-trust-framework:content")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class) // TODO actually xsd:anyURI
+    @JsonSerialize(using = UriSerializer.class)
+    @JsonDeserialize(using = UriDeserializer.class)
     private String content;
 
     @NotNull

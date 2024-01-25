@@ -6,13 +6,13 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
 
-public class StringSerializer extends StdSerializer<String> {
+public class UriSerializer extends StdSerializer<String> {
 
-    public StringSerializer() {
+    public UriSerializer() {
         this(null);
     }
 
-    public StringSerializer(Class<String> t) {
+    public UriSerializer(Class<String> t) {
         super(t);
     }
 
@@ -20,7 +20,7 @@ public class StringSerializer extends StdSerializer<String> {
     public void serialize(String s, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField("@type", "xsd:string");
+        jsonGenerator.writeStringField("@type", "xsd:anyURI");
         jsonGenerator.writeStringField("@value", s);
         jsonGenerator.writeEndObject();
     }
