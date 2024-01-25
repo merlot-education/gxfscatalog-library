@@ -9,7 +9,6 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescrip
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NodeKindIRITypeId;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.RegistrationNumber;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.StringTypeValue;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
@@ -63,13 +62,13 @@ class GxfsCatalogServiceTests {
         credentialSubject.setType("gax-trust-framework:LegalPerson");
         credentialSubject.setId(id);
         credentialSubject.setRegistrationNumber(new RegistrationNumber());
-        credentialSubject.getRegistrationNumber().setLocal(new StringTypeValue("12345"));
-        credentialSubject.setLegalName(new StringTypeValue(name));
+        credentialSubject.getRegistrationNumber().setLocal("12345");
+        credentialSubject.setLegalName(name);
         VCard address = new VCard();
-        address.setCountryName(new StringTypeValue("DE"));
-        address.setStreetAddress(new StringTypeValue("Some Street 3"));
-        address.setLocality(new StringTypeValue("Berlin"));
-        address.setPostalCode(new StringTypeValue("12345"));
+        address.setCountryName("DE");
+        address.setStreetAddress("Some Street 3");
+        address.setLocality("Berlin");
+        address.setPostalCode("12345");
         credentialSubject.setHeadquarterAddress(address);
         credentialSubject.setLegalAddress(address);
         return credentialSubject;
@@ -261,11 +260,11 @@ class GxfsCatalogServiceTests {
 
         GaxTrustLegalPersonCredentialSubject credentialSubject = (GaxTrustLegalPersonCredentialSubject) item
                 .getSelfDescription().getVerifiableCredential().getCredentialSubject();
-        credentialSubject.setLegalName(new StringTypeValue("MyNewParticipant"));
+        credentialSubject.setLegalName("MyNewParticipant");
         ParticipantItem item2 = gxfsCatalogService.updateParticipant(credentialSubject);
         assertNotNull(item2);
         assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
-                .getVerifiableCredential().getCredentialSubject()).getLegalName().getValue());
+                .getVerifiableCredential().getCredentialSubject()).getLegalName());
     }
 
     @Test

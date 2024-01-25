@@ -1,6 +1,12 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,11 +17,15 @@ public class TermsAndConditions {
 
     @NotNull
     @JsonProperty("gax-trust-framework:content")
-    private StringTypeValue content;
+    @JsonSerialize(using = UriSerializer.class)
+    @JsonDeserialize(using = UriDeserializer.class)
+    private String content;
 
     @NotNull
     @JsonProperty("gax-trust-framework:hash")
-    private StringTypeValue hash;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String hash;
 
     @JsonProperty("@type")
     private String type;
@@ -23,8 +33,8 @@ public class TermsAndConditions {
     @Override
     public boolean equals(Object other) {
         if (other instanceof TermsAndConditions otherTermsAndConditions){
-            return content.getValue().equals((otherTermsAndConditions).getContent().getValue())
-                    && hash.getValue().equals((otherTermsAndConditions).getHash().getValue());
+            return content.equals((otherTermsAndConditions).getContent())
+                    && hash.equals((otherTermsAndConditions).getHash());
         }
         return false;
     }
@@ -32,8 +42,8 @@ public class TermsAndConditions {
     @Override
     public int hashCode() {
         int result = 17;
-        result = 31 * result + content.getValue().hashCode();
-        result = 31 * result + hash.getValue().hashCode();
+        result = 31 * result + content.hashCode();
+        result = 31 * result + hash.hashCode();
         return result;
     }
 

@@ -1,10 +1,13 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.RegistrationNumber;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.StringTypeValue;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,13 +17,19 @@ import lombok.Setter;
 public class GaxTrustLegalPersonCredentialSubject extends SelfDescriptionCredentialSubject {
     // inherited from gax-trust-framework:LegalPerson
     @JsonProperty("gax-trust-framework:legalName")
-    private StringTypeValue legalName;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String legalName;
 
     @JsonProperty("gax-trust-framework:legalForm")
-    private StringTypeValue legalForm;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String legalForm;
 
     @JsonProperty("gax-trust-framework:description")
-    private StringTypeValue description;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String description;
 
     @JsonProperty("gax-trust-framework:registrationNumber")
     @NotNull

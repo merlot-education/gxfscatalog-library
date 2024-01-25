@@ -1,6 +1,10 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,17 +15,27 @@ public class RegistrationNumber {
     private String type;
 
     @JsonProperty("gax-trust-framework:local")
-    private StringTypeValue local;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String local;
 
     @JsonProperty("gax-trust-framework:EUID")
-    private StringTypeValue euid;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String euid;
 
     @JsonProperty("gax-trust-framework:EORI")
-    private StringTypeValue eori;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String eori;
 
     @JsonProperty("gax-trust-framework:vatID")
-    private StringTypeValue vatId;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String vatId;
 
     @JsonProperty("gax-trust-framework:leiCode")
-    private StringTypeValue leiCode;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String leiCode;
 }

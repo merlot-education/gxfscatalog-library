@@ -3,7 +3,13 @@ package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.servic
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.*;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.UriSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +23,9 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
     // inherited from gax-trust-framework:ServiceOffering
     @NotNull
     @JsonProperty("gax-trust-framework:name")
-    private StringTypeValue name;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String name;
 
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
@@ -27,11 +35,15 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:policy")
-    private List<StringTypeValue> policy;
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    private List<String> policy;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:dataProtectionRegime")
-    private List<StringTypeValue> dataProtectionRegime;
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    private List<String> dataProtectionRegime;
 
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
@@ -39,14 +51,20 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
     private List<DataAccountExport> dataAccountExport;
 
     @JsonProperty("dct:description")
-    private StringTypeValue description;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String description;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("dcat:keyword")
-    private List<StringTypeValue> keyword;
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    private List<String> keyword;
 
     @JsonProperty("gax-trust-framework:provisionType")
-    private StringTypeValue provisionType;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String provisionType;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:endpoint")
@@ -62,9 +80,13 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:dependsOn")
-    private List<StringTypeValue> trustDependsOn;
+    @JsonSerialize(contentUsing = UriSerializer.class)
+    @JsonDeserialize(contentUsing = UriDeserializer.class)
+    private List<String> trustDependsOn;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:ServiceOfferingLocations")
-    private List<StringTypeValue> serviceOfferingLocations;
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    private List<String> serviceOfferingLocations;
 }

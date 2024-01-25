@@ -105,7 +105,7 @@ public class MyBusinessService {
         GaxTrustLegalPersonCredentialSubject subject = new GaxTrustLegalPersonCredentialSubject();
         subject.setType("gax-trust-framework:LegalPerson");
         subject.setId("did:web:some-participant.example");
-        subject.setLegalName(new StringTypeValue("My Participant Ltd."));
+        subject.setLegalName("My Participant Ltd.");
         
         (...) // set all other fields as required
         
