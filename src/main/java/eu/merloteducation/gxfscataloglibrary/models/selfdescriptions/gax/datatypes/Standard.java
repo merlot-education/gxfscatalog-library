@@ -2,6 +2,10 @@ package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.dataty
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
+import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,14 +21,20 @@ public class Standard {
 
     @NotNull
     @JsonProperty("gax-trust-framework:title")
-    private StringTypeValue title;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String title;
 
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:standardReference")
-    private List<StringTypeValue> standardReference;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private List<String> standardReference;
 
     @JsonProperty("gax-trust-framework:publisher")
-    private StringTypeValue publisher;
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String publisher;
 
 }
