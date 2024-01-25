@@ -218,7 +218,7 @@ public class GxfsCatalogService {
      * @param size page size
      * @return list of participant uris corresponding to the paging parameters
      */
-    public GXFSCatalogListResponse<GXFSQueryUriItem> getParticipantUriPage(
+    public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPage(
             String participantType, String sortField, long offset, long size) {
         QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
                 + " return p.uri ORDER BY toLower(p." + sortField + ")"

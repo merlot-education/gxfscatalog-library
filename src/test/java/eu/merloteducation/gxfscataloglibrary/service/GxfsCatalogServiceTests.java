@@ -283,7 +283,7 @@ class GxfsCatalogServiceTests {
             gxfsCatalogService
                     .addParticipant(generateParticipantCredentialSubject("" + i, "MyParticipant"));
         }
-        GXFSCatalogListResponse<GXFSQueryUriItem> uriPage = gxfsCatalogService.getParticipantUriPage(
+        GXFSCatalogListResponse<GXFSQueryUriItem> uriPage = gxfsCatalogService.getSortedParticipantUriPage(
                 "LegalPerson", "legalName", 0, 3);
 
         assertEquals(3, uriPage.getTotalCount());
