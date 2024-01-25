@@ -57,9 +57,8 @@ class SerializationTests {
         int value = 5;
 
         String serialized = objectMapper.writeValueAsString(value);
-        System.out.println(serialized);
         assertTrue(serialized.contains("\"@type\":\"xsd:integer\""));
-        assertTrue(serialized.contains("\"@value\":\"5\""));
+        assertTrue(serialized.contains("\"@value\":5"));
     }
 
     @Test
