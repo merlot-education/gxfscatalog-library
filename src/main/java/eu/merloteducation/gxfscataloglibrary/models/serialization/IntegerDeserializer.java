@@ -21,6 +21,10 @@ public class IntegerDeserializer extends StdDeserializer<Integer> {
     public Integer deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-        return node.get("@value").intValue();
+        if (node.get("@type") != null &&
+                node.get("@type").textValue().equals("xsd:integer")) {
+            return node.get("@value").intValue();
+        }
+        return node.intValue();
     }
 }

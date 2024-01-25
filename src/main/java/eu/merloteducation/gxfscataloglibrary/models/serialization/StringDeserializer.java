@@ -21,6 +21,10 @@ public class StringDeserializer extends StdDeserializer<String> {
     public String deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
             throws IOException {
         JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-        return node.get("@value").textValue();
+        if (node.get("@type") != null &&
+                node.get("@type").textValue().equals("xsd:string")) {
+            return node.get("@value").textValue();
+        }
+        return node.textValue();
     }
 }

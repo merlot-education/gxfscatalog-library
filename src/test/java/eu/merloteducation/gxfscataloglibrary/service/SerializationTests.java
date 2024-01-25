@@ -78,6 +78,17 @@ class SerializationTests {
     }
 
     @Test
+    void deserializeStringPlain() throws JsonProcessingException {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(String.class, new StringDeserializer());
+        objectMapper.registerModule(module);
+
+        String stringPlain = "\"somevalue\"";
+        String deserialized = objectMapper.readValue(stringPlain, String.class);
+        assertEquals("somevalue", deserialized);
+    }
+
+    @Test
     void deserializeUriTypeValue() throws JsonProcessingException {
         SimpleModule module = new SimpleModule();
         module.addDeserializer(String.class, new UriDeserializer());
@@ -94,6 +105,17 @@ class SerializationTests {
     }
 
     @Test
+    void deserializeUriPlain() throws JsonProcessingException {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(String.class, new UriDeserializer());
+        objectMapper.registerModule(module);
+
+        String uriPlain = "\"somevalue\"";
+        String deserialized = objectMapper.readValue(uriPlain, String.class);
+        assertEquals("somevalue", deserialized);
+    }
+
+    @Test
     void deserializeIntegerTypeValue() throws JsonProcessingException {
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Integer.class, new IntegerDeserializer());
@@ -106,6 +128,17 @@ class SerializationTests {
                 }
                 """;
         int deserialized = objectMapper.readValue(uriTypeValue, Integer.class);
+        assertEquals(5, deserialized);
+    }
+
+    @Test
+    void deserializeIntegerPlain() throws JsonProcessingException {
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(Integer.class, new IntegerDeserializer());
+        objectMapper.registerModule(module);
+
+        String integerPlain = "5";
+        int deserialized = objectMapper.readValue(integerPlain, Integer.class);
         assertEquals(5, deserialized);
     }
 
