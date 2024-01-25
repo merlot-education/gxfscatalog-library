@@ -33,6 +33,8 @@ public class GxfsCatalogAuthService {
     private String authToken;
     private String refreshToken;
 
+    private boolean active = false;
+
     public GxfsCatalogAuthService(@Value("${keycloak.token-uri:#{null}}") String keycloakTokenUri,
                                   @Value("${keycloak.logout-uri:#{null}}") String keycloakLogoutUri,
                                   @Value("${keycloak.client-id:#{null}}") String clientId,
@@ -49,21 +51,25 @@ public class GxfsCatalogAuthService {
         this.keycloakGXFScatalogUser = keycloakGXFScatalogUser;
         this.keycloakGXFScatalogPass = keycloakGXFScatalogPass;
         this.webClient = webClient;
-        this.refreshLogin();
+
+        if (!(StringUtil.isNullOrEmpty(this.keycloakGXFScatalogUser)
+                || StringUtil.isNullOrEmpty(this.keycloakGXFScatalogPass))) {
+            this.active = true;
+            this.refreshLogin();
+        } else {
+            logger.warn("No valid credentials found for the catalog user. Requests to the catalog will not work.");
+        }
     }
 
     @Scheduled(fixedDelay = 120 * 1000)
     public void refreshLogin() {
         // TODO compute delay dynamically from token
-        if (!(StringUtil.isNullOrEmpty(this.keycloakGXFScatalogUser)
-                || StringUtil.isNullOrEmpty(this.keycloakGXFScatalogPass))) {
+        if (active) {
             try {
                 loginAsGXFSCatalog();
             } catch (WebClientRequestException | WebClientResponseException e) {
                 logger.warn("Failed to refresh authentication token", e);
             }
-        } else {
-            logger.warn("No valid credentials found for the catalog user. Requests to the catalog will not work.");
         }
     }
 
