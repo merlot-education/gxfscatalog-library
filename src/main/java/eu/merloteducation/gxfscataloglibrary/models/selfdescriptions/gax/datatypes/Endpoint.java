@@ -30,8 +30,8 @@ public class Endpoint {
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:endpointDescription")
-    @JsonSerialize(using = UriSerializer.class)
-    @JsonDeserialize(using = UriDeserializer.class)
+    @JsonSerialize(contentUsing = UriSerializer.class)
+    @JsonDeserialize(contentUsing = UriDeserializer.class)
     private List<String> endpointDescription;
 
     @NotNull

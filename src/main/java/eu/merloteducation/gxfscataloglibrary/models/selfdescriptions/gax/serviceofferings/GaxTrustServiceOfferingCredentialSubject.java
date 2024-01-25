@@ -35,14 +35,14 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:policy")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     private List<String> policy;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:dataProtectionRegime")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     private List<String> dataProtectionRegime;
 
     @NotNull
@@ -57,8 +57,8 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("dcat:keyword")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     private List<String> keyword;
 
     @JsonProperty("gax-trust-framework:provisionType")
@@ -80,13 +80,13 @@ public class GaxTrustServiceOfferingCredentialSubject extends GaxCoreServiceOffe
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:dependsOn")
-    @JsonSerialize(using = UriSerializer.class)
-    @JsonDeserialize(using = UriDeserializer.class)
+    @JsonSerialize(contentUsing = UriSerializer.class)
+    @JsonDeserialize(contentUsing = UriDeserializer.class)
     private List<String> trustDependsOn;
 
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:ServiceOfferingLocations")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     private List<String> serviceOfferingLocations;
 }

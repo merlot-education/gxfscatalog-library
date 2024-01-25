@@ -30,8 +30,8 @@ public class Standard {
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     @JsonProperty("gax-trust-framework:standardReference")
-    @JsonSerialize(using = UriSerializer.class)
-    @JsonDeserialize(using = UriDeserializer.class)
+    @JsonSerialize(contentUsing = UriSerializer.class)
+    @JsonDeserialize(contentUsing = UriDeserializer.class)
     private List<String> standardReference;
 
     @JsonProperty("gax-trust-framework:publisher")
