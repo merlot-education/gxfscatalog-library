@@ -33,11 +33,4 @@ public class MerlotOrganizationCredentialSubject extends GaxTrustLegalPersonCred
     @NotNull
     private TermsAndConditions termsAndConditions;
 
-    // TODO remove again
-    @JsonProperty("merlot:mailAddress")
-    @NotNull
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
-    private String mailAddress;
-
 }
