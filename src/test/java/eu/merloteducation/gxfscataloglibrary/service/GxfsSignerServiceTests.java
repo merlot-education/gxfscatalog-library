@@ -31,7 +31,8 @@ class GxfsSignerServiceTests {
             CredentialPresentationException, CredentialSignatureException {
         GxfsSignerService gxfsSignerService = new GxfsSignerService(
                 GxfsSignerServiceTests.class.getClassLoader().getResource("cert.ss.pem").getPath(),
-                GxfsSignerServiceTests.class.getClassLoader().getResource("prk.ss.pem").getPath());
+                GxfsSignerServiceTests.class.getClassLoader().getResource("prk.ss.pem").getPath(),
+                "did:web:compliance.lab.gaia-x.eu");
         VerifiablePresentation vp =
                 gxfsSignerService
                         .presentVerifiableCredential(generateCredentialSubject(), "did:web:issuer.example.com");
@@ -43,7 +44,8 @@ class GxfsSignerServiceTests {
     void loadNonExistentCertificates() throws CertificateException, IOException, CredentialPresentationException {
         GxfsSignerService gxfsSignerService = new GxfsSignerService(
                 "garbage1.ss.pem",
-                "garbage2.ss.pem");
+                "garbage2.ss.pem",
+                "did:web:compliance.lab.gaia-x.eu");
         VerifiablePresentation vp =
                 gxfsSignerService
                         .presentVerifiableCredential(generateCredentialSubject(), "did:web:issuer.example.com");

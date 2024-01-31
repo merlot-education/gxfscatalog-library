@@ -2,6 +2,7 @@ gxfscatalog:
   base-uri: "http://localhost:8101"
   cert-path: ""
   private-key-path: ""
+  verification-method: "did:web:compliance.lab.gaia-x.eu"
 
 gxfswizardapi:
   base-uri: "http://localhost:8102"

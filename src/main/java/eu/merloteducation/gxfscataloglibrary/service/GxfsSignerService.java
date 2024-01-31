@@ -49,9 +49,13 @@ public class GxfsSignerService {
     private PrivateKey prk;
     private List<X509Certificate> certs;
 
+    private final String verificationMethod;
+
     public GxfsSignerService(@Value("${gxfscatalog.cert-path:#{null}}") String certPath,
-                             @Value("${gxfscatalog.private-key-path:#{null}}") String privateKeyPath)
+                             @Value("${gxfscatalog.private-key-path:#{null}}") String privateKeyPath,
+                             @Value("${gxfscatalog.verification-method:#{null}}") String verificationMethod)
             throws IOException, CertificateException {
+        this.verificationMethod = verificationMethod;
         try {
             try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(privateKeyPath) ?
                     GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
@@ -164,7 +168,7 @@ public class GxfsSignerService {
 
         signer.setCreated(new Date());
         signer.setProofPurpose(LDSecurityKeywords.JSONLD_TERM_ASSERTIONMETHOD);
-        signer.setVerificationMethod(URI.create("did:web:merlot-education.eu")); // TODO check if this can replaced by the issuer
+        signer.setVerificationMethod(URI.create(verificationMethod));
 
         return signer.sign(credential);
     }
