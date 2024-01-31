@@ -164,7 +164,7 @@ public class GxfsSignerService {
 
         signer.setCreated(new Date());
         signer.setProofPurpose(LDSecurityKeywords.JSONLD_TERM_ASSERTIONMETHOD);
-        signer.setVerificationMethod(URI.create("did:web:merlot-education.eu"));
+        signer.setVerificationMethod(URI.create("did:web:merlot-education.eu")); // TODO check if this can replaced by the issuer
 
         return signer.sign(credential);
     }

@@ -23,12 +23,6 @@ public class MerlotOrganizationCredentialSubject extends GaxTrustLegalPersonCred
     @JsonDeserialize(using = StringDeserializer.class)
     private String orgaName;
 
-    @JsonProperty("merlot:merlotId")
-    @NotNull
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
-    private String merlotId;
-
     @JsonProperty("merlot:termsAndConditions")
     @NotNull
     private TermsAndConditions termsAndConditions;
