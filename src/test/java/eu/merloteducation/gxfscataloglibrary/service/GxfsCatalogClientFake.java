@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
@@ -161,11 +163,17 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
             int timeout,
             boolean withTotalCount,
             QueryRequest query) {
-        List<GXFSQueryUriItem> uris = participantItems.stream().map(pi -> {
-            GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
-            uriItem.setUri(pi.getId());
-            return uriItem;
-        }).toList();
+        List<String> excludedUris = findListOfIds(query.getStatement());
+
+        List<GXFSQueryUriItem> uris = participantItems.stream().filter(pi -> !excludedUris.contains(pi.getId()))
+            .map(pi -> {
+                GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
+                uriItem.setUri(pi.getId());
+                return uriItem;
+            }).toList();
+
+
+
         GXFSCatalogListResponse<GXFSQueryUriItem> response = new GXFSCatalogListResponse<>();
         response.setItems(uris);
         response.setTotalCount(uris.size());
@@ -214,6 +222,26 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         ParticipantItem item = findParticipantItemById(participantId);
         participantItems.remove(item);
         return item;
+    }
+
+    private List<String> findListOfIds(String query){
+        Pattern patternList = Pattern.compile("\\[(\\d+)(, \\d+)*\\]");
+        Matcher matcher = patternList.matcher(query);
+
+        List<String> ids = new ArrayList<>();
+
+        if (matcher.find()){
+            String matched = matcher.group();
+
+            Pattern patternNumberId = Pattern.compile("\\b\\d+\\b");
+            Matcher matcherNumberId = patternNumberId.matcher(matched);
+
+            while (matcherNumberId.find()) {
+                ids.add(matcherNumberId.group());
+            }
+        }
+
+        return ids;
     }
 
 }

@@ -25,6 +25,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -287,6 +288,19 @@ class GxfsCatalogServiceTests {
 
         assertEquals(3, uriPage.getTotalCount());
         assertEquals(3, uriPage.getItems().size());
+    }
+
+    @Test
+    void getParticipantsUriPageWithExcludedUris() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("" + i, "MyParticipant"));
+        }
+        GXFSCatalogListResponse<GXFSQueryUriItem> uriPage = gxfsCatalogService.getSortedParticipantUriPageWithExcludedUris(
+            "LegalPerson", "legalName", List.of("0", "1"), 0, 3);
+
+        assertEquals(1, uriPage.getTotalCount());
+        assertEquals(1, uriPage.getItems().size());
     }
 
 }
