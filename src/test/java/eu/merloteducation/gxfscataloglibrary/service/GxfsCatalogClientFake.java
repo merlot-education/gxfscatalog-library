@@ -225,20 +225,16 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     private List<String> findListOfIds(String query){
-        Pattern patternList = Pattern.compile("\\[(\\d+)(, \\d+)*\\]");
-        Matcher matcher = patternList.matcher(query);
+        String regex = "IN \\[([^\\]]*)\\] return"; //
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(query);
 
         List<String> ids = new ArrayList<>();
 
         if (matcher.find()){
-            String matched = matcher.group();
+            String matched = matcher.group(1).replace("\"", "");
 
-            Pattern patternNumberId = Pattern.compile("\\b\\d+\\b");
-            Matcher matcherNumberId = patternNumberId.matcher(matched);
-
-            while (matcherNumberId.find()) {
-                ids.add(matcherNumberId.group());
-            }
+            ids = Arrays.stream(matched.split(", ")).toList();
         }
 
         return ids;
