@@ -247,8 +247,9 @@ public class GxfsCatalogService {
      */
     public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPageWithExcludedUris(
         String participantType, String sortField, List<String> excludedUris, long offset, long size) {
+        String excludedUrisString = listToString(excludedUris);
         QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
-            + " WHERE NOT p.uri IN " + excludedUris
+            + " WHERE NOT p.uri IN " + excludedUrisString
             + " return p.uri ORDER BY toLower(p." + sortField + ")"
             + " SKIP " + offset + " LIMIT " + size);
         return this.gxfsCatalogClient.postQuery(
@@ -256,5 +257,22 @@ public class GxfsCatalogService {
             5,
             true,
             query);
+    }
+
+    private String listToString(List<String> stringList) {
+        StringBuilder result = new StringBuilder("[");
+
+        for (int i = 0; i < stringList.size(); i++) {
+            result.append("\"").append(stringList.get(i)).append("\"");
+
+            // Add a comma if it's not the last element
+            if (i < stringList.size() - 1) {
+                result.append(", ");
+            }
+        }
+
+        result.append("]");
+
+        return result.toString();
     }
 }
