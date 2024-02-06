@@ -16,6 +16,8 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.service
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class GxfsCatalogService {
     @Autowired
@@ -228,5 +230,49 @@ public class GxfsCatalogService {
                 5,
                 true,
                 query);
+    }
+
+    /**
+     * Given paging parameters and excluded uris, return a list (page) of participant URIs sorted by some field
+     * corresponding to these parameters.
+     * This is mainly used to access the participant self-descriptions in a second step, by using the
+     * uris as IDs and requesting SDs with these IDs.
+     *
+     * @param participantType type of the participant to query for, e.g. LegalPerson or MerlotOrganisation
+     * @param sortField field of the participant to sort by
+     * @param excludedUris list of uris to exclude
+     * @param offset paging offset
+     * @param size page size
+     * @return list of participant uris corresponding to the paging parameters
+     */
+    public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPageWithExcludedUris(
+        String participantType, String sortField, List<String> excludedUris, long offset, long size) {
+        String excludedUrisString = listToString(excludedUris);
+        QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
+            + " WHERE NOT p.uri IN " + excludedUrisString
+            + " return p.uri ORDER BY toLower(p." + sortField + ")"
+            + " SKIP " + offset + " LIMIT " + size);
+        return this.gxfsCatalogClient.postQuery(
+            QueryLanguage.OPENCYPHER,
+            5,
+            true,
+            query);
+    }
+
+    private String listToString(List<String> stringList) {
+        StringBuilder result = new StringBuilder("[");
+
+        for (int i = 0; i < stringList.size(); i++) {
+            result.append("\"").append(stringList.get(i)).append("\"");
+
+            // Add a comma if it's not the last element
+            if (i < stringList.size() - 1) {
+                result.append(", ");
+            }
+        }
+
+        result.append("]");
+
+        return result.toString();
     }
 }
