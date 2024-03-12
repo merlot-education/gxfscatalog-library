@@ -13,13 +13,33 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescrip
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
 import java.util.List;
 
 @Service
 public class GxfsCatalogService {
+
+    private final Logger logger = LoggerFactory.getLogger(GxfsCatalogService.class);
+
+    private static final String DEFAULT_DID_WEB = "did:web:compliance.lab.gaia-x.eu";
+
     @Autowired
     private GxfsCatalogClient gxfsCatalogClient;
 
@@ -151,7 +171,7 @@ public class GxfsCatalogService {
 
     /**
      * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the key that was provided to this library and send it to the catalog.
+     * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
      * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
@@ -161,16 +181,36 @@ public class GxfsCatalogService {
     public SelfDescriptionMeta addServiceOffering(
             GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
+        return addServiceOffering(serviceOfferingCredentialSubject, DEFAULT_DID_WEB, getDefaultPrivateKey());
+    }
+
+    /**
+     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
+     * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
+     *
+     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
+     * @param privateKey string representation of private key to sign the SD with
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
+     * @return SD meta response of the catalog
+     */
+    public SelfDescriptionMeta addServiceOffering(
+            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject,
+            String verificationMethod, String privateKey)
+            throws CredentialPresentationException, CredentialSignatureException {
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveDidWebCertificates(verificationMethod);
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(serviceOfferingCredentialSubject,
                         serviceOfferingCredentialSubject.getOfferedBy().getId());
-        gxfsSignerService.signVerifiablePresentation(vp);
-        return this.gxfsCatalogClient.postAddSelfDescription(vp);
+        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates);
+        return gxfsCatalogClient.postAddSelfDescription(vp);
     }
 
     /**
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
-     * wrap it in a verifiable presentation, sign it using the key that was provided to this library and send it to the catalog.
+     * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
      * @param participantCredentialSubject participant credential subject to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
@@ -179,17 +219,36 @@ public class GxfsCatalogService {
      */
     public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
+        return addParticipant(participantCredentialSubject, DEFAULT_DID_WEB, getDefaultPrivateKey());
+    }
+
+    /**
+     * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
+     * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
+     *
+     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
+     * @param privateKey string representation of private key to sign the SD with
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
+     * @return catalog content of the participant
+     */
+    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
+                                          String verificationMethod, String privateKey)
+            throws CredentialPresentationException, CredentialSignatureException {
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveDidWebCertificates(verificationMethod);
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
-        gxfsSignerService.signVerifiablePresentation(vp);
+        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates);
         return this.gxfsCatalogClient.postAddParticipant(vp);
     }
 
     /**
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson
      * and whose id already exists in the catalog, wrap it in a verifiable presentation,
-     * sign it using the key that was provided to this library and send it to the catalog
+     * sign it using the default verification method and key and send it to the catalog
      * to update it.
      *
      * @param participantCredentialSubject participant credential subject to update in the catalog
@@ -199,10 +258,31 @@ public class GxfsCatalogService {
      */
     public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
+        return updateParticipant(participantCredentialSubject, DEFAULT_DID_WEB, getDefaultPrivateKey());
+    }
+
+    /**
+     * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson
+     * and whose id already exists in the catalog, wrap it in a verifiable presentation,
+     * sign it using the provided verification method and key and send it to the catalog
+     * to update it.
+     *
+     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
+     * @param privateKey string representation of private key to sign the SD with
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
+     * @return catalog content of the participant
+     */
+    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
+                                             String verificationMethod, String privateKey)
+            throws CredentialPresentationException, CredentialSignatureException {
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveDidWebCertificates(verificationMethod);
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
-        gxfsSignerService.signVerifiablePresentation(vp);
+        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates);
         return this.gxfsCatalogClient.putUpdateParticipant(
                 participantCredentialSubject.getId(),
                 vp);
@@ -274,5 +354,97 @@ public class GxfsCatalogService {
         result.append("]");
 
         return result.toString();
+    }
+
+    /**
+     * Given a did:web, resolve it to its certificates.
+     *
+     * @param didWeb did:web to resolve
+     * @return list of certificates
+     */
+    private List<X509Certificate> resolveDidWebCertificates(String didWeb) {
+
+        if (!didWeb.startsWith("did:web:")) {
+            logger.warn("Failed to validate verificationMethod {} as it is not a did:web, will skip validation.", didWeb);
+            return Collections.emptyList();
+        }
+
+        if (didWeb.equals(DEFAULT_DID_WEB)) {
+            logger.info("Using default verificationMethod {}, skipping web request.", didWeb);
+            try {
+                return buildCertficates(getDefaultCertificate());
+            } catch (CredentialSignatureException e) {
+                logger.warn("Failed to load default certificate, will skip validation.");
+                return Collections.emptyList();
+            }
+        }
+
+        // TODO fetch certificate from did endpoint
+        return buildCertficates("");
+    }
+
+    /**
+     * Given a string representation of the private key, convert it to it's the object representation.
+     *
+     * @param prk string representation of the private key
+     * @return PrivateKey object
+     */
+    private PrivateKey buildPrivateKey(String prk) {
+        try {
+            PEMParser pemParser = new PEMParser(new StringReader(prk));
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+            PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
+            return converter.getPrivateKey(privateKeyInfo);
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Given a string representation of the certificates, convert them to a list of their object representations.
+     *
+     * @param certs string representation of the certificates
+     * @return list of X509 certificate objects
+     */
+    private List<X509Certificate> buildCertficates(String certs) {
+        try {
+            ByteArrayInputStream certStream = new ByteArrayInputStream(certs.getBytes(StandardCharsets.UTF_8));
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            return (List<X509Certificate>) certFactory.generateCertificates(certStream);
+        } catch (CertificateException ignored) {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Load the default private key corresponding to the DEFAULT_DID_WEB.
+     *
+     * @return string representation of private key
+     * @throws CredentialSignatureException error during loading of private key
+     */
+    private String getDefaultPrivateKey() throws CredentialSignatureException {
+        try (InputStream privateKeyStream =
+                     GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")) {
+            return privateKeyStream == null ? null :
+                    new String(privateKeyStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new CredentialSignatureException("Failed to read default private key. " + e.getMessage());
+        }
+    }
+
+    /**
+     * Load the default certificate corresponding to the DEFAULT_DID_WEB.
+     *
+     * @return string representation of certificate
+     * @throws CredentialSignatureException error during loading of private key
+     */
+    private String getDefaultCertificate() throws CredentialSignatureException {
+        try (InputStream privateKeyStream =
+                     GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")) {
+            return privateKeyStream == null ? null :
+                    new String(privateKeyStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new CredentialSignatureException("Failed to read default certificate. " + e.getMessage());
+        }
     }
 }
