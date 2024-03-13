@@ -15,20 +15,19 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescrip
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
@@ -43,7 +42,14 @@ public class GxfsCatalogService {
 
     private final Logger logger = LoggerFactory.getLogger(GxfsCatalogService.class);
 
-    private static final String DEFAULT_DID_WEB = "did:web:compliance.lab.gaia-x.eu";
+    @Value("${gxfscatalog.verification-method:#{null}}")
+    private String defaultVerificationMethod;
+
+    @Value("${gxfscatalog.cert-path:#{null}}")
+    private String defaultCertPath;
+
+    @Value("${gxfscatalog.private-key-path:#{null}}")
+    private String defaultPrivateKey;
 
     @Autowired
     private GxfsCatalogClient gxfsCatalogClient;
@@ -189,7 +195,7 @@ public class GxfsCatalogService {
     public SelfDescriptionMeta addServiceOffering(
             GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(serviceOfferingCredentialSubject, DEFAULT_DID_WEB, getDefaultPrivateKey());
+        return addServiceOffering(serviceOfferingCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -227,7 +233,7 @@ public class GxfsCatalogService {
      */
     public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addParticipant(participantCredentialSubject, DEFAULT_DID_WEB, getDefaultPrivateKey());
+        return addParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -266,7 +272,7 @@ public class GxfsCatalogService {
      */
     public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
-        return updateParticipant(participantCredentialSubject, DEFAULT_DID_WEB, getDefaultPrivateKey());
+        return updateParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -379,7 +385,7 @@ public class GxfsCatalogService {
             return Collections.emptyList();
         }
 
-        if (verificationMethod.equals(DEFAULT_DID_WEB)) {
+        if (verificationMethod.equals(defaultVerificationMethod)) {
             logger.info("Using default verificationMethod {}, skipping web request.", verificationMethod);
             try {
                 return buildCertficates(getDefaultCertificate());
@@ -470,14 +476,15 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Load the default private key corresponding to the DEFAULT_DID_WEB.
+     * Load the default private key corresponding to the defaultVerificationMethod.
      *
      * @return string representation of private key
      * @throws CredentialSignatureException error during loading of private key
      */
     private String getDefaultPrivateKey() throws CredentialSignatureException {
-        try (InputStream privateKeyStream =
-                     GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")) {
+        try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(defaultPrivateKey) ?
+                GxfsCatalogService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
+                : new FileInputStream(defaultPrivateKey)) {
             return privateKeyStream == null ? null :
                     new String(privateKeyStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
@@ -486,16 +493,17 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Load the default certificate corresponding to the DEFAULT_DID_WEB.
+     * Load the default certificate corresponding to the defaultVerificationMethod.
      *
      * @return string representation of certificate
      * @throws CredentialSignatureException error during loading of private key
      */
     private String getDefaultCertificate() throws CredentialSignatureException {
-        try (InputStream certStream =
-                     GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")) {
-            return certStream == null ? null :
-                    new String(certStream.readAllBytes(), StandardCharsets.UTF_8);
+        try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(defaultCertPath) ?
+                GxfsCatalogService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
+                : new FileInputStream(defaultCertPath)) {
+            return publicKeyStream == null ? null :
+                    new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new CredentialSignatureException("Failed to read default certificate. " + e.getMessage());
         }
