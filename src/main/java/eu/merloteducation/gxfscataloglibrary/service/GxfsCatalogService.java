@@ -42,23 +42,31 @@ public class GxfsCatalogService {
 
     private final Logger logger = LoggerFactory.getLogger(GxfsCatalogService.class);
 
-    @Value("${gxfscatalog.verification-method:#{null}}")
-    private String defaultVerificationMethod;
+    private final String defaultVerificationMethod;
 
-    @Value("${gxfscatalog.cert-path:#{null}}")
-    private String defaultCertPath;
+    private final String defaultCertPath;
 
-    @Value("${gxfscatalog.private-key-path:#{null}}")
-    private String defaultPrivateKey;
+    private final String defaultPrivateKey;
 
-    @Autowired
-    private GxfsCatalogClient gxfsCatalogClient;
+    private final GxfsCatalogClient gxfsCatalogClient;
 
-    @Autowired
-    private GxfsSignerService gxfsSignerService;
+    private final GxfsSignerService gxfsSignerService;
 
-    @Autowired
-    private WebClient webClient;
+    private final WebClient webClient;
+
+    public GxfsCatalogService(@Autowired GxfsCatalogClient gxfsCatalogClient,
+                              @Autowired GxfsSignerService gxfsSignerService,
+                              @Autowired WebClient webClient,
+                              @Value("${gxfscatalog.verification-method:#{null}}") String defaultVerificationMethod,
+                              @Value("${gxfscatalog.cert-path:#{null}}") String defaultCertPath,
+                              @Value("${gxfscatalog.private-key-path:#{null}}") String defaultPrivateKey) {
+        this.gxfsCatalogClient = gxfsCatalogClient;
+        this.gxfsSignerService = gxfsSignerService;
+        this.webClient = webClient;
+        this.defaultVerificationMethod = defaultVerificationMethod;
+        this.defaultCertPath = defaultCertPath;
+        this.defaultPrivateKey = defaultPrivateKey;
+    }
 
     /**
      * Given the hash of a self-description in the catalog, set its status in the catalog to revoked.
@@ -502,9 +510,10 @@ public class GxfsCatalogService {
         try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(defaultCertPath) ?
                 GxfsCatalogService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
                 : new FileInputStream(defaultCertPath)) {
-            return publicKeyStream == null ? null :
-                    new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
+            return new String(Objects.requireNonNull(publicKeyStream,
+                    "Certificate input stream is null.").readAllBytes(),
+                    StandardCharsets.UTF_8);
+        } catch (IOException | NullPointerException e) {
             throw new CredentialSignatureException("Failed to read default certificate. " + e.getMessage());
         }
     }
