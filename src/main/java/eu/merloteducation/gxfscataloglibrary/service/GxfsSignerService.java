@@ -154,11 +154,15 @@ public class GxfsSignerService {
      */
     private void check(JsonLDObject credential, LdProof proof, List<X509Certificate> certs)
             throws IOException, GeneralSecurityException, JsonLDException {
+        boolean certificateMatches = false;
         for (X509Certificate cert : certs) {
             PublicKey puk = cert.getPublicKey();
             PublicKeyVerifier<?> pkVerifier = new RSA_PS256_PublicKeyVerifier((RSAPublicKey) puk);
             JsonWebSignature2020LdVerifier verifier = new JsonWebSignature2020LdVerifier(pkVerifier);
-            verifier.verify(credential, proof);
+            certificateMatches |= verifier.verify(credential, proof);
+        }
+        if (!certs.isEmpty() && !certificateMatches) {
+            throw new GeneralSecurityException("No matching certificates for this signature.");
         }
     }
 }

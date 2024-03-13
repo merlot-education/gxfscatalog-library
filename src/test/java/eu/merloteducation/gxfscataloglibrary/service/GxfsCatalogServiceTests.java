@@ -1,7 +1,9 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import eu.merloteducation.gxfscataloglibrary.config.GxfsCatalogLibConfig;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
+import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
@@ -12,6 +14,9 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatyp
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,17 +26,26 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.netty.http.client.HttpClient;
 
+import javax.net.ssl.SSLException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+@SpringBootTest()
 @ExtendWith(MockitoExtension.class)
 @EnableConfigurationProperties
+@WireMockTest(httpsPort = 8101, httpsEnabled = true)
 class GxfsCatalogServiceTests {
 
     @Autowired
@@ -46,8 +60,20 @@ class GxfsCatalogServiceTests {
     @MockBean
     private GxfsWizardApiService gxfsWizardApiService;
 
-    @MockBean
-    private GxfsCatalogLibConfig gxfsCatalogLibConfig;
+    private String privateKey;
+
+    // configure web client to ignore self-signed SSL certificate of WireMock
+    private WebClient createWebClient() throws SSLException {
+        SslContext context = SslContextBuilder.forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+
+        HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(context));
+
+        return WebClient
+                .builder()
+                .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
+    }
 
     private GaxCoreServiceOfferingCredentialSubject generateOfferingCredentialSubject(String id, String offeredBy) {
         GaxCoreServiceOfferingCredentialSubject credentialSubject = new GaxCoreServiceOfferingCredentialSubject();
@@ -77,9 +103,38 @@ class GxfsCatalogServiceTests {
 
 
     @BeforeEach
-    public void setUp() {
+    public void setUp() throws SSLException {
         // reset catalog client fake between each test
         ReflectionTestUtils.setField(gxfsCatalogService, "gxfsCatalogClient", new GxfsCatalogClientFake());
+        ReflectionTestUtils.setField(gxfsCatalogService, "webClient", createWebClient());
+
+        String didJson = "";
+        try (InputStream didStream =
+                     GxfsCatalogServiceTests.class.getClassLoader().getResourceAsStream("exampledid.json")) {
+            didJson = new String(didStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
+        stubFor(get("/.well-known/did.json")
+                .willReturn(ok()
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(didJson)));
+
+        String cert = "";
+        try (InputStream certStream =
+                     GxfsCatalogServiceTests.class.getClassLoader().getResourceAsStream("cert.ss.pem")) {
+            cert = new String(certStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
+        stubFor(get("/.well-known/somecert.pem")
+                .willReturn(ok()
+                        .withBody(cert)));
+
+        privateKey = "";
+        try (InputStream prkStream =
+                     GxfsCatalogServiceTests.class.getClassLoader().getResourceAsStream("prk.ss.pem")) {
+            privateKey = new String(prkStream.readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+        }
     }
 
     @Test
@@ -212,6 +267,14 @@ class GxfsCatalogServiceTests {
     }
 
     @Test
+    void addValidServiceOfferingExternalKey() throws Exception {
+        SelfDescriptionMeta meta =
+                gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"),
+                        "did:web:localhost:8101#1234", privateKey);
+        assertNotNull(meta);
+    }
+
+    @Test
     void addInvalidServiceOffering() {
         GaxCoreServiceOfferingCredentialSubject subject = new GaxCoreServiceOfferingCredentialSubject();
         assertThrows(NullPointerException.class, () ->
@@ -248,6 +311,48 @@ class GxfsCatalogServiceTests {
     }
 
     @Test
+    void addValidParticipantValidExternalKey() throws Exception {
+        ParticipantItem item = gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                        "did:web:localhost:8101#1234",
+                        privateKey);
+        assertNotNull(item);
+    }
+
+    @Test
+    void addValidParticipantExternalKeyMissingCert() {
+        assertThrows(CredentialSignatureException.class,
+                () -> gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                        "did:web:localhost:8101#12345",
+                        privateKey));
+    }
+
+    @Test
+    void addValidParticipantExternalKeyUnknownDid() {
+        assertThrows(CredentialSignatureException.class,
+                () -> gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                        "did:web:example.org#1234",
+                        privateKey));
+    }
+
+    @Test
+    void addValidParticipantExternalKeyInvalidPrivateKey() {
+        assertThrows(CredentialSignatureException.class,
+                () -> gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                        "did:web:localhost:8101#1234",
+                        "garbage"));
+    }
+
+    @Test
+    void addValidParticipantExternalKeyNotDidWeb() throws CredentialSignatureException, CredentialPresentationException {
+        ParticipantItem item = gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                        "did:other:123",
+                        privateKey);
+        assertNotNull(item);
+    }
+
+    @Test
     void addInvalidParticipant() {
         GaxTrustLegalPersonCredentialSubject subject = new GaxTrustLegalPersonCredentialSubject();
         assertThrows(NullPointerException.class, () ->
@@ -263,6 +368,22 @@ class GxfsCatalogServiceTests {
                 .getSelfDescription().getVerifiableCredential().getCredentialSubject();
         credentialSubject.setLegalName("MyNewParticipant");
         ParticipantItem item2 = gxfsCatalogService.updateParticipant(credentialSubject);
+        assertNotNull(item2);
+        assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
+                .getVerifiableCredential().getCredentialSubject()).getLegalName());
+    }
+
+    @Test
+    void updateExistingParticipantExternalKey() throws Exception {
+        ParticipantItem item = gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                        "did:web:localhost:8101#1234", privateKey);
+
+        GaxTrustLegalPersonCredentialSubject credentialSubject = (GaxTrustLegalPersonCredentialSubject) item
+                .getSelfDescription().getVerifiableCredential().getCredentialSubject();
+        credentialSubject.setLegalName("MyNewParticipant");
+        ParticipantItem item2 = gxfsCatalogService.updateParticipant(credentialSubject,
+                "did:web:localhost:8101#1234", privateKey);
         assertNotNull(item2);
         assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
                 .getVerifiableCredential().getCredentialSubject()).getLegalName());

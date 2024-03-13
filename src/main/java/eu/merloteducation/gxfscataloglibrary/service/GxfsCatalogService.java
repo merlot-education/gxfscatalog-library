@@ -1,6 +1,8 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
@@ -20,6 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -32,6 +36,7 @@ import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class GxfsCatalogService {
@@ -45,6 +50,9 @@ public class GxfsCatalogService {
 
     @Autowired
     private GxfsSignerService gxfsSignerService;
+
+    @Autowired
+    private WebClient webClient;
 
     /**
      * Given the hash of a self-description in the catalog, set its status in the catalog to revoked.
@@ -200,7 +208,7 @@ public class GxfsCatalogService {
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
         PrivateKey prk = buildPrivateKey(privateKey);
-        List<X509Certificate> certificates = resolveDidWebCertificates(verificationMethod);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(serviceOfferingCredentialSubject,
                         serviceOfferingCredentialSubject.getOfferedBy().getId());
@@ -237,7 +245,7 @@ public class GxfsCatalogService {
                                           String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
         PrivateKey prk = buildPrivateKey(privateKey);
-        List<X509Certificate> certificates = resolveDidWebCertificates(verificationMethod);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
@@ -278,7 +286,7 @@ public class GxfsCatalogService {
                                              String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
         PrivateKey prk = buildPrivateKey(privateKey);
-        List<X509Certificate> certificates = resolveDidWebCertificates(verificationMethod);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
         VerifiablePresentation vp = gxfsSignerService
                 .presentVerifiableCredential(participantCredentialSubject,
                         participantCredentialSubject.getId());
@@ -357,20 +365,22 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given a did:web, resolve it to its certificates.
+     * Given a verification method, resolve it to its certificates.
+     * Currently, only did:web is supported. If the given method is anything else, it will return an empty list.
      *
-     * @param didWeb did:web to resolve
+     * @param verificationMethod method to resolve
+     * @throws CredentialSignatureException failed to resolve given did:web certificate
      * @return list of certificates
      */
-    private List<X509Certificate> resolveDidWebCertificates(String didWeb) {
+    private List<X509Certificate> resolveCertificates(String verificationMethod) throws CredentialSignatureException {
 
-        if (!didWeb.startsWith("did:web:")) {
-            logger.warn("Failed to validate verificationMethod {} as it is not a did:web, will skip validation.", didWeb);
+        if (!verificationMethod.startsWith("did:web:")) {
+            logger.warn("Failed to validate verificationMethod {} as it is not a did:web, will skip validation.", verificationMethod);
             return Collections.emptyList();
         }
 
-        if (didWeb.equals(DEFAULT_DID_WEB)) {
-            logger.info("Using default verificationMethod {}, skipping web request.", didWeb);
+        if (verificationMethod.equals(DEFAULT_DID_WEB)) {
+            logger.info("Using default verificationMethod {}, skipping web request.", verificationMethod);
             try {
                 return buildCertficates(getDefaultCertificate());
             } catch (CredentialSignatureException e) {
@@ -379,24 +389,66 @@ public class GxfsCatalogService {
             }
         }
 
-        // TODO fetch certificate from did endpoint
-        return buildCertficates("");
+        // at this point we have an unknown did:web, try to resolve it
+        try {
+            JsonNode didDocument = requestDidDocument(verificationMethod);
+            ArrayNode verificationMethods = (ArrayNode) didDocument.get("verificationMethod");
+            for (JsonNode vm : verificationMethods) {
+                String vmId = vm.get("id").asText();
+                if (vmId.equals(verificationMethod)) {
+                    return buildCertficates(requestCertificate(vm));
+                }
+            }
+            throw new CredentialSignatureException("Could not find certificate for given verification method " +
+                    verificationMethod);
+        } catch (NullPointerException | WebClientResponseException e) {
+            throw new CredentialSignatureException("Error during did:web resolving: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Request the did.json document for a given did:web
+     *
+     * @param verificationMethod did:web
+     * @return did document json
+     */
+    private JsonNode requestDidDocument(String verificationMethod) {
+        // resolve did:web certificate
+        String didDocumentUri = verificationMethod.replace("did:web:", "https://");
+        didDocumentUri = didDocumentUri.replaceFirst("#.*",  "/.well-known/did.json");
+        JsonNode didDocument = webClient.get().uri(didDocumentUri).retrieve().bodyToMono(JsonNode.class).block();
+        return Objects.requireNonNull(didDocument, "Failed to retrieve did-document at " + didDocumentUri);
+    }
+
+    /**
+     * Request the certificate that is linked in the given verification method entry of a did.json document.
+     *
+     * @param didDocumentEntry verification method entry of did.json
+     * @return string representation of corresponding certificate
+     */
+    private String requestCertificate(JsonNode didDocumentEntry) {
+        // resolve did:web certificate
+        String certUrl = didDocumentEntry.get("publicKeyJwk").get("x5u").asText();
+        String certificate = webClient.get().uri(certUrl)
+                .retrieve().bodyToMono(String.class).block();
+        return Objects.requireNonNull(certificate, "Failed to retrieve certificate at " + certUrl);
     }
 
     /**
      * Given a string representation of the private key, convert it to it's the object representation.
      *
      * @param prk string representation of the private key
+     * @throws CredentialSignatureException failed to decode private key
      * @return PrivateKey object
      */
-    private PrivateKey buildPrivateKey(String prk) {
+    private PrivateKey buildPrivateKey(String prk) throws CredentialSignatureException {
         try {
             PEMParser pemParser = new PEMParser(new StringReader(prk));
             JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
             PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
             return converter.getPrivateKey(privateKeyInfo);
-        } catch (IOException ignored) {
-            return null;
+        } catch (IOException e) {
+            throw new CredentialSignatureException("Failed to parse private key. " + e.getMessage());
         }
     }
 
@@ -404,15 +456,16 @@ public class GxfsCatalogService {
      * Given a string representation of the certificates, convert them to a list of their object representations.
      *
      * @param certs string representation of the certificates
+     * @throws CredentialSignatureException failed to decode certificate
      * @return list of X509 certificate objects
      */
-    private List<X509Certificate> buildCertficates(String certs) {
+    private List<X509Certificate> buildCertficates(String certs) throws CredentialSignatureException {
         try {
             ByteArrayInputStream certStream = new ByteArrayInputStream(certs.getBytes(StandardCharsets.UTF_8));
             CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
             return (List<X509Certificate>) certFactory.generateCertificates(certStream);
-        } catch (CertificateException ignored) {
-            return Collections.emptyList();
+        } catch (CertificateException e) {
+            throw new CredentialSignatureException("Failed to parse certificate. " + e.getMessage());
         }
     }
 
@@ -439,10 +492,10 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException error during loading of private key
      */
     private String getDefaultCertificate() throws CredentialSignatureException {
-        try (InputStream privateKeyStream =
+        try (InputStream certStream =
                      GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")) {
-            return privateKeyStream == null ? null :
-                    new String(privateKeyStream.readAllBytes(), StandardCharsets.UTF_8);
+            return certStream == null ? null :
+                    new String(certStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new CredentialSignatureException("Failed to read default certificate. " + e.getMessage());
         }
