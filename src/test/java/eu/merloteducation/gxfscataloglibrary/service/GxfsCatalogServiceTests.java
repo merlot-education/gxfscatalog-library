@@ -42,7 +42,7 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest()
+@SpringBootTest
 @ExtendWith(MockitoExtension.class)
 @EnableConfigurationProperties
 @WireMockTest(httpsPort = 8101, httpsEnabled = true)
