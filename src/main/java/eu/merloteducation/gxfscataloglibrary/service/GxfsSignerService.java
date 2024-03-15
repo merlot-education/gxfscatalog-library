@@ -120,9 +120,9 @@ public class GxfsSignerService {
     }
 
     /**
-     * Given a credential, add a signature with the key of the service.
+     * Given a credential, add a signature with the provided private key and verification method.
      *
-     * @param credential credential to check
+     * @param credential credential to sign
      * @param verificationMethod method for signing
      * @param prk private key for signature
      * @throws IOException              IOException
