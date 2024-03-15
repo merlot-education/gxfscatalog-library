@@ -19,6 +19,7 @@ import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -428,10 +429,39 @@ public class GxfsCatalogService {
      */
     private JsonNode requestDidDocument(String verificationMethod) {
         // resolve did:web certificate
-        String didDocumentUri = verificationMethod.replace("did:web:", "https://");
-        didDocumentUri = didDocumentUri.replaceFirst("#.*",  "/.well-known/did.json");
+        String didWeb = verificationMethod
+                .replace("did:web:", "") // remove did type prefix
+                .replaceFirst("#.*", ""); // remove verification method reference
+        String didDocumentUri = getDidDocumentUri(didWeb);
         JsonNode didDocument = webClient.get().uri(didDocumentUri).retrieve().bodyToMono(JsonNode.class).block();
         return Objects.requireNonNull(didDocument, "Failed to retrieve did-document at " + didDocumentUri);
+    }
+
+    /**
+     * Given the domain part of the did:web, return the resulting URI.
+     * See <a href="https://w3c-ccg.github.io/did-method-web/#read-resolve">did-web specification</a> for reference.
+     *
+     * @param didWeb did:web without prefix and key reference
+     * @return did web URI
+     */
+    private static String getDidDocumentUri(String didWeb) {
+        boolean containsSubpath = didWeb.contains(":");
+        StringBuilder didDocumentUriBuilder = new StringBuilder();
+        didDocumentUriBuilder.append(didWeb
+                .replace(":", "/") // Replace ":" with "/" in the method specific identifier to
+                                                    // obtain the fully qualified domain name and optional path.
+                .replace("%3A", ":")); // If the domain contains a port percent decode the colon.
+
+        // Generate an HTTPS URL to the expected location of the DID document by prepending https://.
+        didDocumentUriBuilder.insert(0, "https://");
+        if (!containsSubpath) {
+            // If no path has been specified in the URL, append /.well-known.
+            didDocumentUriBuilder.append("/.well-known");
+        }
+        // Append /did.json to complete the URL.
+        didDocumentUriBuilder.append("/did.json");
+
+        return didDocumentUriBuilder.toString();
     }
 
     /**

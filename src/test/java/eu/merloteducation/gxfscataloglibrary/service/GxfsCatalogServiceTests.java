@@ -114,7 +114,7 @@ class GxfsCatalogServiceTests {
             didJson = new String(didStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
         }
-        stubFor(get("/.well-known/did.json")
+        stubFor(get("/1234/did.json")
                 .willReturn(ok()
                         .withHeader("Content-Type", "application/json")
                         .withBody(didJson)));
@@ -125,7 +125,7 @@ class GxfsCatalogServiceTests {
             cert = new String(certStream.readAllBytes(), StandardCharsets.UTF_8);
         } catch (IOException ignored) {
         }
-        stubFor(get("/.well-known/somecert.pem")
+        stubFor(get("/1234/somecert.pem")
                 .willReturn(ok()
                         .withBody(cert)));
 
@@ -270,7 +270,7 @@ class GxfsCatalogServiceTests {
     void addValidServiceOfferingExternalKey() throws Exception {
         SelfDescriptionMeta meta =
                 gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"),
-                        "did:web:localhost:8101#1234", privateKey);
+                        "did:web:localhost%3A8101:1234#JWK2020", privateKey);
         assertNotNull(meta);
     }
 
@@ -314,7 +314,7 @@ class GxfsCatalogServiceTests {
     void addValidParticipantValidExternalKey() throws Exception {
         ParticipantItem item = gxfsCatalogService
                 .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
-                        "did:web:localhost:8101#1234",
+                        "did:web:localhost%3A8101:1234#JWK2020",
                         privateKey);
         assertNotNull(item);
     }
@@ -323,7 +323,7 @@ class GxfsCatalogServiceTests {
     void addValidParticipantExternalKeyMissingCert() {
         assertThrows(CredentialSignatureException.class,
                 () -> gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
-                        "did:web:localhost:8101#12345",
+                        "did:web:localhost%3A8101:1234#someotherkey",
                         privateKey));
     }
 
@@ -331,7 +331,7 @@ class GxfsCatalogServiceTests {
     void addValidParticipantExternalKeyUnknownDid() {
         assertThrows(CredentialSignatureException.class,
                 () -> gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
-                        "did:web:example.org#1234",
+                        "did:web:example.org:1234",
                         privateKey));
     }
 
@@ -339,7 +339,7 @@ class GxfsCatalogServiceTests {
     void addValidParticipantExternalKeyInvalidPrivateKey() {
         assertThrows(CredentialSignatureException.class,
                 () -> gxfsCatalogService.addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
-                        "did:web:localhost:8101#1234",
+                        "did:web:localhost%3A8101:1234#JWK2020",
                         "garbage"));
     }
 
@@ -377,13 +377,13 @@ class GxfsCatalogServiceTests {
     void updateExistingParticipantExternalKey() throws Exception {
         ParticipantItem item = gxfsCatalogService
                 .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
-                        "did:web:localhost:8101#1234", privateKey);
+                        "did:web:localhost%3A8101:1234#JWK2020", privateKey);
 
         GaxTrustLegalPersonCredentialSubject credentialSubject = (GaxTrustLegalPersonCredentialSubject) item
                 .getSelfDescription().getVerifiableCredential().getCredentialSubject();
         credentialSubject.setLegalName("MyNewParticipant");
         ParticipantItem item2 = gxfsCatalogService.updateParticipant(credentialSubject,
-                "did:web:localhost:8101#1234", privateKey);
+                "did:web:localhost%3A8101:1234#JWK2020", privateKey);
         assertNotNull(item2);
         assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
                 .getVerifiableCredential().getCredentialSubject()).getLegalName());
