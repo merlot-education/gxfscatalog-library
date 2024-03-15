@@ -1,15 +1,26 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
+import io.netty.util.internal.StringUtil;
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
+import org.bouncycastle.openssl.PEMParser;
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.security.PrivateKey;
 import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,28 +38,41 @@ class GxfsSignerServiceTests {
     }
 
     @Test
-    void loadExternalCertificates() throws CertificateException, IOException,
+    void loadExternalCertificates() throws
             CredentialPresentationException, CredentialSignatureException {
-        GxfsSignerService gxfsSignerService = new GxfsSignerService(
-                GxfsSignerServiceTests.class.getClassLoader().getResource("cert.ss.pem").getPath(),
-                GxfsSignerServiceTests.class.getClassLoader().getResource("prk.ss.pem").getPath(),
-                "did:web:compliance.lab.gaia-x.eu");
+        GxfsSignerService gxfsSignerService = new GxfsSignerService(new ObjectMapper());
         VerifiablePresentation vp =
                 gxfsSignerService
                         .presentVerifiableCredential(generateCredentialSubject(), "did:web:issuer.example.com");
-        gxfsSignerService.signVerifiablePresentation(vp);
+        gxfsSignerService.signVerifiablePresentation(
+                vp,
+                "did:web:compliance.lab.gaia-x.eu",
+                loadPrivateKey(),
+                loadCertificates());
         assertNotNull(vp);
     }
 
-    @Test
-    void loadNonExistentCertificates() throws CertificateException, IOException, CredentialPresentationException {
-        GxfsSignerService gxfsSignerService = new GxfsSignerService(
-                "garbage1.ss.pem",
-                "garbage2.ss.pem",
-                "did:web:compliance.lab.gaia-x.eu");
-        VerifiablePresentation vp =
-                gxfsSignerService
-                        .presentVerifiableCredential(generateCredentialSubject(), "did:web:issuer.example.com");
-        assertThrows(CredentialSignatureException.class, () -> gxfsSignerService.signVerifiablePresentation(vp));
+    private PrivateKey loadPrivateKey() {
+        try (InputStream privateKeyStream =
+                     GxfsSignerServiceTests.class.getClassLoader().getResourceAsStream("prk.ss.pem")) {
+            PEMParser pemParser = new PEMParser(new InputStreamReader(privateKeyStream));
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
+            PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
+            return converter.getPrivateKey(privateKeyInfo);
+        } catch (IOException ignored) {
+            return null;
+        }
+    }
+
+    private List<X509Certificate> loadCertificates() {
+        try (InputStream publicKeyStream =
+                     GxfsSignerServiceTests.class.getClassLoader().getResourceAsStream("cert.ss.pem")) {
+            String certString = new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
+            ByteArrayInputStream certStream = new ByteArrayInputStream(certString.getBytes(StandardCharsets.UTF_8));
+            CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
+            return (List<X509Certificate>) certFactory.generateCertificates(certStream);
+        } catch (CertificateException | IOException ignored) {
+            return Collections.emptyList();
+        }
     }
 }

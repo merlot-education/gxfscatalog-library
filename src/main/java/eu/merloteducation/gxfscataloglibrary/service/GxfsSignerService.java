@@ -18,69 +18,34 @@ import info.weboftrust.ldsignatures.LdProof;
 import info.weboftrust.ldsignatures.jsonld.LDSecurityKeywords;
 import info.weboftrust.ldsignatures.signer.JsonWebSignature2020LdSigner;
 import info.weboftrust.ldsignatures.verifier.JsonWebSignature2020LdVerifier;
-import io.netty.util.internal.StringUtil;
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.bouncycastle.openssl.PEMParser;
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.security.*;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
 @Service
 public class GxfsSignerService {
     private final Logger logger = LoggerFactory.getLogger(GxfsSignerService.class);
-    private PrivateKey prk;
-    private List<X509Certificate> certs;
 
-    private final String verificationMethod;
+    private final ObjectMapper mapper;
 
-    public GxfsSignerService(@Value("${gxfscatalog.cert-path:#{null}}") String certPath,
-                             @Value("${gxfscatalog.private-key-path:#{null}}") String privateKeyPath,
-                             @Value("${gxfscatalog.verification-method:#{null}}") String verificationMethod)
-            throws IOException, CertificateException {
-        this.verificationMethod = verificationMethod;
-        try {
-            try (InputStream privateKeyStream = StringUtil.isNullOrEmpty(privateKeyPath) ?
-                    GxfsSignerService.class.getClassLoader().getResourceAsStream("prk.ss.pem")
-                    : new FileInputStream(privateKeyPath)) {
-                PEMParser pemParser = new PEMParser(new InputStreamReader(privateKeyStream));
-                JcaPEMKeyConverter converter = new JcaPEMKeyConverter();
-                PrivateKeyInfo privateKeyInfo = PrivateKeyInfo.getInstance(pemParser.readObject());
-                prk = converter.getPrivateKey(privateKeyInfo);
-            }
+    public GxfsSignerService(@Autowired ObjectMapper mapper) {
+        this.mapper = mapper;
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
-            try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(certPath) ?
-                    GxfsSignerService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
-                    : new FileInputStream(certPath)) {
-                String certString = new String(publicKeyStream.readAllBytes(), StandardCharsets.UTF_8);
-                ByteArrayInputStream certStream = new ByteArrayInputStream(certString.getBytes(StandardCharsets.UTF_8));
-                CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
-                certs = (List<X509Certificate>) certFactory.generateCertificates(certStream);
-            }
-        } catch (FileNotFoundException | NullPointerException e) {
-            logger.warn("Could not load private key or certificate for SD signing. Signing will not work. {}",
-                    e.getMessage());
-            prk = null;
-            certs = Collections.emptyList();
-        }
-
+        Security.addProvider(new BouncyCastleProvider());
     }
 
     /**
@@ -92,10 +57,7 @@ public class GxfsSignerService {
      */
     public VerifiablePresentation presentVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
                                                               String issuer) throws CredentialPresentationException {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         String credentialSubjectJson;
-
         try {
             credentialSubjectJson = mapper.writeValueAsString(credentialSubject);
         } catch (JsonProcessingException e) {
@@ -122,27 +84,33 @@ public class GxfsSignerService {
     }
 
     /**
-     * Given a verifiable presentation, sign it with the key provided to the service.
+     * Given a verifiable presentation, sign it with the provided private key and verification method.
+     * If a non-empty list of certificates is given, also check if any of them match the private key.
      *
      * @param vp presentation to sign
+     * @param verificationMethod method for signing
+     * @param prk private key for signature
+     * @param certs certificates to check the signature against (if empty list, skip check)
      * @throws CredentialSignatureException exception during the signature of the vp
      */
-    public void signVerifiablePresentation(VerifiablePresentation vp) throws CredentialSignatureException {
-        Security.addProvider(new BouncyCastleProvider());
+    public void signVerifiablePresentation(VerifiablePresentation vp,
+                                           String verificationMethod,
+                                           PrivateKey prk,
+                                           List<X509Certificate> certs) throws CredentialSignatureException {
         VerifiableCredential vc = vp.getVerifiableCredential();
 
         try {
             logger.debug("Signing VC");
-            LdProof vcProof = sign(vc);
-            check(vc, vcProof);
+            LdProof vcProof = sign(vc, verificationMethod, prk);
+            check(vc, vcProof, certs);
             logger.debug("Signed");
 
             vc.setJsonObjectKeyValue("proof", vc.getLdProof().getJsonObject());
             vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
 
             logger.debug("Signing VP");
-            LdProof vpProof = sign(vp);
-            check(vp, vpProof);
+            LdProof vpProof = sign(vp, verificationMethod, prk);
+            check(vp, vpProof, certs);
             logger.debug("Signed");
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
             throw new CredentialSignatureException(e.getMessage());
@@ -152,14 +120,16 @@ public class GxfsSignerService {
     }
 
     /**
-     * Given a credential, add a signature with the key of the service.
+     * Given a credential, add a signature with the provided private key and verification method.
      *
-     * @param credential credential to check
+     * @param credential credential to sign
+     * @param verificationMethod method for signing
+     * @param prk private key for signature
      * @throws IOException              IOException
      * @throws GeneralSecurityException GeneralSecurityException
      * @throws JsonLDException          JsonLDException
      */
-    private LdProof sign(JsonLDObject credential)
+    private LdProof sign(JsonLDObject credential, String verificationMethod, PrivateKey prk)
             throws IOException, GeneralSecurityException, JsonLDException {
         KeyPair kp = new KeyPair(null, prk);
         PrivateKeySigner<?> privateKeySigner = new RSA_PS256_PrivateKeySigner(kp);
@@ -178,17 +148,22 @@ public class GxfsSignerService {
      *
      * @param credential credential to check
      * @param proof      proof
+     * @param certs      certificates to validate the proof against
      * @throws IOException              IOException
      * @throws GeneralSecurityException GeneralSecurityException
      * @throws JsonLDException          JsonLDException
      */
-    private void check(JsonLDObject credential, LdProof proof)
+    private void check(JsonLDObject credential, LdProof proof, List<X509Certificate> certs)
             throws IOException, GeneralSecurityException, JsonLDException {
+        boolean certificateMatches = false;
         for (X509Certificate cert : certs) {
             PublicKey puk = cert.getPublicKey();
             PublicKeyVerifier<?> pkVerifier = new RSA_PS256_PublicKeyVerifier((RSAPublicKey) puk);
             JsonWebSignature2020LdVerifier verifier = new JsonWebSignature2020LdVerifier(pkVerifier);
-            verifier.verify(credential, proof);
+            certificateMatches |= verifier.verify(credential, proof);
+        }
+        if (!certs.isEmpty() && !certificateMatches) {
+            throw new GeneralSecurityException("No matching certificates for this signature.");
         }
     }
 }
