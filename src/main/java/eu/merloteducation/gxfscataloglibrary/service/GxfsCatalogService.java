@@ -507,10 +507,10 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException error during loading of private key
      */
     private String getDefaultCertificate() throws CredentialSignatureException {
-        try (InputStream publicKeyStream = StringUtil.isNullOrEmpty(defaultCertPath) ?
+        try (InputStream certificateStream = StringUtil.isNullOrEmpty(defaultCertPath) ?
                 GxfsCatalogService.class.getClassLoader().getResourceAsStream("cert.ss.pem")
                 : new FileInputStream(defaultCertPath)) {
-            return new String(Objects.requireNonNull(publicKeyStream,
+            return new String(Objects.requireNonNull(certificateStream,
                     "Certificate input stream is null.").readAllBytes(),
                     StandardCharsets.UTF_8);
         } catch (IOException | NullPointerException e) {

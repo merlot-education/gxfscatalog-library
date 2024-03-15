@@ -84,7 +84,8 @@ public class GxfsSignerService {
     }
 
     /**
-     * Given a verifiable presentation, sign it with the key provided to the service.
+     * Given a verifiable presentation, sign it with the provided private key and verification method.
+     * If a non-empty list of certificates is given, also check if any of them match the private key.
      *
      * @param vp presentation to sign
      * @param verificationMethod method for signing
