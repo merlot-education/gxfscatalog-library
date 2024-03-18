@@ -14,9 +14,6 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatyp
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,11 +23,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
 import java.io.IOException;
@@ -61,19 +55,6 @@ class GxfsCatalogServiceTests {
     private GxfsWizardApiService gxfsWizardApiService;
 
     private String privateKey;
-
-    // configure web client to ignore self-signed SSL certificate of WireMock
-    private WebClient createWebClient() throws SSLException {
-        SslContext context = SslContextBuilder.forClient()
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .build();
-
-        HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(context));
-
-        return WebClient
-                .builder()
-                .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
-    }
 
     private GaxCoreServiceOfferingCredentialSubject generateOfferingCredentialSubject(String id, String offeredBy) {
         GaxCoreServiceOfferingCredentialSubject credentialSubject = new GaxCoreServiceOfferingCredentialSubject();
@@ -106,7 +87,6 @@ class GxfsCatalogServiceTests {
     public void setUp() throws SSLException {
         // reset catalog client fake between each test
         ReflectionTestUtils.setField(gxfsCatalogService, "gxfsCatalogClient", new GxfsCatalogClientFake());
-        ReflectionTestUtils.setField(gxfsCatalogService, "webClient", createWebClient());
 
         String didJson = "";
         try (InputStream didStream =
