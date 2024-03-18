@@ -92,9 +92,7 @@ public class GxfsCatalogLibConfig {
 
             HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(context));
 
-            return WebClient
-                    .builder()
-                    .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
+            webClientBuilder = webClientBuilder.clientConnector(new ReactorClientHttpConnector(httpClient));
         }
         return webClientBuilder.build();
     }
