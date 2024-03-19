@@ -17,3 +17,6 @@ keycloak:
   oidc-base-uri: "${keycloak.base-uri}/realms/gxfscatalog/protocol/openid-connect"
   token-uri: "${keycloak.oidc-base-uri}/token"
   logout-uri: "${keycloak.oidc-base-uri}/logout"
+
+gxfscatalog-library:
+  ignore-ssl: false
