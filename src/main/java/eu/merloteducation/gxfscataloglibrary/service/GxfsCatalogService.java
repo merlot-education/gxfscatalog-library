@@ -1,6 +1,7 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -35,9 +36,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class GxfsCatalogService {
@@ -56,15 +55,19 @@ public class GxfsCatalogService {
 
     private final WebClient webClient;
 
+    private final ObjectMapper objectMapper;
+
     public GxfsCatalogService(@Autowired GxfsCatalogClient gxfsCatalogClient,
                               @Autowired GxfsSignerService gxfsSignerService,
                               @Autowired WebClient webClient,
+                              @Autowired ObjectMapper objectMapper,
                               @Value("${gxfscatalog.verification-method:#{null}}") String defaultVerificationMethod,
                               @Value("${gxfscatalog.cert-path:#{null}}") String defaultCertPath,
                               @Value("${gxfscatalog.private-key-path:#{null}}") String defaultPrivateKey) {
         this.gxfsCatalogClient = gxfsCatalogClient;
         this.gxfsSignerService = gxfsSignerService;
         this.webClient = webClient;
+        this.objectMapper = objectMapper;
         this.defaultVerificationMethod = defaultVerificationMethod;
         this.defaultCertPath = defaultCertPath;
         this.defaultPrivateKey = defaultPrivateKey;
@@ -329,11 +332,13 @@ public class GxfsCatalogService {
         QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
                 + " return p.uri ORDER BY toLower(p." + sortField + ")"
                 + " SKIP " + offset + " LIMIT " + size);
-        return this.gxfsCatalogClient.postQueryUriItem(
-                QueryLanguage.OPENCYPHER,
-                5,
-                true,
-                query);
+        GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
+            QueryLanguage.OPENCYPHER,
+            5,
+            true,
+            query);
+
+        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryUriItem>>() {});
     }
 
     /**
@@ -356,11 +361,13 @@ public class GxfsCatalogService {
             + " WHERE NOT p.uri IN " + excludedUrisString
             + " return p.uri ORDER BY toLower(p." + sortField + ")"
             + " SKIP " + offset + " LIMIT " + size);
-        return this.gxfsCatalogClient.postQueryUriItem(
+        GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
             QueryLanguage.OPENCYPHER,
             5,
             true,
             query);
+
+        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryUriItem>>() {});
     }
 
     /**
@@ -376,11 +383,13 @@ public class GxfsCatalogService {
             + " WHERE p.uri = \"" + participantUri + "\""
             + " return p.legalName");
 
-        return this.gxfsCatalogClient.postQueryLegalNameItem(
-                QueryLanguage.OPENCYPHER,
-                5,
-                true,
-                query);
+        GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
+            QueryLanguage.OPENCYPHER,
+            5,
+            true,
+            query);
+
+        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryLegalNameItem>>() {});
     }
 
     private String listToString(List<String> stringList) {

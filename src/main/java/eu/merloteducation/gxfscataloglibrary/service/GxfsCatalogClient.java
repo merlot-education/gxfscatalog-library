@@ -51,19 +51,11 @@ public interface GxfsCatalogClient {
 
     // Query
     @PostExchange("/query")
-    GXFSCatalogListResponse<GXFSQueryUriItem> postQueryUriItem(
+    <T> GXFSCatalogListResponse<T> postQuery(
             @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
             @RequestParam(name = "timeout", required = false) int timeout,
             @RequestParam(name = "withTotalCount", required = false) boolean withTotalCount,
             @RequestBody QueryRequest query
-    );
-
-    @PostExchange("/query")
-    GXFSCatalogListResponse<GXFSQueryLegalNameItem> postQueryLegalNameItem(
-        @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
-        @RequestParam(name = "timeout", required = false) int timeout,
-        @RequestParam(name = "withTotalCount", required = false) boolean withTotalCount,
-        @RequestBody QueryRequest query
     );
 
     // TODO Schemas
