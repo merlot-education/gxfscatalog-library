@@ -5,6 +5,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NodeKindIRITypeId;
@@ -158,7 +159,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public GXFSCatalogListResponse<GXFSQueryUriItem> postQuery(
+    public GXFSCatalogListResponse<GXFSQueryUriItem> postQueryUriItem(
             QueryLanguage queryLanguage,
             int timeout,
             boolean withTotalCount,
@@ -178,6 +179,13 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         response.setItems(uris);
         response.setTotalCount(uris.size());
         return response;
+    }
+
+    @Override
+    public GXFSCatalogListResponse<GXFSQueryLegalNameItem> postQueryLegalNameItem(QueryLanguage queryLanguage,
+        int timeout, boolean withTotalCount, QueryRequest query) {
+
+        return null;
     }
 
     @Override

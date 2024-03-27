@@ -2,6 +2,7 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
@@ -9,6 +10,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
@@ -19,7 +21,6 @@ import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -328,7 +329,7 @@ public class GxfsCatalogService {
         QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
                 + " return p.uri ORDER BY toLower(p." + sortField + ")"
                 + " SKIP " + offset + " LIMIT " + size);
-        return this.gxfsCatalogClient.postQuery(
+        return this.gxfsCatalogClient.postQueryUriItem(
                 QueryLanguage.OPENCYPHER,
                 5,
                 true,
@@ -355,11 +356,31 @@ public class GxfsCatalogService {
             + " WHERE NOT p.uri IN " + excludedUrisString
             + " return p.uri ORDER BY toLower(p." + sortField + ")"
             + " SKIP " + offset + " LIMIT " + size);
-        return this.gxfsCatalogClient.postQuery(
+        return this.gxfsCatalogClient.postQueryUriItem(
             QueryLanguage.OPENCYPHER,
             5,
             true,
             query);
+    }
+
+    /**
+     * Given the uri of a participant, return (a list containing) the legal name of the participant.
+     *
+     * @param participantType type of the participant to query for, e.g. LegalPerson or MerlotOrganisation
+     * @param participantUri uri of the participant
+     * @return list containing the legal name of the participant
+     */
+    public GXFSCatalogListResponse<GXFSQueryLegalNameItem> getParticipantLegalNameByUri(
+        String participantType, String participantUri) {
+        QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
+            + " WHERE p.uri = \"" + participantUri + "\""
+            + " return p.legalName");
+
+        return this.gxfsCatalogClient.postQueryLegalNameItem(
+                QueryLanguage.OPENCYPHER,
+                5,
+                true,
+                query);
     }
 
     private String listToString(List<String> stringList) {

@@ -5,6 +5,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
@@ -50,11 +51,19 @@ public interface GxfsCatalogClient {
 
     // Query
     @PostExchange("/query")
-    GXFSCatalogListResponse<GXFSQueryUriItem> postQuery(
+    GXFSCatalogListResponse<GXFSQueryUriItem> postQueryUriItem(
             @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
             @RequestParam(name = "timeout", required = false) int timeout,
             @RequestParam(name = "withTotalCount", required = false) boolean withTotalCount,
             @RequestBody QueryRequest query
+    );
+
+    @PostExchange("/query")
+    GXFSCatalogListResponse<GXFSQueryLegalNameItem> postQueryLegalNameItem(
+        @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
+        @RequestParam(name = "timeout", required = false) int timeout,
+        @RequestParam(name = "withTotalCount", required = false) boolean withTotalCount,
+        @RequestBody QueryRequest query
     );
 
     // TODO Schemas
