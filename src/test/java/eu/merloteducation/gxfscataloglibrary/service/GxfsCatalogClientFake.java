@@ -5,6 +5,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NodeKindIRITypeId;
@@ -12,6 +13,7 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatyp
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.participants.MerlotOrganizationCredentialSubject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -158,26 +160,41 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public GXFSCatalogListResponse<GXFSQueryUriItem> postQuery(
-            QueryLanguage queryLanguage,
-            int timeout,
-            boolean withTotalCount,
-            QueryRequest query) {
-        List<String> excludedUris = findListOfIds(query.getStatement());
+    public <T> GXFSCatalogListResponse<T> postQuery(QueryLanguage queryLanguage, int timeout, boolean withTotalCount,
+        QueryRequest query) {
+        String statement = query.getStatement();
 
-        List<GXFSQueryUriItem> uris = participantItems.stream().filter(pi -> !excludedUris.contains(pi.getId()))
-            .map(pi -> {
-                GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
-                uriItem.setUri(pi.getId());
-                return uriItem;
-            }).toList();
+        if (statement.contains("return p.legalName")) {
+            String id = findId(statement);
 
+            List<GXFSQueryLegalNameItem> legalNames = participantItems.stream().filter(pi -> pi.getId().equals(id))
+                .map(pi -> {
+                    GXFSQueryLegalNameItem legalNameItem = new GXFSQueryLegalNameItem();
+                    legalNameItem.setLegalName(((GaxTrustLegalPersonCredentialSubject) pi.getSelfDescription().getVerifiableCredential().getCredentialSubject()).getLegalName());
+                    return legalNameItem;
+                }).toList();
 
+            GXFSCatalogListResponse<GXFSQueryLegalNameItem> response = new GXFSCatalogListResponse<>();
+            response.setItems(legalNames);
+            response.setTotalCount(legalNames.size());
+            return (GXFSCatalogListResponse<T>) response;
+        } else if (statement.contains("return p.uri")) {
+            List<String> excludedUris = findListOfIds(query.getStatement());
 
-        GXFSCatalogListResponse<GXFSQueryUriItem> response = new GXFSCatalogListResponse<>();
-        response.setItems(uris);
-        response.setTotalCount(uris.size());
-        return response;
+            List<GXFSQueryUriItem> uris = participantItems.stream().filter(pi -> !excludedUris.contains(pi.getId()))
+                .map(pi -> {
+                    GXFSQueryUriItem uriItem = new GXFSQueryUriItem();
+                    uriItem.setUri(pi.getId());
+                    return uriItem;
+                }).toList();
+
+            GXFSCatalogListResponse<GXFSQueryUriItem> response = new GXFSCatalogListResponse<>();
+            response.setItems(uris);
+            response.setTotalCount(uris.size());
+            return (GXFSCatalogListResponse<T>) response;
+        } else {
+            return null;
+        }
     }
 
     @Override
@@ -225,7 +242,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     private List<String> findListOfIds(String query){
-        String regex = "IN \\[([^\\]]*)\\] return"; //
+        String regex = "IN \\[([^\\]]*)\\] return";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(query);
 
@@ -238,6 +255,21 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         }
 
         return ids;
+    }
+
+    private String findId(String query){
+        String regex = "p\\.uri\\s*=\\s*([^\\s]*)\\s*return";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(query);
+
+        List<String> ids = new ArrayList<>();
+
+        while (matcher.find()) {
+            String id = matcher.group(1).replace("\"", "");;
+            ids.add(id);
+        }
+
+        return ids.get(0);
     }
 
 }

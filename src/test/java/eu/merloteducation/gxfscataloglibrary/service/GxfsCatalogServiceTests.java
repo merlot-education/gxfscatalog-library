@@ -5,6 +5,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
@@ -402,6 +403,21 @@ class GxfsCatalogServiceTests {
 
         assertEquals(1, uriPage.getTotalCount());
         assertEquals(1, uriPage.getItems().size());
+    }
+
+    @Test
+    void getParticipantLegalNameByUri() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            gxfsCatalogService
+                .addParticipant(generateParticipantCredentialSubject("" + i, "MyParticipant" + i));
+        }
+
+        GXFSCatalogListResponse<GXFSQueryLegalNameItem> legalNames = gxfsCatalogService.getParticipantLegalNameByUri(
+            "LegalPerson", "2");
+
+        assertEquals(1, legalNames.getTotalCount());
+        assertEquals(1, legalNames.getItems().size());
+        assertEquals("MyParticipant2", legalNames.getItems().get(0).getLegalName());
     }
 
 }
