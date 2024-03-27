@@ -329,7 +329,7 @@ public class GxfsCatalogService {
      */
     public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPage(
             String participantType, String sortField, long offset, long size) {
-        QueryRequest query = new QueryRequest("MATCH (" + getParticipantTypeString(participantType) + ")"
+        QueryRequest query = new QueryRequest(getMatchParticipantTypeString(participantType)
                 + " return p.uri ORDER BY toLower(p." + sortField + ")"
                 + " SKIP " + offset + " LIMIT " + size);
         GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
@@ -357,7 +357,7 @@ public class GxfsCatalogService {
     public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPageWithExcludedUris(
         String participantType, String sortField, List<String> excludedUris, long offset, long size) {
         String excludedUrisString = listToString(excludedUris);
-        QueryRequest query = new QueryRequest("MATCH (" + getParticipantTypeString(participantType) + ")"
+        QueryRequest query = new QueryRequest(getMatchParticipantTypeString(participantType)
             + " WHERE NOT p.uri IN " + excludedUrisString
             + " return p.uri ORDER BY toLower(p." + sortField + ")"
             + " SKIP " + offset + " LIMIT " + size);
@@ -379,7 +379,7 @@ public class GxfsCatalogService {
      */
     public GXFSCatalogListResponse<GXFSQueryLegalNameItem> getParticipantLegalNameByUri(
         String participantType, String participantUri) {
-        QueryRequest query = new QueryRequest("MATCH (" + getParticipantTypeString(participantType) + ")"
+        QueryRequest query = new QueryRequest(getMatchParticipantTypeString(participantType)
             + " WHERE p.uri = \"" + participantUri + "\""
             + " return p.legalName");
 
@@ -578,7 +578,7 @@ public class GxfsCatalogService {
         }
     }
 
-    private String getParticipantTypeString(String participantType) {
-        return "p:" + participantType;
+    private String getMatchParticipantTypeString(String participantType) {
+        return "MATCH (p:" + participantType + ")";
     }
 }
