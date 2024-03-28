@@ -1,7 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -56,15 +55,19 @@ public class GxfsCatalogService {
 
     private final WebClient webClient;
 
+    private final ObjectMapper objectMapper;
+
     public GxfsCatalogService(@Autowired GxfsCatalogClient gxfsCatalogClient,
                               @Autowired GxfsSignerService gxfsSignerService,
                               @Autowired WebClient webClient,
+                              @Autowired ObjectMapper objectMapper,
                               @Value("${gxfscatalog.verification-method:#{null}}") String defaultVerificationMethod,
                               @Value("${gxfscatalog.cert-path:#{null}}") String defaultCertPath,
                               @Value("${gxfscatalog.private-key-path:#{null}}") String defaultPrivateKey) {
         this.gxfsCatalogClient = gxfsCatalogClient;
         this.gxfsSignerService = gxfsSignerService;
         this.webClient = webClient;
+        this.objectMapper = objectMapper;
         this.defaultVerificationMethod = defaultVerificationMethod;
         this.defaultCertPath = defaultCertPath;
         this.defaultPrivateKey = defaultPrivateKey;
@@ -370,29 +373,22 @@ public class GxfsCatalogService {
      * @param participantVerifiablePresentation signed verifiable presentation of the participant credential subject to insert into the catalog
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(VerifiablePresentation participantVerifiablePresentation)
-         {
-
-        // TODO
-
+    public ParticipantItem addParticipant(VerifiablePresentation participantVerifiablePresentation) {
         return this.gxfsCatalogClient.postAddParticipant(participantVerifiablePresentation);
     }
 
     /**
      * Given the signed verifiable presentation of the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson
-     * and whose id already exists in the catalog, send it to the catalog to update it.
+     * and the participant id, send it to the catalog to update it.
      *
      * @param participantVerifiablePresentation signed verifiable presentation of the participant credential subject to update in the catalog
 
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(VerifiablePresentation participantVerifiablePresentation)
-       {
-
-           // TODO
-           return this.gxfsCatalogClient.putUpdateParticipant(
-               "id", //participantVerifiablePresentation.getId(),
-               participantVerifiablePresentation);
+    public ParticipantItem updateParticipant(String participantId, VerifiablePresentation participantVerifiablePresentation) {
+       return this.gxfsCatalogClient.putUpdateParticipant(
+           participantId,
+           participantVerifiablePresentation);
     }
 
     private String listToString(List<String> stringList) {
