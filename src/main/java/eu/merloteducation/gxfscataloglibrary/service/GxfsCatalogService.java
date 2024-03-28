@@ -1,7 +1,9 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
@@ -19,7 +21,6 @@ import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -360,6 +361,38 @@ public class GxfsCatalogService {
             5,
             true,
             query);
+    }
+
+    /**
+     * Given the signed verifiable presentation of the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
+     * send it to the catalog.
+     *
+     * @param participantVerifiablePresentation signed verifiable presentation of the participant credential subject to insert into the catalog
+     * @return catalog content of the participant
+     */
+    public ParticipantItem addParticipant(VerifiablePresentation participantVerifiablePresentation)
+         {
+
+        // TODO
+
+        return this.gxfsCatalogClient.postAddParticipant(participantVerifiablePresentation);
+    }
+
+    /**
+     * Given the signed verifiable presentation of the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson
+     * and whose id already exists in the catalog, send it to the catalog to update it.
+     *
+     * @param participantVerifiablePresentation signed verifiable presentation of the participant credential subject to update in the catalog
+
+     * @return catalog content of the participant
+     */
+    public ParticipantItem updateParticipant(VerifiablePresentation participantVerifiablePresentation)
+       {
+
+           // TODO
+           return this.gxfsCatalogClient.putUpdateParticipant(
+               "id", //participantVerifiablePresentation.getId(),
+               participantVerifiablePresentation);
     }
 
     private String listToString(List<String> stringList) {
