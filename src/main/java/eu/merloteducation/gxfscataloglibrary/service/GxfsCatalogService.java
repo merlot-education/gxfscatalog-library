@@ -1,6 +1,7 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -10,6 +11,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
+import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
@@ -34,9 +36,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 public class GxfsCatalogService {
@@ -329,14 +329,16 @@ public class GxfsCatalogService {
      */
     public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPage(
             String participantType, String sortField, long offset, long size) {
-        QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
+        QueryRequest query = new QueryRequest(getMatchParticipantTypeString(participantType)
                 + " return p.uri ORDER BY toLower(p." + sortField + ")"
                 + " SKIP " + offset + " LIMIT " + size);
-        return this.gxfsCatalogClient.postQuery(
-                QueryLanguage.OPENCYPHER,
-                5,
-                true,
-                query);
+        GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
+            QueryLanguage.OPENCYPHER,
+            5,
+            true,
+            query);
+
+        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryUriItem>>() {});
     }
 
     /**
@@ -355,15 +357,39 @@ public class GxfsCatalogService {
     public GXFSCatalogListResponse<GXFSQueryUriItem> getSortedParticipantUriPageWithExcludedUris(
         String participantType, String sortField, List<String> excludedUris, long offset, long size) {
         String excludedUrisString = listToString(excludedUris);
-        QueryRequest query = new QueryRequest("MATCH (p:" + participantType + ")"
+        QueryRequest query = new QueryRequest(getMatchParticipantTypeString(participantType)
             + " WHERE NOT p.uri IN " + excludedUrisString
             + " return p.uri ORDER BY toLower(p." + sortField + ")"
             + " SKIP " + offset + " LIMIT " + size);
-        return this.gxfsCatalogClient.postQuery(
+        GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
             QueryLanguage.OPENCYPHER,
             5,
             true,
             query);
+
+        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryUriItem>>() {});
+    }
+
+    /**
+     * Given the uri of a participant, return (a list containing) the legal name of the participant.
+     *
+     * @param participantType type of the participant to query for, e.g. LegalPerson or MerlotOrganisation
+     * @param participantUri uri of the participant
+     * @return list containing the legal name of the participant
+     */
+    public GXFSCatalogListResponse<GXFSQueryLegalNameItem> getParticipantLegalNameByUri(
+        String participantType, String participantUri) {
+        QueryRequest query = new QueryRequest(getMatchParticipantTypeString(participantType)
+            + " WHERE p.uri = \"" + participantUri + "\""
+            + " return p.legalName");
+
+        GXFSCatalogListResponse<Map<String, Object>> response = this.gxfsCatalogClient.postQuery(
+            QueryLanguage.OPENCYPHER,
+            5,
+            true,
+            query);
+
+        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryLegalNameItem>>() {});
     }
 
     /**
@@ -575,5 +601,9 @@ public class GxfsCatalogService {
         } catch (IOException | NullPointerException e) {
             throw new CredentialSignatureException("Failed to read default certificate. " + e.getMessage());
         }
+    }
+
+    private String getMatchParticipantTypeString(String participantType) {
+        return "MATCH (p:" + participantType + ")";
     }
 }
