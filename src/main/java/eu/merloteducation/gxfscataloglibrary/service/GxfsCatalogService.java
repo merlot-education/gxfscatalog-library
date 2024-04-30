@@ -251,6 +251,22 @@ public class GxfsCatalogService {
 
     /**
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
+     * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
+     * The verification method must reference the certificate associated with the default key.
+     *
+     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
+     * @return catalog content of the participant
+     */
+    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject, String verificationMethod)
+        throws CredentialPresentationException, CredentialSignatureException {
+        return addParticipant(participantCredentialSubject, verificationMethod, getDefaultPrivateKey());
+    }
+
+    /**
+     * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
      * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
      * @param participantCredentialSubject participant credential subject to insert into the catalog
@@ -286,6 +302,24 @@ public class GxfsCatalogService {
     public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
             throws CredentialPresentationException, CredentialSignatureException {
         return updateParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+    }
+
+    /**
+     * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson
+     * and whose id already exists in the catalog, wrap it in a verifiable presentation,
+     * sign it using the provided verification method and the default key and send it to the catalog
+     * to update it.
+     * The verification method must reference the certificate associated with the default key.
+     *
+     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
+     * @return catalog content of the participant
+     */
+    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject, String verificationMethod)
+        throws CredentialPresentationException, CredentialSignatureException {
+        return updateParticipant(participantCredentialSubject, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
