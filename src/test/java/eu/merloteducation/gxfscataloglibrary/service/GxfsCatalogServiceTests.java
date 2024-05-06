@@ -109,6 +109,9 @@ class GxfsCatalogServiceTests {
         stubFor(get("/1234/somecert.pem")
                 .willReturn(ok()
                         .withBody(cert)));
+        stubFor(get("/.well-known/cert.pem")
+            .willReturn(ok()
+                .withBody(cert)));
 
         privateKey = "";
         try (InputStream prkStream =
@@ -252,6 +255,14 @@ class GxfsCatalogServiceTests {
         SelfDescriptionMeta meta =
                 gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"),
                         "did:web:localhost%3A8101:1234#JWK2020", privateKey);
+        assertNotNull(meta);
+    }
+
+    @Test
+    void addValidServiceOfferingMerlotVerificationMethod() throws Exception {
+        SelfDescriptionMeta meta =
+            gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"),
+                "did:web:localhost%3A8101:1234#MERLOTJWK2020");
         assertNotNull(meta);
     }
 

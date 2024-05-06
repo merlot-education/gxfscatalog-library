@@ -213,6 +213,22 @@ public class GxfsCatalogService {
 
     /**
      * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
+     * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
+     * The verification method must reference the certificate associated with the default key.
+     *
+     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @throws CredentialSignatureException exception during the signature of the presentation
+     * @return SD meta response of the catalog
+     */
+    public SelfDescriptionMeta addServiceOffering(
+        GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject, String verificationMethod)
+        throws CredentialPresentationException, CredentialSignatureException {
+        return addServiceOffering(serviceOfferingCredentialSubject, verificationMethod, getDefaultPrivateKey());
+    }
+
+    /**
+     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
      * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
      * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
