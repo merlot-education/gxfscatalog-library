@@ -109,6 +109,9 @@ class GxfsCatalogServiceTests {
         stubFor(get("/1234/somecert.pem")
                 .willReturn(ok()
                         .withBody(cert)));
+        stubFor(get("/.well-known/cert.pem")
+            .willReturn(ok()
+                .withBody(cert)));
 
         privateKey = "";
         try (InputStream prkStream =
@@ -256,6 +259,14 @@ class GxfsCatalogServiceTests {
     }
 
     @Test
+    void addValidServiceOfferingMerlotVerificationMethod() throws Exception {
+        SelfDescriptionMeta meta =
+            gxfsCatalogService.addServiceOffering(generateOfferingCredentialSubject("1", "2345"),
+                "did:web:localhost%3A8101:1234#MERLOTJWK2020");
+        assertNotNull(meta);
+    }
+
+    @Test
     void addInvalidServiceOffering() {
         GaxCoreServiceOfferingCredentialSubject subject = new GaxCoreServiceOfferingCredentialSubject();
         assertThrows(NullPointerException.class, () ->
@@ -297,6 +308,14 @@ class GxfsCatalogServiceTests {
                 .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
                         "did:web:localhost%3A8101:1234#JWK2020",
                         privateKey);
+        assertNotNull(item);
+    }
+
+    @Test
+    void addValidParticipantValidMerlotVerificationMethod() throws Exception {
+        ParticipantItem item = gxfsCatalogService
+            .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                "did:web:localhost%3A8101:1234#MERLOTJWK2020");
         assertNotNull(item);
     }
 
@@ -368,6 +387,22 @@ class GxfsCatalogServiceTests {
         assertNotNull(item2);
         assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
                 .getVerifiableCredential().getCredentialSubject()).getLegalName());
+    }
+
+    @Test
+    void updateExistingParticipantMerlotVerificationMethod() throws Exception {
+        ParticipantItem item = gxfsCatalogService
+            .addParticipant(generateParticipantCredentialSubject("2345", "MyParticipant"),
+                "did:web:localhost%3A8101:1234#MERLOTJWK2020");
+
+        GaxTrustLegalPersonCredentialSubject credentialSubject = (GaxTrustLegalPersonCredentialSubject) item
+            .getSelfDescription().getVerifiableCredential().getCredentialSubject();
+        credentialSubject.setLegalName("MyNewParticipant");
+        ParticipantItem item2 = gxfsCatalogService.updateParticipant(credentialSubject,
+            "did:web:localhost%3A8101:1234#MERLOTJWK2020");
+        assertNotNull(item2);
+        assertNotEquals("MyParticipant", ((GaxTrustLegalPersonCredentialSubject) item2.getSelfDescription()
+            .getVerifiableCredential().getCredentialSubject()).getLegalName());
     }
 
     @Test
