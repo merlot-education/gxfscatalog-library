@@ -217,6 +217,7 @@ public class GxfsCatalogService {
      * The verification method must reference the certificate associated with the default key.
      *
      * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
