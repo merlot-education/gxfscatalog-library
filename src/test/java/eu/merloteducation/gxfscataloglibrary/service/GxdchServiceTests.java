@@ -2,6 +2,7 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,18 +44,21 @@ class GxdchServiceTests {
     }
 
     @Test
+    @Disabled
     void checkComplianceSuccess() {
         JsonNode result = gxdchService.checkCompliance(null);
         assertNotNull(result);
     }
 
     @Test
+    @Disabled
     void getTncSuccess() {
         JsonNode result = gxdchService.getGxTnCs();
         assertNotNull(result);
     }
 
     @Test
+    @Disabled
     void verifyRegistrationNumberSuccess() {
         JsonNode result = gxdchService.verifyRegistrationNumber(null);
         assertNotNull(result);

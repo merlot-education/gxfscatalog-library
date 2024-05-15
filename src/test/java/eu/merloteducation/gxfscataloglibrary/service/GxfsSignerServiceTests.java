@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.PrivateKey;
 import java.security.cert.CertificateException;
@@ -41,9 +43,20 @@ class GxfsSignerServiceTests {
     void loadExternalCertificates() throws
             CredentialPresentationException, CredentialSignatureException {
         GxfsSignerService gxfsSignerService = new GxfsSignerService(new ObjectMapper());
+        SelfDescriptionCredentialSubject cs = generateCredentialSubject();
+        VerifiableCredential vc = gxfsSignerService.createVerifiableCredential(
+                cs,
+                URI.create("did:web:issuer.example.com"),
+                URI.create(cs.getId()));
+        gxfsSignerService.signVerifiableCredential(
+                vc,
+                "did:web:compliance.lab.gaia-x.eu",
+                loadPrivateKey(),
+                loadCertificates());
+
         VerifiablePresentation vp =
                 gxfsSignerService
-                        .presentVerifiableCredential(generateCredentialSubject(), "did:web:issuer.example.com");
+                        .createVerifiablePresentation(List.of(vc), vc.getId());
         gxfsSignerService.signVerifiablePresentation(
                 vp,
                 "did:web:compliance.lab.gaia-x.eu",
