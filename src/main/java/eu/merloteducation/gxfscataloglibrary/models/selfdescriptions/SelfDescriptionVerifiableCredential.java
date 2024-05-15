@@ -12,9 +12,7 @@ import java.util.List;
 public class SelfDescriptionVerifiableCredential {
     @JsonProperty("@context")
     private List<String> context;
-    @JsonProperty("@id")
     private String id;
-    @JsonProperty("@type")
     private List<String> type;
     private String issuer;
     private String issuanceDate;

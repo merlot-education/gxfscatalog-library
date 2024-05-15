@@ -47,7 +47,7 @@ class GxfsCatalogClientTests {
                                     "items": [
                                         {
                                             "meta": {
-                                                "content": "{\\"@id\\":\\"http://example.edu/verifiablePresentation/self-description1\\"}"
+                                                "content": "{\\"id\\":\\"http://example.edu/verifiablePresentation/self-description1\\"}"
                                             }
                                         }
                                     ]
