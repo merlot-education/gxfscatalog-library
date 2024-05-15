@@ -41,18 +41,14 @@ public class GxfsCatalogLibConfig {
     @Value("${gxfscatalog-library.ignore-ssl:false}")
     private boolean ignoreSsl;
 
-    @Value("${gxdch-services.compliance-base-uris}")
+    @Value("${gxdch-services.compliance-base-uris:}")
     private List<String> complianceServiceUris;
-    @Value("${gxdch-services.registry-base-uris}")
+    @Value("${gxdch-services.registry-base-uris:}")
     private List<String> registryServiceUris;
-    @Value("${gxdch-services.notary-base-uris}")
+    @Value("${gxdch-services.notary-base-uris:}")
     private List<String> notaryServiceUris;
-    @Value("${gxdch-services.version}")
+    @Value("${gxdch-services.version:#{null}}")
     private String serviceVersion;
-
-
-
-
 
     @Bean
     public GxfsCatalogClient gxfsCatalogClient(@Autowired GxfsCatalogAuthService gxfsCatalogAuthService) {
