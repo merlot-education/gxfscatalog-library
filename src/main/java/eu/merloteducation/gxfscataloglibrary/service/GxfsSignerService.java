@@ -89,7 +89,7 @@ public class GxfsSignerService {
                 .builder()
                 .id(id)
                 .build();
-        vp.setJsonObjectKeyValue("verifiableCredential", vcsJsonLd); // done outside of builder to support lists
+        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vcsJsonLd); // done outside of builder to support lists
         return vp;
     }
 

@@ -267,7 +267,8 @@ public class GxfsCatalogService {
         gxdchService.checkCompliance(vp);
 
         // reset vc of vp to single object for now for catalog use
-        vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
+
+        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vc.getJsonObject());
         gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
 
         return gxfsCatalogClient.postAddSelfDescription(vp);
@@ -338,7 +339,7 @@ public class GxfsCatalogService {
         gxdchService.checkCompliance(vp);
 
         // reset vc of vp to single object for now for catalog use
-        vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
+        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vc.getJsonObject());
         gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
 
         return this.gxfsCatalogClient.postAddParticipant(vp);
@@ -415,7 +416,7 @@ public class GxfsCatalogService {
         gxdchService.checkCompliance(vp);
 
         // reset vc of vp to single object for now for catalog use
-        vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
+        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vc.getJsonObject());
         gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
 
         return this.gxfsCatalogClient.putUpdateParticipant(
