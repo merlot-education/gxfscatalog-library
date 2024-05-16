@@ -129,7 +129,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     @Override
     public SelfDescriptionMeta postAddSelfDescription(VerifiablePresentation body) {
         SelfDescriptionItem item = generateBasicOfferingSdItem(
-                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("@id").toString(),
+                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("id").toString(),
                 body.getVerifiableCredential().getIssuer().toString(),
                 body.getVerifiableCredential().getIssuer().toString(),
                 SelfDescriptionStatus.ACTIVE
@@ -208,7 +208,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     @Override
     public ParticipantItem postAddParticipant(VerifiablePresentation body) {
         ParticipantItem item = generateParticipantItem(
-                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("@id").toString(),
+                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("id").toString(),
                 ((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
                         .get("gax-trust-framework:legalName")).get("@value"));
         participantItems.add(item);

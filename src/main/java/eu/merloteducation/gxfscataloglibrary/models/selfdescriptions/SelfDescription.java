@@ -13,8 +13,8 @@ import java.util.List;
 public class SelfDescription {
 
     @NotNull
-    @JsonProperty("@id")
     private String id;
+
     private List<String> type;
 
     @NotNull

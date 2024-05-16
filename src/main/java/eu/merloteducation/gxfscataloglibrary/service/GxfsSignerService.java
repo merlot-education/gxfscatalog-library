@@ -4,6 +4,7 @@ import com.danubetech.keyformats.crypto.PrivateKeySigner;
 import com.danubetech.keyformats.crypto.PublicKeyVerifier;
 import com.danubetech.keyformats.crypto.impl.RSA_PS256_PrivateKeySigner;
 import com.danubetech.keyformats.crypto.impl.RSA_PS256_PublicKeyVerifier;
+import com.danubetech.verifiablecredentials.CredentialSubject;
 import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -29,11 +30,10 @@ import java.net.URI;
 import java.security.*;
 import java.security.cert.X509Certificate;
 import java.security.interfaces.RSAPublicKey;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class GxfsSignerService {
@@ -49,38 +49,73 @@ public class GxfsSignerService {
     }
 
     /**
-     * Given a credential subject and an issuer, wrap it in an unsigned verifiable presentation.
+     * Given a credential subject, issuer and credential id, create a corresponding unsigned verifiable credential.
      *
      * @param credentialSubject credential subject to wrap
-     * @param issuer issuer of the presentation
-     * @throws CredentialPresentationException exception during the presentation of the credential
+     * @param issuer issuer of the credential
+     * @param id id of the credential
+     * @return verifiable credential
+     * @throws CredentialPresentationException error during creation of credential
      */
-    public VerifiablePresentation presentVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
-                                                              String issuer) throws CredentialPresentationException {
-        String credentialSubjectJson;
+    public VerifiableCredential createVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
+                                                           URI issuer,
+                                                           URI id) throws CredentialPresentationException {
         try {
-            credentialSubjectJson = mapper.writeValueAsString(credentialSubject);
+            CredentialSubject cs = CredentialSubject.fromJson(mapper.writeValueAsString(credentialSubject));
+            return VerifiableCredential
+                    .builder()
+                    .id(id)
+                    .issuanceDate(Date.from(Instant.now()))
+                    .credentialSubject(cs)
+                    .issuer(issuer)
+                    .build();
         } catch (JsonProcessingException e) {
             throw new CredentialPresentationException(e.getMessage());
         }
+    }
 
-        return VerifiablePresentation.fromJson("""
-            {
-                "@context": ["https://www.w3.org/2018/credentials/v1"],
-                "@id": "http://example.edu/verifiablePresentation/self-description1",
-                "type": ["VerifiablePresentation"],
-                "verifiableCredential": {
-                    "@context": ["https://www.w3.org/2018/credentials/v1"],
-                    "@id": "https://www.example.org/ServiceOffering.json",
-                    "@type": ["VerifiableCredential"],
-                    "issuer": \"""" + issuer + """
-            ",
-            "issuanceDate": \"""" + OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT) + """
-            ",
-            "credentialSubject":\s""" + credentialSubjectJson + """
-                }
-            }
-            """);
+    /**
+     * Given a list of verifiable credentials and a presentation ID, wrap it in an unsigned verifiable presentation.
+     *
+     * @param vcs list of credential subjects to wrap
+     * @param id id of the presentation
+     */
+    public VerifiablePresentation createVerifiablePresentation(List<VerifiableCredential> vcs,
+                                                               URI id) {
+
+        // Map vcs to Map to allow signature later on (VerifiableCredential class is unsupported)
+        List<Map<String, Object>> vcsJsonLd = vcs.stream().map(JsonLDObject::getJsonObject).toList();
+        VerifiablePresentation vp = VerifiablePresentation
+                .builder()
+                .id(id)
+                .build();
+        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vcsJsonLd); // done outside of builder to support lists
+        return vp;
+    }
+
+    /**
+     * Given a verifiable credential, sign it with the provided private key and verification method.
+     * If a non-empty list of certificates is given, also check if any of them match the private key.
+     *
+     * @param vc credential to sign
+     * @param verificationMethod method for signing
+     * @param prk private key for signature
+     * @param certs certificates to check the signature against (if empty list, skip check)
+     * @throws CredentialSignatureException exception during the signature of the vp
+     */
+    public void signVerifiableCredential(VerifiableCredential vc,
+                                           String verificationMethod,
+                                           PrivateKey prk,
+                                           List<X509Certificate> certs) throws CredentialSignatureException {
+        try {
+            logger.debug("Signing VC");
+            LdProof vcProof = sign(vc, verificationMethod, prk);
+            check(vc, vcProof, certs);
+            vc.setJsonObjectKeyValue("proof", vc.getLdProof().getJsonObject());
+            logger.debug("Signed");
+        } catch (IOException | GeneralSecurityException | JsonLDException e) {
+            throw new CredentialSignatureException(e.getMessage());
+        }
     }
 
     /**
@@ -97,26 +132,15 @@ public class GxfsSignerService {
                                            String verificationMethod,
                                            PrivateKey prk,
                                            List<X509Certificate> certs) throws CredentialSignatureException {
-        VerifiableCredential vc = vp.getVerifiableCredential();
-
         try {
-            logger.debug("Signing VC");
-            LdProof vcProof = sign(vc, verificationMethod, prk);
-            check(vc, vcProof, certs);
-            logger.debug("Signed");
-
-            vc.setJsonObjectKeyValue("proof", vc.getLdProof().getJsonObject());
-            vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
-
             logger.debug("Signing VP");
             LdProof vpProof = sign(vp, verificationMethod, prk);
             check(vp, vpProof, certs);
+            vp.setJsonObjectKeyValue("proof", vp.getLdProof().getJsonObject());
             logger.debug("Signed");
         } catch (IOException | GeneralSecurityException | JsonLDException e) {
             throw new CredentialSignatureException(e.getMessage());
         }
-
-        vp.setJsonObjectKeyValue("proof", vp.getLdProof().getJsonObject());
     }
 
     /**

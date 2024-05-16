@@ -1,8 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.config;
 
-import eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogAuthService;
-import eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogClient;
-import eu.merloteducation.gxfscataloglibrary.service.GxfsWizardApiClient;
+import eu.merloteducation.gxfscataloglibrary.service.*;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
@@ -24,6 +22,11 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 
 import javax.net.ssl.SSLException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Configuration
 @PropertySource("classpath:application.yml")
@@ -37,6 +40,15 @@ public class GxfsCatalogLibConfig {
 
     @Value("${gxfscatalog-library.ignore-ssl:false}")
     private boolean ignoreSsl;
+
+    @Value("${gxdch-services.compliance-base-uris:}")
+    private List<String> complianceServiceUris;
+    @Value("${gxdch-services.registry-base-uris:}")
+    private List<String> registryServiceUris;
+    @Value("${gxdch-services.notary-base-uris:}")
+    private List<String> notaryServiceUris;
+    @Value("${gxdch-services.version:#{null}}")
+    private String serviceVersion;
 
     @Bean
     public GxfsCatalogClient gxfsCatalogClient(@Autowired GxfsCatalogAuthService gxfsCatalogAuthService) {
@@ -95,6 +107,54 @@ public class GxfsCatalogLibConfig {
             webClientBuilder.clientConnector(new ReactorClientHttpConnector(httpClient));
         }
         return webClientBuilder.build();
+    }
+
+    @Bean
+    public Map<String, GxComplianceClient> gxComplianceClients() {
+        Map<String, GxComplianceClient> clients = new HashMap<>();
+        for (String clientUri : complianceServiceUris) {
+            String fullUri = getBaseUriWithVersion(clientUri);
+            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
+            clients.put(fullUri, httpServiceProxyFactory.createClient(GxComplianceClient.class));
+        }
+        return clients;
+    }
+
+    @Bean
+    public Map<String, GxRegistryClient> gxRegistryClients() {
+        Map<String, GxRegistryClient> clients = new HashMap<>();
+        for (String clientUri : registryServiceUris) {
+            String fullUri = getBaseUriWithVersion(clientUri);
+            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
+            clients.put(fullUri, httpServiceProxyFactory.createClient(GxRegistryClient.class));
+        }
+        return clients;
+    }
+
+    @Bean
+    public Map<String, GxNotaryClient> gxNotaryClients() {
+        Map<String, GxNotaryClient> clients = new HashMap<>();
+        for (String clientUri : notaryServiceUris) {
+            String fullUri = getBaseUriWithVersion(clientUri);
+            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
+            clients.put(fullUri, httpServiceProxyFactory.createClient(GxNotaryClient.class));
+        }
+        return clients;
+    }
+
+    private HttpServiceProxyFactory getHttpServiceProxyFactory(String uri) {
+        WebClient webClient = WebClient.builder()
+                .baseUrl(uri)
+                // Set connection and read timeouts
+                .clientConnector(new ReactorClientHttpConnector(HttpClient.create().responseTimeout(Duration.ofSeconds(30))))
+                .build();
+        return HttpServiceProxyFactory
+                .builderFor(WebClientAdapter.create(webClient))
+                .build();
+    }
+
+    private String getBaseUriWithVersion(String baseUri){
+        return baseUri + "/" + serviceVersion;
     }
 
 }

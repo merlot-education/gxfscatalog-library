@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, visible = true, defaultImpl = UnknownCredentialSubject.class)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type", visible = true, defaultImpl = UnknownCredentialSubject.class)
 @JsonSubTypes({
         @JsonSubTypes.Type(value = GaxTrustLegalPersonCredentialSubject.class, name = "gax-trust-framework:LegalPerson"),
         @JsonSubTypes.Type(value = MerlotOrganizationCredentialSubject.class, name = "merlot:MerlotOrganization"),
@@ -30,10 +30,8 @@ import java.util.Map;
 })
 public class SelfDescriptionCredentialSubject {
     // base fields
-    @JsonProperty("@id")
     private String id;
 
-    @JsonProperty("@type")
     private String type;
 
     @JsonProperty("@context")
