@@ -2,7 +2,6 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,9 +38,6 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -253,6 +249,8 @@ public class GxfsCatalogService {
             GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject,
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
+
+        // TODO extract VP creation functionality once shapes are adapted
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
 
@@ -265,15 +263,12 @@ public class GxfsCatalogService {
         VerifiablePresentation vp = gxfsSignerService.createVerifiablePresentation(
                 List.of(vc), // wrap vc into list
                 URI.create(serviceOfferingCredentialSubject.getId())); // set vp id to cs id for now
-        System.out.println(vp);
 
         gxdchService.checkCompliance(vp);
 
         // reset vc of vp to single object for now for catalog use
         vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
         gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
-
-        System.out.println(vp);
 
         return gxfsCatalogClient.postAddSelfDescription(vp);
     }
@@ -322,6 +317,8 @@ public class GxfsCatalogService {
     public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
                                           String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
+
+        // TODO extract VP creation functionality once shapes are adapted
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
 
@@ -335,8 +332,6 @@ public class GxfsCatalogService {
                 List.of(vc), // wrap vc into list
                 URI.create(participantCredentialSubject.getId())); // set vp id to cs id for now
 
-        System.out.println(vp);
-
         gxdchService.getGxTnCs();
         gxdchService.verifyRegistrationNumber(objectMapper.valueToTree(
                 participantCredentialSubject.getRegistrationNumber()));
@@ -345,8 +340,6 @@ public class GxfsCatalogService {
         // reset vc of vp to single object for now for catalog use
         vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
         gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
-
-        System.out.println(vp);
 
         return this.gxfsCatalogClient.postAddParticipant(vp);
     }
@@ -401,6 +394,8 @@ public class GxfsCatalogService {
     public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
                                              String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
+
+        // TODO extract VP creation functionality once shapes are adapted
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
 
@@ -414,8 +409,6 @@ public class GxfsCatalogService {
                 List.of(vc), // wrap vc into list
                 URI.create(participantCredentialSubject.getId())); // set vp id to cs id for now
 
-        System.out.println(vp);
-
         gxdchService.getGxTnCs();
         gxdchService.verifyRegistrationNumber(objectMapper.valueToTree(
                 participantCredentialSubject.getRegistrationNumber()));
@@ -424,8 +417,6 @@ public class GxfsCatalogService {
         // reset vc of vp to single object for now for catalog use
         vp.setJsonObjectKeyValue("verifiableCredential", vc.getJsonObject());
         gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
-
-        System.out.println(vp);
 
         return this.gxfsCatalogClient.putUpdateParticipant(
                 participantCredentialSubject.getId(),

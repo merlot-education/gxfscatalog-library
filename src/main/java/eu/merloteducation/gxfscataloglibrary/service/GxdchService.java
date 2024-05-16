@@ -2,7 +2,6 @@ package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,17 +12,14 @@ import java.util.Map;
 @Service
 @Slf4j
 public class GxdchService {
-    private final ObjectMapper objectMapper;
 
     private final Map<String, GxComplianceClient> gxComplianceClients;
     private final Map<String, GxRegistryClient> gxRegistryClients;
     private final Map<String, GxNotaryClient> gxNotaryClients;
 
-    public GxdchService(@Autowired ObjectMapper objectMapper,
-                        @Autowired Map<String, GxComplianceClient> gxComplianceClients,
+    public GxdchService(@Autowired Map<String, GxComplianceClient> gxComplianceClients,
                         @Autowired Map<String, GxRegistryClient> gxRegistryClients,
                         @Autowired Map<String, GxNotaryClient> gxNotaryClients) {
-        this.objectMapper = objectMapper;
         this.gxComplianceClients = gxComplianceClients;
         this.gxRegistryClients = gxRegistryClients;
         this.gxNotaryClients = gxNotaryClients;
@@ -34,6 +30,7 @@ public class GxdchService {
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {
             log.info("Checking compliance with Compliance Service {}", clientEntry.getKey());
+            log.debug("VP: {}", vp);
             try {
                 return clientEntry.getValue().postCredentialOffer(null, vp);
             } catch (WebClientResponseException e) {
@@ -70,6 +67,7 @@ public class GxdchService {
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxNotaryClient> clientEntry : gxNotaryClients.entrySet()) {
             log.info("Verifying registration number at Notary {}", clientEntry.getKey());
+            log.debug("Registration number: {}", registrationNumber);
             try {
                 return clientEntry.getValue().postRegistrationNumber(null, registrationNumber);
             } catch (WebClientResponseException e) {
