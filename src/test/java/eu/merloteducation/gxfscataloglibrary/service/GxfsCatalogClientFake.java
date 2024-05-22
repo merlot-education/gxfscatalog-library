@@ -8,12 +8,11 @@ import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.NodeKindIRITypeId;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.RegistrationNumber;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.VCard;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.participants.MerlotOrganizationCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.NodeKindIRITypeId;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxVcard;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.ServiceOfferingCredentialSubject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -39,13 +38,16 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         item.getMeta().setStatus(status.getValue());
         item.getMeta().setContent(new SelfDescription());
         item.getMeta().getContent().setId(id);
-        item.getMeta().getContent().setVerifiableCredential(new SelfDescriptionVerifiableCredential());
-        GaxCoreServiceOfferingCredentialSubject credentialSubject = new GaxCoreServiceOfferingCredentialSubject();
-        item.getMeta().getContent().getVerifiableCredential().setCredentialSubject(credentialSubject);
 
+        ServiceOfferingCredentialSubject credentialSubject = new ServiceOfferingCredentialSubject();
         credentialSubject.setId(id);
-        credentialSubject.setType("gax-core:ServiceOffering");
-        credentialSubject.setOfferedBy(new NodeKindIRITypeId(offeredBy));
+        credentialSubject.setType("gx:ServiceOffering");
+        credentialSubject.setProvidedBy(new NodeKindIRITypeId(offeredBy));
+
+        SelfDescriptionVerifiableCredential vc = new SelfDescriptionVerifiableCredential();
+        vc.setCredentialSubject(credentialSubject);
+
+        item.getMeta().getContent().setVerifiableCredential(List.of(vc));
         return item;
     }
 
@@ -55,21 +57,32 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         item.setName(name);
         item.setSelfDescription(new SelfDescription());
         item.getSelfDescription().setId(id);
-        item.getSelfDescription().setVerifiableCredential(new SelfDescriptionVerifiableCredential());
-        GaxTrustLegalPersonCredentialSubject credentialSubject = new GaxTrustLegalPersonCredentialSubject();
-        item.getSelfDescription().getVerifiableCredential().setCredentialSubject(credentialSubject);
-        credentialSubject.setId(id);
-        credentialSubject.setType("gax-trust-framework:LegalPerson");
-        credentialSubject.setRegistrationNumber(new RegistrationNumber());
-        credentialSubject.setLegalName(name);
-        credentialSubject.getRegistrationNumber().setLocal("12345");
-        VCard address = new VCard();
-        address.setCountryName("DE");
-        address.setStreetAddress("Some Street 3");
+
+        LegalParticipantCredentialSubject participantCs = new LegalParticipantCredentialSubject();
+        participantCs.setId(id + "#legalParticipant");
+        participantCs.setName(name);
+        participantCs.setLegalRegistrationNumber(List.of(new NodeKindIRITypeId("did:web:1234")));
+        GxVcard address = new GxVcard();
+        address.setCountryCode("DE");
+        address.setCountrySubdivisionCode(List.of("DE-BER"));
         address.setLocality("Berlin");
+        address.setStreetAddress("Some Street 3");
         address.setPostalCode("12345");
-        credentialSubject.setHeadquarterAddress(address);
-        credentialSubject.setLegalAddress(address);
+        participantCs.setLegalAddress(address);
+        participantCs.setHeadquarterAddress(address);
+        SelfDescriptionVerifiableCredential participantVc = new SelfDescriptionVerifiableCredential();
+        participantVc.setId(id);
+        participantVc.setCredentialSubject(participantCs);
+
+        LegalRegistrationNumberCredentialSubject registrationNumberCs = new LegalRegistrationNumberCredentialSubject();
+        registrationNumberCs.setId(id + "#legalRegistrationNumber");
+        registrationNumberCs.setVatID(List.of("FR79537407926"));
+        SelfDescriptionVerifiableCredential registrationNumberVc = new SelfDescriptionVerifiableCredential();
+        registrationNumberVc.setId(id);
+        registrationNumberVc.setCredentialSubject(registrationNumberCs);
+
+        item.getSelfDescription().setVerifiableCredential(List.of(participantVc, registrationNumberVc));
+
         return item;
     }
 
@@ -169,8 +182,11 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
             List<GXFSQueryLegalNameItem> legalNames = participantItems.stream().filter(pi -> pi.getId().equals(id))
                 .map(pi -> {
+                    LegalParticipantCredentialSubject cs = getLegalParticipantCredentialSubject(pi);
                     GXFSQueryLegalNameItem legalNameItem = new GXFSQueryLegalNameItem();
-                    legalNameItem.setLegalName(((GaxTrustLegalPersonCredentialSubject) pi.getSelfDescription().getVerifiableCredential().getCredentialSubject()).getLegalName());
+                    if (cs != null) {
+                        legalNameItem.setLegalName(cs.getName());
+                    }
                     return legalNameItem;
                 }).toList();
 
@@ -225,11 +241,11 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     public ParticipantItem putUpdateParticipant(String participantId, VerifiablePresentation body) {
         checkError(participantId);
         ParticipantItem item = findParticipantItemById(participantId);
-        GaxTrustLegalPersonCredentialSubject credentialSubject =
-                (GaxTrustLegalPersonCredentialSubject)
-                        item.getSelfDescription().getVerifiableCredential().getCredentialSubject();
-        credentialSubject.setLegalName(((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
-                        .get("gax-trust-framework:legalName")).get("@value"));
+        LegalParticipantCredentialSubject cs = getLegalParticipantCredentialSubject(item);
+        if (cs != null) {
+            cs.setName(((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
+                    .get("gx:name")).get("@value"));
+        }
         return item;
     }
 
@@ -270,6 +286,13 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         }
 
         return ids.get(0);
+    }
+
+    private LegalParticipantCredentialSubject getLegalParticipantCredentialSubject(ParticipantItem pi) {
+        return pi.getSelfDescription().getVerifiableCredential().stream()
+                .filter(vc -> vc.getCredentialSubject() instanceof LegalParticipantCredentialSubject)
+                .map(vc -> (LegalParticipantCredentialSubject) vc.getCredentialSubject()).findFirst()
+                .orElse(null);
     }
 
 }

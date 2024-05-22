@@ -5,8 +5,7 @@ import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
-import io.netty.util.internal.StringUtil;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.VCCredentialSubject;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -31,8 +30,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @ExtendWith(MockitoExtension.class)
 class GxfsSignerServiceTests {
 
-    private SelfDescriptionCredentialSubject generateCredentialSubject() {
-        SelfDescriptionCredentialSubject subject = new SelfDescriptionCredentialSubject();
+    private VCCredentialSubject generateCredentialSubject() {
+        VCCredentialSubject subject = new VCCredentialSubject();
         subject.setId("did:web:subject.example.com");
         subject.setType("context:type");
         subject.setContext(Map.of("context", "http://example.com"));
@@ -43,7 +42,7 @@ class GxfsSignerServiceTests {
     void loadExternalCertificates() throws
             CredentialPresentationException, CredentialSignatureException {
         GxfsSignerService gxfsSignerService = new GxfsSignerService(new ObjectMapper());
-        SelfDescriptionCredentialSubject cs = generateCredentialSubject();
+        VCCredentialSubject cs = generateCredentialSubject();
         VerifiableCredential vc = gxfsSignerService.createVerifiableCredential(
                 cs,
                 URI.create("did:web:issuer.example.com"),

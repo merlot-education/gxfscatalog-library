@@ -14,12 +14,9 @@ import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatur
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
 import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
@@ -207,15 +204,15 @@ public class GxfsCatalogService {
      * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
      * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
-     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject)
+            List<VCCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(serviceOfferingCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+        return addServiceOffering(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -223,23 +220,23 @@ public class GxfsCatalogService {
      * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
      * The verification method must reference the certificate associated with the default key.
      *
-     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-        GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject, String verificationMethod)
+            List<VCCredentialSubject> credentialSubjects, String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(serviceOfferingCredentialSubject, verificationMethod, getDefaultPrivateKey());
+        return addServiceOffering(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
      * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
      * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
-     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
@@ -247,11 +244,11 @@ public class GxfsCatalogService {
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject,
+            List<VCCredentialSubject> credentialSubjects,
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(List.of(serviceOfferingCredentialSubject),
+        VerifiablePresentation vp = createSignedVerifiablePresentation(credentialSubjects,
                 verificationMethod, privateKey);
 
         return gxfsCatalogClient.postAddSelfDescription(vp);
@@ -261,14 +258,14 @@ public class GxfsCatalogService {
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
      * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
-     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
+    public ParticipantItem addParticipant(List<VCCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+        return addParticipant(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -276,36 +273,98 @@ public class GxfsCatalogService {
      * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
      * The verification method must reference the certificate associated with the default key.
      *
-     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject, String verificationMethod)
+    public ParticipantItem addParticipant(List<VCCredentialSubject> credentialSubjects,
+                                          String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return addParticipant(participantCredentialSubject, verificationMethod, getDefaultPrivateKey());
+        return addParticipant(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
      * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
-     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
+    public ParticipantItem addParticipant(List<VCCredentialSubject> credentialSubjects,
                                           String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(List.of(participantCredentialSubject),
-                verificationMethod, privateKey);
+        // make sure there is at least one legal participant CS
+        credentialSubjects.stream()
+                .filter(LegalParticipantCredentialSubject.class::isInstance)
+                .map(s -> (LegalParticipantCredentialSubject) s)
+                .findFirst().orElseThrow(
+                        () -> new CredentialPresentationException(
+                                "Could not find Legal participant in list of credential subjects."));
 
-        return this.gxfsCatalogClient.postAddParticipant(vp);
+        // make sure there is at least one legal registration number CS
+        credentialSubjects.stream()
+                .filter(LegalRegistrationNumberCredentialSubject.class::isInstance)
+                .map(s -> (LegalRegistrationNumberCredentialSubject) s)
+                .findFirst().orElseThrow(
+                        () -> new CredentialPresentationException(
+                                "Could not find registration number in list of credential subjects."));
+
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
+
+        List<VerifiableCredential> complianceVcs = new ArrayList<>();
+        List<VerifiableCredential> fullVcs = new ArrayList<>();
+
+        // TODO incorporate Gaia-X TnC into SD
+        gxdchService.getGxTnCs();
+
+        for (VCCredentialSubject cs : credentialSubjects) {
+            VerifiableCredential credential;
+            // check type to decide who signs the CS
+            if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
+                // let notary sign registration number
+                credential = gxdchService.verifyRegistrationNumber(registrationNumberCs);
+                complianceVcs.add(credential);
+            } else {
+                // otherwise we sign ourselves
+                credential = gxfsSignerService.createVerifiableCredential(
+                        cs,
+                        URI.create(cs.getId()), // set issuer to cs id
+                        URI.create(cs.getId())); // set vc id to cs id
+                gxfsSignerService
+                        .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
+                if (cs instanceof LegalParticipantCredentialSubject) {
+                    // if CS is Gaia-X Legal Participant, add them to the compliance VCs
+                    complianceVcs.add(credential);
+                }
+            }
+            // regardless of type, add the signed VC to our list of VCs for the SD
+            fullVcs.add(credential);
+        }
+
+        // set up a VP for the compliance service
+        VerifiablePresentation complianceVp = gxfsSignerService.createVerifiablePresentation(
+                complianceVcs, // insert credentials into vp
+                complianceVcs.get(0).getId()); // set vp id to first cs id for now
+
+        // TODO check and store result of compliance
+        JsonNode complianceResult = gxdchService.checkCompliance(complianceVp);
+
+        VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
+                fullVcs, // insert credentials into vp
+                fullVcs.get(0).getId()); // set vp id to first cs id for now
+
+        // sign verifiable presentation for catalog storage
+        gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
+
+        return this.gxfsCatalogClient.postAddParticipant(fullVp);
     }
 
     /**
@@ -314,14 +373,14 @@ public class GxfsCatalogService {
      * sign it using the default verification method and key and send it to the catalog
      * to update it.
      *
-     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
+    public ParticipantItem updateParticipant(List<VCCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
-        return updateParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+        return updateParticipant(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -331,15 +390,16 @@ public class GxfsCatalogService {
      * to update it.
      * The verification method must reference the certificate associated with the default key.
      *
-     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject, String verificationMethod)
+    public ParticipantItem updateParticipant(List<VCCredentialSubject> credentialSubjects,
+                                             String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return updateParticipant(participantCredentialSubject, verificationMethod, getDefaultPrivateKey());
+        return updateParticipant(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -348,22 +408,22 @@ public class GxfsCatalogService {
      * sign it using the provided verification method and key and send it to the catalog
      * to update it.
      *
-     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
+    public ParticipantItem updateParticipant(List<VCCredentialSubject> credentialSubjects,
                                              String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(List.of(participantCredentialSubject),
+        VerifiablePresentation vp = createSignedVerifiablePresentation(credentialSubjects,
                 verificationMethod, privateKey);
 
         return this.gxfsCatalogClient.putUpdateParticipant(
-                participantCredentialSubject.getId(),
+                credentialSubjects.get(0).getId(),
                 vp);
     }
 
@@ -441,22 +501,23 @@ public class GxfsCatalogService {
             true,
             query);
 
-        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryLegalNameItem>>() {});
+        return objectMapper.convertValue(response, new TypeReference<>() {
+        });
     }
 
     private VerifiablePresentation createSignedVerifiablePresentation(
-            List<SelfDescriptionCredentialSubject> subjects,
+            List<VCCredentialSubject> subjects,
             String verificationMethod,
             String privateKey) throws CredentialSignatureException, CredentialPresentationException {
 
-        boolean isParticipant = subjects.get(0) instanceof GaxTrustLegalPersonCredentialSubject;
+        boolean isParticipant = subjects.stream().anyMatch(LegalParticipantCredentialSubject.class::isInstance);
 
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
 
         List<VerifiableCredential> credentials = new ArrayList<>();
 
-        for (SelfDescriptionCredentialSubject cs : subjects) {
+        for (VCCredentialSubject cs : subjects) {
             VerifiableCredential vc;
             if (isParticipant) {
                 vc = gxfsSignerService.createVerifiableCredential(
@@ -466,7 +527,8 @@ public class GxfsCatalogService {
             } else {
                 vc = gxfsSignerService.createVerifiableCredential(
                         cs,
-                        URI.create(((GaxCoreServiceOfferingCredentialSubject) cs).getOfferedBy().getId()), // set issuer to offered by
+                        // TODO fix offerings issuer
+                        URI.create("TODO"), // set issuer to offered by
                         URI.create(cs.getId())); // set vc id to cs id
             }
             gxfsSignerService.signVerifiableCredential(vc, verificationMethod, prk, certificates); // sign vc
@@ -480,8 +542,12 @@ public class GxfsCatalogService {
         // if participant, request Gaia-X TnC as well as validate registration number with notary
         if (isParticipant) {
             gxdchService.getGxTnCs();
-            gxdchService.verifyRegistrationNumber(objectMapper.valueToTree(
-                    ((GaxTrustLegalPersonCredentialSubject) subjects.get(0)).getRegistrationNumber()));
+
+            subjects.stream()
+                    .filter(LegalRegistrationNumberCredentialSubject.class::isInstance)
+                    .map(s -> (LegalRegistrationNumberCredentialSubject) s)
+                    .findFirst().ifPresent(gxdchService::verifyRegistrationNumber);
+
         }
 
         // regardless of type check for compliance

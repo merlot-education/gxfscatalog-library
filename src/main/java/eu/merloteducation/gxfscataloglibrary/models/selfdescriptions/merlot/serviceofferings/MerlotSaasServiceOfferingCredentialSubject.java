@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.VCCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.datatypes.AllowedUserCount;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
@@ -16,7 +17,7 @@ import java.util.List;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class SaaSCredentialSubject extends MerlotServiceOfferingCredentialSubject {
+public class MerlotSaasServiceOfferingCredentialSubject extends VCCredentialSubject {
     // inherited from merlot:MerlotServiceOfferingSaaS
 
     @JsonProperty("merlot:hardwareRequirements")

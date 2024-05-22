@@ -4,7 +4,6 @@ import com.danubetech.keyformats.crypto.PrivateKeySigner;
 import com.danubetech.keyformats.crypto.PublicKeyVerifier;
 import com.danubetech.keyformats.crypto.impl.RSA_PS256_PrivateKeySigner;
 import com.danubetech.keyformats.crypto.impl.RSA_PS256_PublicKeyVerifier;
-import com.danubetech.verifiablecredentials.CredentialSubject;
 import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -12,7 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.VCCredentialSubject;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
@@ -57,11 +56,11 @@ public class GxfsSignerService {
      * @return verifiable credential
      * @throws CredentialPresentationException error during creation of credential
      */
-    public VerifiableCredential createVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
+    public VerifiableCredential createVerifiableCredential(VCCredentialSubject credentialSubject,
                                                            URI issuer,
                                                            URI id) throws CredentialPresentationException {
         try {
-            CredentialSubject cs = CredentialSubject.fromJson(mapper.writeValueAsString(credentialSubject));
+            com.danubetech.verifiablecredentials.CredentialSubject cs = com.danubetech.verifiablecredentials.CredentialSubject.fromJson(mapper.writeValueAsString(credentialSubject));
             return VerifiableCredential
                     .builder()
                     .id(id)

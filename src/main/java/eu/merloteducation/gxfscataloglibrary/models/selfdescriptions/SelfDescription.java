@@ -1,7 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes.SDProof;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -23,6 +22,6 @@ public class SelfDescription {
 
     private SDProof proof;
 
-    private SelfDescriptionVerifiableCredential verifiableCredential;
+    private List<SelfDescriptionVerifiableCredential> verifiableCredential;
 
 }
