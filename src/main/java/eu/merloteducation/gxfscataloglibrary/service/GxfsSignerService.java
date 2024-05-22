@@ -4,6 +4,7 @@ import com.danubetech.keyformats.crypto.PrivateKeySigner;
 import com.danubetech.keyformats.crypto.PublicKeyVerifier;
 import com.danubetech.keyformats.crypto.impl.RSA_PS256_PrivateKeySigner;
 import com.danubetech.keyformats.crypto.impl.RSA_PS256_PublicKeyVerifier;
+import com.danubetech.verifiablecredentials.CredentialSubject;
 import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -60,7 +61,7 @@ public class GxfsSignerService {
                                                            URI issuer,
                                                            URI id) throws CredentialPresentationException {
         try {
-            com.danubetech.verifiablecredentials.CredentialSubject cs = com.danubetech.verifiablecredentials.CredentialSubject.fromJson(mapper.writeValueAsString(credentialSubject));
+            CredentialSubject cs = CredentialSubject.fromJson(mapper.writeValueAsString(credentialSubject));
             return VerifiableCredential
                     .builder()
                     .id(id)

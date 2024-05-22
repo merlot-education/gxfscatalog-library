@@ -331,6 +331,7 @@ public class GxfsCatalogService {
             if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
                 // let notary sign registration number
                 credential = gxdchService.verifyRegistrationNumber(registrationNumberCs);
+                // TODO handle case where notary does not attest the registration number (i.e. credential == null)
                 complianceVcs.add(credential);
             } else {
                 // otherwise we sign ourselves

@@ -71,7 +71,7 @@ public class GxdchService {
             log.info("Verifying registration number at Notary {}", clientEntry.getKey());
             log.debug("Registration number: {}", registrationNumber);
             try {
-                return clientEntry.getValue().postRegistrationNumber(null, registrationNumber);
+                return clientEntry.getValue().postRegistrationNumber(registrationNumber.getId(), registrationNumber);
             } catch (WebClientResponseException e) {
                 log.info("Failed to verify registration number at Notary {}: {} {}",
                         clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());

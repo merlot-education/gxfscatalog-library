@@ -31,15 +31,15 @@ public class ServiceOfferingCredentialSubject extends VCCredentialSubject {
     private List<SOTermsAndConditions> termsAndConditions;
 
     @JsonProperty("gx:policy")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     @NotNull
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> policy;
 
     @JsonProperty("gx:dataProtectionRegime")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
     private List<String> dataProtectionRegime;
 

@@ -24,8 +24,8 @@ public class GxVcard {
     private String countryCode;
 
     @JsonProperty("gx:countrySubdivisionCode")
-    @JsonSerialize(using = StringSerializer.class)
-    @JsonDeserialize(using = StringDeserializer.class)
+    @JsonSerialize(contentUsing = StringSerializer.class)
+    @JsonDeserialize(contentUsing = StringDeserializer.class)
     @NotNull
     private List<String> countrySubdivisionCode;
 
