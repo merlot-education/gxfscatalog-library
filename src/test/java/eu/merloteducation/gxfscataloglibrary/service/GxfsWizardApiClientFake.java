@@ -34,7 +34,7 @@ public class GxfsWizardApiClientFake implements GxfsWizardApiClient {
     }
 
     @Override
-    public String getJSON(String name) {
+    public String getJSON(String ecosystem, String name) {
         if (!getShapeFiles().contains(name)) {
             throw new WebClientResponseException(HttpStatus.NOT_FOUND.value(), "missing", null, null, null);
         }

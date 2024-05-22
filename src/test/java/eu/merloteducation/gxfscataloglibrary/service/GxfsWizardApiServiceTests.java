@@ -82,14 +82,14 @@ class GxfsWizardApiServiceTests {
 
     @Test
     void getShapeFileExisting() {
-        String json = gxfsWizardApiService.getShapeByName("Participant1.json");
+        String json = gxfsWizardApiService.getShapeByName("ecosystem","Participant1.json");
         assertNotNull(json);
     }
 
     @Test
     void getShapeFileNonExistent() {
         WebClientResponseException e = assertThrows(WebClientResponseException.class,
-                () -> gxfsWizardApiService.getShapeByName("missing"));
+                () -> gxfsWizardApiService.getShapeByName("ecosystem","missing"));
         assertEquals(HttpStatus.NOT_FOUND, e.getStatusCode());
     }
 }

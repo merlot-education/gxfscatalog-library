@@ -23,7 +23,7 @@ class GxfsWizardApiClientTests {
 
     @BeforeEach
     public void setUp() {
-        stubFor(get("/getJSON?name=Test.json")
+        stubFor(get("/getJSON?ecosystem=ecosystem&name=Test.json")
                 .willReturn(ok()
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"some\": \"data\"}")));
@@ -31,8 +31,8 @@ class GxfsWizardApiClientTests {
 
     @Test
     void verifyWizardClientCanCall() {
-        gxfsWizardApiClient.getJSON("Test.json");
-        verify(getRequestedFor(urlEqualTo("/getJSON?name=Test.json")));
+        gxfsWizardApiClient.getJSON("ecosystem", "Test.json");
+        verify(getRequestedFor(urlEqualTo("/getJSON?ecosystem=ecosystem&name=Test.json")));
     }
 
 }
