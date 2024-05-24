@@ -64,7 +64,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         participantCs.setLegalRegistrationNumber(List.of(new NodeKindIRITypeId("did:web:1234")));
         GxVcard address = new GxVcard();
         address.setCountryCode("DE");
-        address.setCountrySubdivisionCode(List.of("DE-BER"));
+        address.setCountrySubdivisionCode("DE-BER");
         address.setLocality("Berlin");
         address.setStreetAddress("Some Street 3");
         address.setPostalCode("12345");

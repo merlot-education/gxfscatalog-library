@@ -357,6 +357,8 @@ public class GxfsCatalogService {
 
         // TODO check and store result of compliance
         JsonNode complianceResult = gxdchService.checkCompliance(complianceVp);
+        System.out.println(complianceVp);
+        System.out.println(complianceResult);
 
         VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
                 fullVcs, // insert credentials into vp

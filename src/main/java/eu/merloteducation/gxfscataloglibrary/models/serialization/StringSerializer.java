@@ -19,9 +19,10 @@ public class StringSerializer extends StdSerializer<String> {
     @Override
     public void serialize(String s, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        jsonGenerator.writeStartObject();
+        jsonGenerator.writeString(s);
+        /*jsonGenerator.writeStartObject();
         jsonGenerator.writeStringField("@type", "xsd:string");
         jsonGenerator.writeStringField("@value", s);
-        jsonGenerator.writeEndObject();
+        jsonGenerator.writeEndObject();*/
     }
 }

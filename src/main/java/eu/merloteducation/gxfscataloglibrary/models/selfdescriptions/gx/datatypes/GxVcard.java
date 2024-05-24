@@ -24,10 +24,10 @@ public class GxVcard {
     private String countryCode;
 
     @JsonProperty("gx:countrySubdivisionCode")
-    @JsonSerialize(contentUsing = StringSerializer.class)
-    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
     @NotNull
-    private List<String> countrySubdivisionCode;
+    private String countrySubdivisionCode;
 
     @JsonProperty("vcard:street-address")
     @JsonSerialize(using = StringSerializer.class)
