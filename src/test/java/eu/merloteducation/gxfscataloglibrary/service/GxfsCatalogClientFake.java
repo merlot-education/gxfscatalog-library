@@ -76,7 +76,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
         LegalRegistrationNumberCredentialSubject registrationNumberCs = new LegalRegistrationNumberCredentialSubject();
         registrationNumberCs.setId(id + "#legalRegistrationNumber");
-        registrationNumberCs.setVatID(List.of("FR79537407926"));
+        registrationNumberCs.setVatID("FR79537407926");
         SelfDescriptionVerifiableCredential registrationNumberVc = new SelfDescriptionVerifiableCredential();
         registrationNumberVc.setId(id);
         registrationNumberVc.setCredentialSubject(registrationNumberCs);

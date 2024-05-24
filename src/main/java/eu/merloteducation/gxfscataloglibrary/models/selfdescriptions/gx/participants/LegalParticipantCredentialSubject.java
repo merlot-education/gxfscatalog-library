@@ -15,11 +15,21 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LegalParticipantCredentialSubject extends VCCredentialSubject {
+
+    @JsonProperty("@context")
+    private Map<String, String> context = Map.of(
+            "gx", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+            "vcard", "http://www.w3.org/2006/vcard/ns#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
+
+    private String type = "gx:LegalParticipant";
 
     // Tagus
     @NotNull
@@ -58,6 +68,5 @@ public class LegalParticipantCredentialSubject extends VCCredentialSubject {
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
     private String description;
-
 
 }

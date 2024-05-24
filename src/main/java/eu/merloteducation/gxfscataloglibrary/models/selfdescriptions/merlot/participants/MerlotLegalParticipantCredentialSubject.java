@@ -12,10 +12,20 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerlotLegalParticipantCredentialSubject extends VCCredentialSubject {
+
+    @JsonProperty("@context")
+    private Map<String, String> context = Map.of(
+            "merlot", "http://w3id.org/gaia-x/merlot#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
+
+    private String type = "merlot:MerlotLegalParticipant";
 
     @JsonProperty("merlot:legalName")
     @NotNull

@@ -14,11 +14,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerlotDataDeliveryServiceOfferingCredentialSubject extends VCCredentialSubject {
+
+    @JsonProperty("@context")
+    private Map<String, String> context = Map.of(
+            "merlot", "http://w3id.org/gaia-x/merlot#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
+
+    private String type = "merlot:MerlotDataDeliveryServiceOffering";
 
     @NotNull
     @JsonProperty("merlot:dataAccessType")

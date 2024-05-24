@@ -8,29 +8,33 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LegalRegistrationNumberCredentialSubject extends VCCredentialSubject {
 
+    @JsonProperty("@context")
+    private Map<String, String> context = Map.of(
+            "gx", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
+
+    private String type = "gx:legalRegistrationNumber";
+
     @JsonProperty("gx:taxID")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> taxID;
+    private String taxID;
 
     @JsonProperty("gx:EUID")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> euid;
+    private String euid;
 
     @JsonProperty("gx:EORI")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> eori;
+    private String eori;
 
     @JsonProperty("gx:vatID")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> vatID;
+    private String vatID;
 
     @JsonProperty("gx:leiCode")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> leiCode;
+    private String leiCode;
 }

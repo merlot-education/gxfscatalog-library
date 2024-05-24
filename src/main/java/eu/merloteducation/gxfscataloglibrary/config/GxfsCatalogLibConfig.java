@@ -135,7 +135,7 @@ public class GxfsCatalogLibConfig {
     public Map<String, GxNotaryClient> gxNotaryClients() {
         Map<String, GxNotaryClient> clients = new HashMap<>();
         for (String clientUri : notaryServiceUris) {
-            String fullUri = getBaseUriWithVersion(clientUri);
+            String fullUri = clientUri + "/" + "development"; //getBaseUriWithVersion(clientUri); // TODO remove
             HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
             clients.put(fullUri, httpServiceProxyFactory.createClient(GxNotaryClient.class));
         }

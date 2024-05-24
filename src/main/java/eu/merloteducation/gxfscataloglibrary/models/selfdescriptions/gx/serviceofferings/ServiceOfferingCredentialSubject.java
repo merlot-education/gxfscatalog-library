@@ -16,11 +16,21 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ServiceOfferingCredentialSubject extends VCCredentialSubject {
+
+    @JsonProperty("@context")
+    private Map<String, String> context = Map.of(
+            "gx", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
+
+    private String type = "gx:ServiceOffering";
+
     @JsonProperty("gx:providedBy")
     private NodeKindIRITypeId providedBy;
 

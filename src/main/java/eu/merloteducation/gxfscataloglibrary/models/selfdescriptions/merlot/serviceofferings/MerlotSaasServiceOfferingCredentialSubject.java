@@ -13,12 +13,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class MerlotSaasServiceOfferingCredentialSubject extends VCCredentialSubject {
-    // inherited from merlot:MerlotServiceOfferingSaaS
+
+    @JsonProperty("@context")
+    private Map<String, String> context = Map.of(
+            "merlot", "http://w3id.org/gaia-x/merlot#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
+
+    private String type = "merlot:MerlotSaasServiceOffering";
 
     @JsonProperty("merlot:hardwareRequirements")
     @JsonSerialize(using = StringSerializer.class)

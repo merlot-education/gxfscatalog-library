@@ -17,6 +17,8 @@ import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
+import foundation.identity.jsonld.ConfigurableDocumentLoader;
+import info.weboftrust.ldsignatures.LdProof;
 import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
@@ -331,7 +333,22 @@ public class GxfsCatalogService {
             if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
                 // let notary sign registration number
                 credential = gxdchService.verifyRegistrationNumber(registrationNumberCs);
-                // TODO handle case where notary does not attest the registration number (i.e. credential == null)
+                if (credential == null) {
+                    // notary has not attested registration number, we sign it ourselves
+                    credential = gxfsSignerService.createVerifiableCredential(
+                            cs,
+                            URI.create(cs.getId()), // set issuer to cs id
+                            URI.create(cs.getId())); // set vc id to cs id
+                    gxfsSignerService
+                            .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
+                } else {
+                    Map<String, Object> proofObj = credential.getLdProof().getJsonObject();
+                    proofObj.remove("@context");
+                    credential.setJsonObjectKeyValue("proof", proofObj);
+                    // patch for context, make it resolvable as it is disabled by default
+                    ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttp(true);
+                    ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttps(true);
+                }
                 complianceVcs.add(credential);
             } else {
                 // otherwise we sign ourselves
@@ -366,6 +383,8 @@ public class GxfsCatalogService {
 
         // sign verifiable presentation for catalog storage
         gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
+
+        System.out.println(fullVp);
 
         return this.gxfsCatalogClient.postAddParticipant(fullVp);
     }
