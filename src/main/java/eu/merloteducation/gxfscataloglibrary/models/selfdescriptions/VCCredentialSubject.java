@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.ServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.participants.MerlotLegalParticipantCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings.MerlotCoopContractServiceOfferingCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings.MerlotDataDeliveryServiceOfferingCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings.MerlotSaasServiceOfferingCredentialSubject;
@@ -22,6 +23,7 @@ import java.util.Map;
         @JsonSubTypes.Type(value = LegalParticipantCredentialSubject.class, name = "gx:LegalParticipant"),
         @JsonSubTypes.Type(value = LegalRegistrationNumberCredentialSubject.class, name = "gx:legalRegistrationNumber"),
         @JsonSubTypes.Type(value = ServiceOfferingCredentialSubject.class, name = "gx:ServiceOffering"),
+        @JsonSubTypes.Type(value = MerlotLegalParticipantCredentialSubject.class, name = "merlot:MerlotLegalParticipant"),
         @JsonSubTypes.Type(value = MerlotDataDeliveryServiceOfferingCredentialSubject.class, name = "merlot:MerlotDataDeliveryServiceOffering"),
         @JsonSubTypes.Type(value = MerlotSaasServiceOfferingCredentialSubject.class, name = "merlot:MerlotSaasServiceOffering"),
         @JsonSubTypes.Type(value = MerlotCoopContractServiceOfferingCredentialSubject.class, name = "merlot:MerlotCoopContractServiceOffering"),

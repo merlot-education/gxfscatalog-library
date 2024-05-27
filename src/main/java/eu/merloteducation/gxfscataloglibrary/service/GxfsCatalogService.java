@@ -441,12 +441,93 @@ public class GxfsCatalogService {
                                              String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(credentialSubjects,
-                verificationMethod, privateKey);
+        // make sure there is at least one legal participant CS
+        credentialSubjects.stream()
+                .filter(LegalParticipantCredentialSubject.class::isInstance)
+                .map(s -> (LegalParticipantCredentialSubject) s)
+                .findFirst().orElseThrow(
+                        () -> new CredentialPresentationException(
+                                "Could not find Legal participant in list of credential subjects."));
+
+        // make sure there is at least one legal registration number CS
+        credentialSubjects.stream()
+                .filter(LegalRegistrationNumberCredentialSubject.class::isInstance)
+                .map(s -> (LegalRegistrationNumberCredentialSubject) s)
+                .findFirst().orElseThrow(
+                        () -> new CredentialPresentationException(
+                                "Could not find registration number in list of credential subjects."));
+
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
+
+        List<VerifiableCredential> complianceVcs = new ArrayList<>();
+        List<VerifiableCredential> fullVcs = new ArrayList<>();
+
+        // TODO incorporate Gaia-X TnC into SD
+        gxdchService.getGxTnCs();
+
+        for (VCCredentialSubject cs : credentialSubjects) {
+            VerifiableCredential credential;
+            // check type to decide who signs the CS
+            if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
+                // let notary sign registration number
+                credential = gxdchService.verifyRegistrationNumber(registrationNumberCs);
+                if (credential == null) {
+                    // notary has not attested registration number, we sign it ourselves
+                    credential = gxfsSignerService.createVerifiableCredential(
+                            cs,
+                            URI.create(cs.getId()), // set issuer to cs id
+                            URI.create(cs.getId())); // set vc id to cs id
+                    gxfsSignerService
+                            .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
+                } else {
+                    Map<String, Object> proofObj = credential.getLdProof().getJsonObject();
+                    proofObj.remove("@context");
+                    credential.setJsonObjectKeyValue("proof", proofObj);
+                    // patch for context, make it resolvable as it is disabled by default
+                    ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttp(true);
+                    ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttps(true);
+                }
+                complianceVcs.add(credential);
+            } else {
+                // otherwise we sign ourselves
+                credential = gxfsSignerService.createVerifiableCredential(
+                        cs,
+                        URI.create(cs.getId()), // set issuer to cs id
+                        URI.create(cs.getId())); // set vc id to cs id
+                gxfsSignerService
+                        .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
+                if (cs instanceof LegalParticipantCredentialSubject) {
+                    // if CS is Gaia-X Legal Participant, add them to the compliance VCs
+                    complianceVcs.add(credential);
+                }
+            }
+            // regardless of type, add the signed VC to our list of VCs for the SD
+            fullVcs.add(credential);
+        }
+
+        // set up a VP for the compliance service
+        VerifiablePresentation complianceVp = gxfsSignerService.createVerifiablePresentation(
+                complianceVcs, // insert credentials into vp
+                complianceVcs.get(0).getId()); // set vp id to first cs id for now
+
+        // TODO check and store result of compliance
+        JsonNode complianceResult = gxdchService.checkCompliance(complianceVp);
+        System.out.println(complianceVp);
+        System.out.println(complianceResult);
+
+        VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
+                fullVcs, // insert credentials into vp
+                fullVcs.get(0).getId()); // set vp id to first cs id for now
+
+        // sign verifiable presentation for catalog storage
+        gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
+
+        System.out.println(fullVp);
 
         return this.gxfsCatalogClient.putUpdateParticipant(
-                credentialSubjects.get(0).getId(),
-                vp);
+                fullVp.getId().toString(),
+                fullVp);
     }
 
     /**
