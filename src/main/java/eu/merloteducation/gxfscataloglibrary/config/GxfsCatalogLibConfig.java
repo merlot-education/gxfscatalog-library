@@ -47,8 +47,6 @@ public class GxfsCatalogLibConfig {
     private List<String> registryServiceUris;
     @Value("${gxdch-services.notary-base-uris:}")
     private List<String> notaryServiceUris;
-    @Value("${gxdch-services.version:#{null}}")
-    private String serviceVersion;
 
     @Bean
     public GxfsCatalogClient gxfsCatalogClient(@Autowired GxfsCatalogAuthService gxfsCatalogAuthService) {
@@ -113,9 +111,8 @@ public class GxfsCatalogLibConfig {
     public Map<String, GxComplianceClient> gxComplianceClients() {
         Map<String, GxComplianceClient> clients = new HashMap<>();
         for (String clientUri : complianceServiceUris) {
-            String fullUri = getBaseUriWithVersion(clientUri);
-            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
-            clients.put(fullUri, httpServiceProxyFactory.createClient(GxComplianceClient.class));
+            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(clientUri);
+            clients.put(clientUri, httpServiceProxyFactory.createClient(GxComplianceClient.class));
         }
         return clients;
     }
@@ -124,9 +121,8 @@ public class GxfsCatalogLibConfig {
     public Map<String, GxRegistryClient> gxRegistryClients() {
         Map<String, GxRegistryClient> clients = new HashMap<>();
         for (String clientUri : registryServiceUris) {
-            String fullUri = getBaseUriWithVersion(clientUri);
-            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
-            clients.put(fullUri, httpServiceProxyFactory.createClient(GxRegistryClient.class));
+            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(clientUri);
+            clients.put(clientUri, httpServiceProxyFactory.createClient(GxRegistryClient.class));
         }
         return clients;
     }
@@ -135,9 +131,8 @@ public class GxfsCatalogLibConfig {
     public Map<String, GxNotaryClient> gxNotaryClients() {
         Map<String, GxNotaryClient> clients = new HashMap<>();
         for (String clientUri : notaryServiceUris) {
-            String fullUri = clientUri + "/" + "development"; //getBaseUriWithVersion(clientUri); // TODO remove
-            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(fullUri);
-            clients.put(fullUri, httpServiceProxyFactory.createClient(GxNotaryClient.class));
+            HttpServiceProxyFactory httpServiceProxyFactory = getHttpServiceProxyFactory(clientUri);
+            clients.put(clientUri, httpServiceProxyFactory.createClient(GxNotaryClient.class));
         }
         return clients;
     }
@@ -151,10 +146,6 @@ public class GxfsCatalogLibConfig {
         return HttpServiceProxyFactory
                 .builderFor(WebClientAdapter.create(webClient))
                 .build();
-    }
-
-    private String getBaseUriWithVersion(String baseUri){
-        return baseUri + "/" + serviceVersion;
     }
 
 }
