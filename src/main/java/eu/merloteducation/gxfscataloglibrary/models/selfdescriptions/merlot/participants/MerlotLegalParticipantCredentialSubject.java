@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.participants;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -18,6 +19,7 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MerlotLegalParticipantCredentialSubject extends PojoCredentialSubject {
 
     @JsonProperty("@context")

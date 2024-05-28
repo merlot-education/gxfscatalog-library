@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
@@ -12,6 +13,7 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MerlotCoopContractServiceOfferingCredentialSubject extends PojoCredentialSubject {
     // does not have any special fields on its own, inherits everything from general offering
 

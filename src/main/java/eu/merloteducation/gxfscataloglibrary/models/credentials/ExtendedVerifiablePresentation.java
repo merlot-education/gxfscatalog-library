@@ -20,17 +20,17 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         if (credentials instanceof List<?> credentialList) {
             return credentialList.stream()
                     .filter(Map.class::isInstance)
-                    .map(o -> (ExtendedVerifiableCredential) ExtendedVerifiableCredential.fromMap((Map) o))
+                    .map(o -> ExtendedVerifiableCredential.fromMap((Map) o))
                     .toList();
         }
         // otherwise we wrap a single element into a list
-        return List.of((ExtendedVerifiableCredential) ExtendedVerifiableCredential.fromMap((Map) credentials));
+        return List.of(ExtendedVerifiableCredential.fromMap((Map) credentials));
     }
 
     public <T extends PojoCredentialSubject> T findFirstCredentialSubjectByType(Class<T> type) {
         String typeString;
         try {
-            typeString = (String) type.getField("type").get(null);
+            typeString = (String) type.getField("TYPE").get(null);
         } catch (NoSuchFieldException | IllegalAccessException ignored) {
             return null;
         }
