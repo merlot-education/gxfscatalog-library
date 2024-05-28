@@ -16,5 +16,5 @@ public class SelfDescriptionVerifiableCredential {
     private String issuer;
     private String issuanceDate;
     private SDProof proof;
-    private VCCredentialSubject credentialSubject;
+    private PojoCredentialSubject credentialSubject;
 }

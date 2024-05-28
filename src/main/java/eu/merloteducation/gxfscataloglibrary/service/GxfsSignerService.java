@@ -12,7 +12,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.VCCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
@@ -57,7 +57,7 @@ public class GxfsSignerService {
      * @return verifiable credential
      * @throws CredentialPresentationException error during creation of credential
      */
-    public VerifiableCredential createVerifiableCredential(VCCredentialSubject credentialSubject,
+    public VerifiableCredential createVerifiableCredential(PojoCredentialSubject credentialSubject,
                                                            URI issuer,
                                                            URI id) throws CredentialPresentationException {
         try {

@@ -5,11 +5,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.VCCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.datatypes.OfferingRuntime;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -19,7 +20,7 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class MerlotServiceOfferingCredentialSubject extends VCCredentialSubject {
+public class MerlotServiceOfferingCredentialSubject extends PojoCredentialSubject {
 
     @JsonProperty("@context")
     private Map<String, String> context = Map.of(
@@ -27,7 +28,8 @@ public class MerlotServiceOfferingCredentialSubject extends VCCredentialSubject 
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
 
-    private String type = "merlot:MerlotServiceOffering";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = "merlot:MerlotServiceOffering";
 
     @NotNull
     @JsonProperty("merlot:creationDate")
@@ -47,4 +49,14 @@ public class MerlotServiceOfferingCredentialSubject extends VCCredentialSubject 
     @NotNull
     @JsonProperty("merlot:merlotTermsAndConditionsAccepted")
     private boolean merlotTermsAndConditionsAccepted;
+
+    @JsonProperty("type")
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    public static String getTypeNoPrefix() {
+        return TYPE.replaceAll(".+:", "");
+    }
 }

@@ -18,7 +18,6 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
 import foundation.identity.jsonld.ConfigurableDocumentLoader;
-import info.weboftrust.ldsignatures.LdProof;
 import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
@@ -212,7 +211,7 @@ public class GxfsCatalogService {
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            List<VCCredentialSubject> credentialSubjects)
+            List<PojoCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
         return addServiceOffering(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
@@ -229,7 +228,7 @@ public class GxfsCatalogService {
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            List<VCCredentialSubject> credentialSubjects, String verificationMethod)
+            List<PojoCredentialSubject> credentialSubjects, String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
         return addServiceOffering(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
@@ -246,7 +245,7 @@ public class GxfsCatalogService {
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            List<VCCredentialSubject> credentialSubjects,
+            List<PojoCredentialSubject> credentialSubjects,
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
@@ -265,7 +264,7 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(List<VCCredentialSubject> credentialSubjects)
+    public ParticipantItem addParticipant(List<PojoCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
         return addParticipant(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
@@ -281,7 +280,7 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(List<VCCredentialSubject> credentialSubjects,
+    public ParticipantItem addParticipant(List<PojoCredentialSubject> credentialSubjects,
                                           String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
         return addParticipant(credentialSubjects, verificationMethod, getDefaultPrivateKey());
@@ -298,25 +297,21 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(List<VCCredentialSubject> credentialSubjects,
+    public ParticipantItem addParticipant(List<PojoCredentialSubject> credentialSubjects,
                                           String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
         // make sure there is at least one legal participant CS
-        credentialSubjects.stream()
-                .filter(LegalParticipantCredentialSubject.class::isInstance)
-                .map(s -> (LegalParticipantCredentialSubject) s)
-                .findFirst().orElseThrow(
-                        () -> new CredentialPresentationException(
-                                "Could not find Legal participant in list of credential subjects."));
+        if (findFirstCredentialSubjectByType(credentialSubjects, LegalParticipantCredentialSubject.class) == null) {
+            throw new CredentialPresentationException(
+                    "Could not find Legal participant in list of credential subjects.");
+        }
 
         // make sure there is at least one legal registration number CS
-        credentialSubjects.stream()
-                .filter(LegalRegistrationNumberCredentialSubject.class::isInstance)
-                .map(s -> (LegalRegistrationNumberCredentialSubject) s)
-                .findFirst().orElseThrow(
-                        () -> new CredentialPresentationException(
-                                "Could not find registration number in list of credential subjects."));
+        if (findFirstCredentialSubjectByType(credentialSubjects, LegalRegistrationNumberCredentialSubject.class) == null) {
+            throw new CredentialPresentationException(
+                    "Could not find registration number in list of credential subjects.");
+        }
 
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
@@ -327,7 +322,7 @@ public class GxfsCatalogService {
         // TODO incorporate Gaia-X TnC into SD
         gxdchService.getGxTnCs();
 
-        for (VCCredentialSubject cs : credentialSubjects) {
+        for (PojoCredentialSubject cs : credentialSubjects) {
             VerifiableCredential credential;
             // check type to decide who signs the CS
             if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
@@ -400,7 +395,7 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(List<VCCredentialSubject> credentialSubjects)
+    public ParticipantItem updateParticipant(List<PojoCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
         return updateParticipant(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
@@ -418,7 +413,7 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(List<VCCredentialSubject> credentialSubjects,
+    public ParticipantItem updateParticipant(List<PojoCredentialSubject> credentialSubjects,
                                              String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
         return updateParticipant(credentialSubjects, verificationMethod, getDefaultPrivateKey());
@@ -437,7 +432,7 @@ public class GxfsCatalogService {
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(List<VCCredentialSubject> credentialSubjects,
+    public ParticipantItem updateParticipant(List<PojoCredentialSubject> credentialSubjects,
                                              String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
@@ -466,7 +461,7 @@ public class GxfsCatalogService {
         // TODO incorporate Gaia-X TnC into SD
         gxdchService.getGxTnCs();
 
-        for (VCCredentialSubject cs : credentialSubjects) {
+        for (PojoCredentialSubject cs : credentialSubjects) {
             VerifiableCredential credential;
             // check type to decide who signs the CS
             if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
@@ -609,7 +604,7 @@ public class GxfsCatalogService {
     }
 
     private VerifiablePresentation createSignedVerifiablePresentation(
-            List<VCCredentialSubject> subjects,
+            List<PojoCredentialSubject> subjects,
             String verificationMethod,
             String privateKey) throws CredentialSignatureException, CredentialPresentationException {
 
@@ -620,7 +615,7 @@ public class GxfsCatalogService {
 
         List<VerifiableCredential> credentials = new ArrayList<>();
 
-        for (VCCredentialSubject cs : subjects) {
+        for (PojoCredentialSubject cs : subjects) {
             VerifiableCredential vc;
             if (isParticipant) {
                 vc = gxfsSignerService.createVerifiableCredential(
@@ -851,5 +846,13 @@ public class GxfsCatalogService {
 
     private String getMatchParticipantTypeString(String participantType) {
         return "MATCH (p:" + participantType + ")";
+    }
+
+    public <T extends PojoCredentialSubject> T findFirstCredentialSubjectByType(
+            List<PojoCredentialSubject> credentialSubjects, Class<T> type) {
+        return credentialSubjects.stream()
+                .filter(type::isInstance)
+                .map(s -> (T) s)
+                .findFirst().orElse(null);
     }
 }

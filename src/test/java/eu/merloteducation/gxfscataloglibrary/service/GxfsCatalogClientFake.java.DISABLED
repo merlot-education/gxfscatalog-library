@@ -4,6 +4,7 @@ import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
@@ -55,7 +56,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         ParticipantItem item = new ParticipantItem();
         item.setId(id);
         item.setName(name);
-        item.setSelfDescription(new SelfDescription());
+        item.setSelfDescription(new ExtendedVerifiablePresentation());
         item.getSelfDescription().setId(id);
 
         LegalParticipantCredentialSubject participantCs = new LegalParticipantCredentialSubject();

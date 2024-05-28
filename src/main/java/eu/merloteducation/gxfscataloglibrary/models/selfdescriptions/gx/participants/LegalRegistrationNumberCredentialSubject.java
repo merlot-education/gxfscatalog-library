@@ -1,19 +1,18 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.VCCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class LegalRegistrationNumberCredentialSubject extends VCCredentialSubject {
+public class LegalRegistrationNumberCredentialSubject extends PojoCredentialSubject {
 
     @JsonProperty("@context")
     private Map<String, String> context = Map.of(
@@ -21,7 +20,8 @@ public class LegalRegistrationNumberCredentialSubject extends VCCredentialSubjec
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
 
-    private String type = "gx:legalRegistrationNumber";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = "gx:legalRegistrationNumber";
 
     @JsonProperty("gx:taxID")
     private String taxID;
@@ -37,4 +37,14 @@ public class LegalRegistrationNumberCredentialSubject extends VCCredentialSubjec
 
     @JsonProperty("gx:leiCode")
     private String leiCode;
+
+    @JsonProperty("type")
+    @Override
+    public String getType() {
+        return TYPE;
+    }
+
+    public static String getTypeNoPrefix() {
+        return TYPE.replaceAll(".+:", "");
+    }
 }

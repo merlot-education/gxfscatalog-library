@@ -11,6 +11,7 @@ import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serv
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings.MerlotDataDeliveryServiceOfferingCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings.MerlotSaasServiceOfferingCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings.MerlotServiceOfferingCredentialSubject;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -29,12 +30,23 @@ import java.util.Map;
         @JsonSubTypes.Type(value = MerlotCoopContractServiceOfferingCredentialSubject.class, name = "merlot:MerlotCoopContractServiceOffering"),
         @JsonSubTypes.Type(value = MerlotServiceOfferingCredentialSubject.class, name = "merlot:MerlotServiceOffering")
 })
-public class VCCredentialSubject {
+public class PojoCredentialSubject {
     // base fields
     private String id;
 
-    private String type;
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = "context:type";
 
     @JsonProperty("@context")
     private Map<String, String> context;
+
+    @JsonProperty("type")
+    public String getType() {
+        return TYPE;
+    }
+
+    public static String getTypeNoPrefix() {
+        return TYPE.replaceAll(".+:", "");
+    }
+
 }
