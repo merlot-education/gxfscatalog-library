@@ -27,7 +27,7 @@ public class GxdchService {
         this.gxNotaryClients = gxNotaryClients;
     }
 
-    public JsonNode checkCompliance(VerifiablePresentation vp) {
+    public VerifiableCredential checkCompliance(VerifiablePresentation vp) {
         // go through compliance service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {

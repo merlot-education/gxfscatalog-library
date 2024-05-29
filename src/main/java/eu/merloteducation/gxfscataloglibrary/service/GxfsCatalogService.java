@@ -368,9 +368,13 @@ public class GxfsCatalogService {
                 complianceVcs.get(0).getId()); // set vp id to first cs id for now
 
         // TODO check and store result of compliance
-        JsonNode complianceResult = gxdchService.checkCompliance(complianceVp);
+        VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
         System.out.println(complianceVp);
         System.out.println(complianceResult);
+
+        if (complianceResult != null) {
+            fullVcs.add(complianceResult);
+        }
 
         VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
                 fullVcs, // insert credentials into vp
@@ -506,10 +510,14 @@ public class GxfsCatalogService {
                 complianceVcs, // insert credentials into vp
                 complianceVcs.get(0).getId()); // set vp id to first cs id for now
 
-        // TODO check and store result of compliance
-        JsonNode complianceResult = gxdchService.checkCompliance(complianceVp);
+        VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
         System.out.println(complianceVp);
         System.out.println(complianceResult);
+
+        // TODO add this once catalog accepts it (signature + shape)
+        /*if (complianceResult != null) {
+            fullVcs.add(complianceResult);
+        }*/
 
         VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
                 fullVcs, // insert credentials into vp
