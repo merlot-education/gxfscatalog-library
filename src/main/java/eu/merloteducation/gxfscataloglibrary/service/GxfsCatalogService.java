@@ -17,6 +17,7 @@ import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.ServiceOfferingCredentialSubject;
 import foundation.identity.jsonld.ConfigurableDocumentLoader;
 import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -257,10 +258,83 @@ public class GxfsCatalogService {
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(credentialSubjects,
-                verificationMethod, privateKey);
+        // make sure there is at least one service offering CS
+        ServiceOfferingCredentialSubject offeringCredentialSubject =
+                findFirstCredentialSubjectByType(credentialSubjects, ServiceOfferingCredentialSubject.class);
+        if (offeringCredentialSubject == null) {
+            throw new CredentialPresentationException(
+                    "Could not find Legal participant in list of credential subjects.");
+        }
 
-        return gxfsCatalogClient.postAddSelfDescription(vp);
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
+
+        List<VerifiableCredential> complianceVcs = new ArrayList<>();
+        List<VerifiableCredential> fullVcs = new ArrayList<>();
+
+        for (PojoCredentialSubject cs : credentialSubjects) {
+            VerifiableCredential credential;
+            // we sign ourselves
+            credential = gxfsSignerService.createVerifiableCredential(
+                    cs,
+                    URI.create(offeringCredentialSubject.getProvidedBy().getId()), // set issuer to provider
+                    URI.create(cs.getId())); // set vc id to cs id
+            gxfsSignerService
+                    .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
+            // check type to decide compliance check
+            if (cs instanceof ServiceOfferingCredentialSubject) {
+                complianceVcs.add(credential);
+            }
+            // regardless of type, add the signed VC to our list of VCs for the SD
+            fullVcs.add(credential);
+        }
+
+        // set up a VP for the compliance service
+        VerifiablePresentation complianceVp = gxfsSignerService.createVerifiablePresentation(
+                complianceVcs, // insert credentials into vp
+                complianceVcs.get(0).getId()); // set vp id to first cs id for now
+
+        // TODO check and store result of compliance
+        VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
+        System.out.println(complianceVp);
+        System.out.println(complianceResult);
+
+        // TODO add this once catalog accepts it (signature + shape)
+        /*try {
+            VerifiableCredential merlotVc = fullVcs.stream()
+                    .filter(vc -> vc.getCredentialSubject().getType().equals("merlot:MerlotLegalParticipant"))
+                    .findFirst().orElse(null);
+            if (complianceResult != null) {
+                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult",
+                        StringEscapeUtils.unescapeJson(objectMapper.writeValueAsString(complianceResult))); // TODO try unescape?
+            } else {
+                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult", "");
+            }
+            merlotVc.setJsonObjectKeyValue("proof", null);
+            gxfsSignerService
+                    .signVerifiableCredential(merlotVc, verificationMethod, prk, certificates); // resign vc
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }*/
+        if (complianceResult == null) {
+            if (enforceCompliance) {
+                throw new CredentialPresentationException("Provided credential subjects failed GXDCH compliance check.");
+            }
+        } else {
+            fullVcs.add(complianceResult);
+        }
+
+
+        VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
+                fullVcs, // insert credentials into vp
+                fullVcs.get(0).getId()); // set vp id to first cs id for now
+
+        // sign verifiable presentation for catalog storage
+        gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
+
+        System.out.println(fullVp);
+
+        return gxfsCatalogClient.postAddSelfDescription(fullVp);
     }
 
     /**
