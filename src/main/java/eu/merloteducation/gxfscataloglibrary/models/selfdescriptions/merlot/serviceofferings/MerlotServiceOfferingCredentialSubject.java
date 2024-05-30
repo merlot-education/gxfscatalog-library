@@ -52,6 +52,9 @@ public class MerlotServiceOfferingCredentialSubject extends PojoCredentialSubjec
     @JsonProperty("merlot:merlotTermsAndConditionsAccepted")
     private boolean merlotTermsAndConditionsAccepted;
 
+    /*@JsonProperty("merlot:gxdchComplianceResult")
+    private String gxdchComplianceResult;*/
+
     @JsonProperty("type")
     @Override
     public String getType() {

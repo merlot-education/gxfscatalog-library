@@ -22,6 +22,8 @@ gxfscatalog-library:
   ignore-ssl: false
 
 gxdch-services:
+  enforce-compliance: false
+  enforce-notary: false
   compliance-base-uris:
     "https://compliance.lab.gaia-x.eu/v1-staging" #,
     #"https://gx-compliance.aruba.it",

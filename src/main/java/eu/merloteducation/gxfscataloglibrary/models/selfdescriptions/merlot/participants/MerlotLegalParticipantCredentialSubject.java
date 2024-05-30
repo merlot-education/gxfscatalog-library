@@ -47,6 +47,9 @@ public class MerlotLegalParticipantCredentialSubject extends PojoCredentialSubje
     @NotNull
     private ParticipantTermsAndConditions termsAndConditions;
 
+    /*@JsonProperty("merlot:gxdchComplianceResult")
+    private String gxdchComplianceResult;*/
+
     @JsonProperty("type")
     @Override
     public String getType() {
