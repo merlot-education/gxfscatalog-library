@@ -278,7 +278,7 @@ public class GxfsCatalogService {
             credential = gxfsSignerService.createVerifiableCredential(
                     cs,
                     URI.create(offeringCredentialSubject.getProvidedBy().getId()), // set issuer to provider
-                    URI.create(cs.getId())); // set vc id to cs id
+                    URI.create(cs.getId() + "#" + cs.getType())); // set vc id to cs id
             gxfsSignerService
                     .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
             // check type to decide compliance check
@@ -292,7 +292,7 @@ public class GxfsCatalogService {
         // set up a VP for the compliance service
         VerifiablePresentation complianceVp = gxfsSignerService.createVerifiablePresentation(
                 complianceVcs, // insert credentials into vp
-                complianceVcs.get(0).getId()); // set vp id to first cs id for now
+                URI.create(credentialSubjects.get(0).getId() + "#complianceSd")); // set vp id to first cs id for now
 
         // TODO check and store result of compliance
         VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
@@ -327,7 +327,7 @@ public class GxfsCatalogService {
 
         VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
                 fullVcs, // insert credentials into vp
-                fullVcs.get(0).getId()); // set vp id to first cs id for now
+                URI.create(credentialSubjects.get(0).getId() + "#sd")); // set vp id to first cs id for now
 
         // sign verifiable presentation for catalog storage
         gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
