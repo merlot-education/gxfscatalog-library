@@ -4,6 +4,7 @@ import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         try {
             typeString = (String) type.getField("TYPE").get(null);
         } catch (NoSuchFieldException | IllegalAccessException ignored) {
-            return null;
+            return Collections.emptyList();
         }
 
         return getVerifiableCredentials().stream()
