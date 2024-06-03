@@ -28,6 +28,14 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
     }
 
     public <T extends PojoCredentialSubject> T findFirstCredentialSubjectByType(Class<T> type) {
+        List<T> pojoCredentialSubjects = findAllCredentialSubjectByType(type);
+        if (pojoCredentialSubjects.isEmpty()) {
+            return null;
+        }
+        return pojoCredentialSubjects.get(0);
+    }
+
+    public <T extends PojoCredentialSubject> List<T> findAllCredentialSubjectByType(Class<T> type) {
         String typeString;
         try {
             typeString = (String) type.getField("TYPE").get(null);
@@ -35,16 +43,10 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
             return null;
         }
 
-        CastableCredentialSubject credentialSubject = getVerifiableCredentials().stream()
+        return getVerifiableCredentials().stream()
                 .map(ExtendedVerifiableCredential::getCredentialSubject)
                 .filter(cs -> cs.getType().equals(typeString))
-                .findFirst().orElse(null);
-
-        if (credentialSubject == null) {
-            return null;
-        }
-
-        return credentialSubject.toPojo(type);
+                .map(cs -> cs.toPojo(type)).toList();
     }
 
     public void setVerifiableCredentials(List<ExtendedVerifiableCredential> credentials) {
