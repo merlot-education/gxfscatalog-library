@@ -15,9 +15,9 @@ import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalParticipantCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.LegalRegistrationNumberCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.ServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalParticipantCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.GxServiceOfferingCredentialSubject;
 import foundation.identity.jsonld.ConfigurableDocumentLoader;
 import io.netty.util.internal.StringUtil;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
@@ -259,8 +259,8 @@ public class GxfsCatalogService {
             throws CredentialPresentationException, CredentialSignatureException {
 
         // make sure there is at least one service offering CS
-        ServiceOfferingCredentialSubject offeringCredentialSubject =
-                findFirstCredentialSubjectByType(credentialSubjects, ServiceOfferingCredentialSubject.class);
+        GxServiceOfferingCredentialSubject offeringCredentialSubject =
+                findFirstCredentialSubjectByType(credentialSubjects, GxServiceOfferingCredentialSubject.class);
         if (offeringCredentialSubject == null) {
             throw new CredentialPresentationException(
                     "Could not find Legal participant in list of credential subjects.");
@@ -282,7 +282,7 @@ public class GxfsCatalogService {
             gxfsSignerService
                     .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
             // check type to decide compliance check
-            if (cs instanceof ServiceOfferingCredentialSubject) {
+            if (cs instanceof GxServiceOfferingCredentialSubject) {
                 complianceVcs.add(credential);
             }
             // regardless of type, add the signed VC to our list of VCs for the SD
@@ -384,13 +384,13 @@ public class GxfsCatalogService {
             throws CredentialPresentationException, CredentialSignatureException {
 
         // make sure there is at least one legal participant CS
-        if (findFirstCredentialSubjectByType(credentialSubjects, LegalParticipantCredentialSubject.class) == null) {
+        if (findFirstCredentialSubjectByType(credentialSubjects, GxLegalParticipantCredentialSubject.class) == null) {
             throw new CredentialPresentationException(
                     "Could not find Legal participant in list of credential subjects.");
         }
 
         // make sure there is at least one legal registration number CS
-        if (findFirstCredentialSubjectByType(credentialSubjects, LegalRegistrationNumberCredentialSubject.class) == null) {
+        if (findFirstCredentialSubjectByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class) == null) {
             throw new CredentialPresentationException(
                     "Could not find registration number in list of credential subjects.");
         }
@@ -407,7 +407,7 @@ public class GxfsCatalogService {
         for (PojoCredentialSubject cs : credentialSubjects) {
             VerifiableCredential credential;
             // check type to decide who signs the CS
-            if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
+            if (cs instanceof GxLegalRegistrationNumberCredentialSubject registrationNumberCs) {
                 // let notary sign registration number
                 credential = gxdchService.verifyRegistrationNumber(registrationNumberCs);
                 if (credential == null) {
@@ -439,7 +439,7 @@ public class GxfsCatalogService {
                         URI.create(cs.getId())); // set vc id to cs id
                 gxfsSignerService
                         .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
-                if (cs instanceof LegalParticipantCredentialSubject) {
+                if (cs instanceof GxLegalParticipantCredentialSubject) {
                     // if CS is Gaia-X Legal Participant, add them to the compliance VCs
                     complianceVcs.add(credential);
                 }
@@ -549,13 +549,13 @@ public class GxfsCatalogService {
             throws CredentialPresentationException, CredentialSignatureException {
 
         // make sure there is at least one legal participant CS
-        if (findFirstCredentialSubjectByType(credentialSubjects, LegalParticipantCredentialSubject.class) == null) {
+        if (findFirstCredentialSubjectByType(credentialSubjects, GxLegalParticipantCredentialSubject.class) == null) {
             throw new CredentialPresentationException(
                     "Could not find Legal participant in list of credential subjects.");
         }
 
         // make sure there is at least one legal registration number CS
-        if (findFirstCredentialSubjectByType(credentialSubjects, LegalRegistrationNumberCredentialSubject.class) == null) {
+        if (findFirstCredentialSubjectByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class) == null) {
             throw new CredentialPresentationException(
                     "Could not find registration number in list of credential subjects.");
         }
@@ -572,7 +572,7 @@ public class GxfsCatalogService {
         for (PojoCredentialSubject cs : credentialSubjects) {
             VerifiableCredential credential;
             // check type to decide who signs the CS
-            if (cs instanceof LegalRegistrationNumberCredentialSubject registrationNumberCs) {
+            if (cs instanceof GxLegalRegistrationNumberCredentialSubject registrationNumberCs) {
                 // let notary sign registration number
                 credential = gxdchService.verifyRegistrationNumber(registrationNumberCs);
                 if (credential == null) {
@@ -604,7 +604,7 @@ public class GxfsCatalogService {
                         URI.create(cs.getId())); // set vc id to cs id
                 gxfsSignerService
                         .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
-                if (cs instanceof LegalParticipantCredentialSubject) {
+                if (cs instanceof GxLegalParticipantCredentialSubject) {
                     // if CS is Gaia-X Legal Participant, add them to the compliance VCs
                     complianceVcs.add(credential);
                 }
@@ -746,7 +746,7 @@ public class GxfsCatalogService {
             String verificationMethod,
             String privateKey) throws CredentialSignatureException, CredentialPresentationException {
 
-        boolean isParticipant = subjects.stream().anyMatch(LegalParticipantCredentialSubject.class::isInstance);
+        boolean isParticipant = subjects.stream().anyMatch(GxLegalParticipantCredentialSubject.class::isInstance);
 
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
@@ -780,8 +780,8 @@ public class GxfsCatalogService {
             gxdchService.getGxTnCs();
 
             subjects.stream()
-                    .filter(LegalRegistrationNumberCredentialSubject.class::isInstance)
-                    .map(s -> (LegalRegistrationNumberCredentialSubject) s)
+                    .filter(GxLegalRegistrationNumberCredentialSubject.class::isInstance)
+                    .map(s -> (GxLegalRegistrationNumberCredentialSubject) s)
                     .findFirst().ifPresent(gxdchService::verifyRegistrationNumber);
 
         }

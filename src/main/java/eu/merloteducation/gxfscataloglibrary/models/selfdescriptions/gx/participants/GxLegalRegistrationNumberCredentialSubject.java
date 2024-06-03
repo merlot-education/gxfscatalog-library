@@ -18,7 +18,7 @@ import java.util.Map;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LegalRegistrationNumberCredentialSubject extends PojoCredentialSubject {
+public class GxLegalRegistrationNumberCredentialSubject extends PojoCredentialSubject {
 
     @JsonProperty("@context")
     private Map<String, String> context = Map.of(

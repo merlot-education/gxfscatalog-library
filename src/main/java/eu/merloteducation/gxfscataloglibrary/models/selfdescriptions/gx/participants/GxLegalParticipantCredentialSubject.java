@@ -1,4 +1,4 @@
-package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -7,9 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.DataAccountExport;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxVcard;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.NodeKindIRITypeId;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.SOTermsAndConditions;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
 import jakarta.validation.constraints.NotNull;
@@ -24,48 +23,51 @@ import java.util.Map;
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ServiceOfferingCredentialSubject extends PojoCredentialSubject {
+public class GxLegalParticipantCredentialSubject extends PojoCredentialSubject {
 
     @JsonProperty("@context")
     private Map<String, String> context = Map.of(
             "gx", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+            "vcard", "http://www.w3.org/2006/vcard/ns#",
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
 
     @Getter(AccessLevel.NONE)
-    public static final String TYPE = "gx:ServiceOffering";
+    public static final String TYPE = "gx:LegalParticipant";
 
-    @JsonProperty("gx:providedBy")
-    private NodeKindIRITypeId providedBy;
-
-    // TODO support aggregationOf and dependsOn
-
-    @JsonProperty("gx:termsAndConditions")
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<SOTermsAndConditions> termsAndConditions;
-
-    @JsonProperty("gx:policy")
-    @JsonSerialize(contentUsing = StringSerializer.class)
-    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    // Tagus
     @NotNull
+    @JsonProperty("gx:legalRegistrationNumber")
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> policy;
+    private List<NodeKindIRITypeId> legalRegistrationNumber; // will be gx:registrationNumber in Loire
 
-    @JsonProperty("gx:dataProtectionRegime")
-    @JsonSerialize(contentUsing = StringSerializer.class)
-    @JsonDeserialize(contentUsing = StringDeserializer.class)
+    // Tagus
+    @JsonProperty("gx:parentOrganization")
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<String> dataProtectionRegime;
+    private List<NodeKindIRITypeId> parentOrganization; // will be gx:parentOrganizationOf in Loire
 
-    @JsonProperty("gx:dataAccountExport")
+    // Tagus
+    @JsonProperty("gx:subOrganization")
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    private List<DataAccountExport> dataAccountExport;
+    private List<NodeKindIRITypeId> subOrganization; // will be gx:subOrganizationOf in Loire
 
+    // Loire
+    @NotNull
+    @JsonProperty("gx:legalAddress")
+    private GxVcard legalAddress; // contains Tagus gx:countrySubdivisionCode
+
+    // Loire
+    @NotNull
+    @JsonProperty("gx:headquarterAddress")
+    private GxVcard headquarterAddress; // contains Tagus gx:countrySubdivisionCode
+
+    // Loire
     @JsonProperty("gx:name")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
     private String name;
 
+    // Loire
     @JsonProperty("gx:description")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
@@ -80,4 +82,5 @@ public class ServiceOfferingCredentialSubject extends PojoCredentialSubject {
     public static String getTypeNoPrefix() {
         return TYPE.replaceAll(".+:", "");
     }
+
 }
