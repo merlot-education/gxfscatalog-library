@@ -38,6 +38,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,6 +57,9 @@ class GxfsCatalogServiceTests {
 
     @MockBean
     private GxfsCatalogClient gxfsCatalogClient;
+
+    @MockBean
+    private GxdchService gxdchService;
 
     @MockBean
     private GxfsWizardApiService gxfsWizardApiService;
@@ -109,6 +113,12 @@ class GxfsCatalogServiceTests {
     public void setUp() throws SSLException {
         // reset catalog client fake between each test
         ReflectionTestUtils.setField(gxfsCatalogService, "gxfsCatalogClient", new GxfsCatalogClientFake());
+        ReflectionTestUtils.setField(gxfsCatalogService, "gxdchService",
+                new GxdchService(
+                        Map.of("http://example.com", new GxComplianceClientFake()),
+                        Map.of("http://example.com", new GxRegistryClientFake()),
+                        Map.of("http://example.com", new GxNotaryClientFake())
+                ));
 
         String didJson = "";
         try (InputStream didStream =
