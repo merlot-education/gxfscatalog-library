@@ -31,7 +31,7 @@ class SerializationTests {
         String value = "somevalue";
 
         String serialized = objectMapper.writeValueAsString(value);
-        assertEquals(value, serialized);
+        assertEquals("\"" + value + "\"", serialized);
     }
 
     @Test
@@ -43,7 +43,7 @@ class SerializationTests {
         String value = "somevalue";
 
         String serialized = objectMapper.writeValueAsString(value);
-        assertEquals(value, serialized);
+        assertEquals("\"" + value + "\"", serialized);
     }
 
     @Test
