@@ -20,9 +20,5 @@ public class IntegerSerializer extends StdSerializer<Integer> {
     public void serialize(Integer i, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
         jsonGenerator.writeNumber(i);
-        /*jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField("@type", "xsd:integer");
-        jsonGenerator.writeNumberField("@value", i);
-        jsonGenerator.writeEndObject();*/
     }
 }

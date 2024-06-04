@@ -31,8 +31,7 @@ class SerializationTests {
         String value = "somevalue";
 
         String serialized = objectMapper.writeValueAsString(value);
-        assertTrue(serialized.contains("\"@type\":\"xsd:string\""));
-        assertTrue(serialized.contains("\"@value\":\"somevalue\""));
+        assertEquals(value, serialized);
     }
 
     @Test
@@ -44,8 +43,7 @@ class SerializationTests {
         String value = "somevalue";
 
         String serialized = objectMapper.writeValueAsString(value);
-        assertTrue(serialized.contains("\"@type\":\"xsd:anyURI\""));
-        assertTrue(serialized.contains("\"@value\":\"somevalue\""));
+        assertEquals(value, serialized);
     }
 
     @Test
@@ -57,8 +55,7 @@ class SerializationTests {
         int value = 5;
 
         String serialized = objectMapper.writeValueAsString(value);
-        assertTrue(serialized.contains("\"@type\":\"xsd:integer\""));
-        assertTrue(serialized.contains("\"@value\":5"));
+        assertEquals(value, Integer.valueOf(serialized));
     }
 
     @Test

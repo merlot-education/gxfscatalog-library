@@ -36,12 +36,14 @@ public class GxServiceOfferingCredentialSubject extends PojoCredentialSubject {
     public static final String TYPE = "gx:ServiceOffering";
 
     @JsonProperty("gx:providedBy")
+    @NotNull
     private NodeKindIRITypeId providedBy;
 
     // TODO support aggregationOf and dependsOn
 
     @JsonProperty("gx:termsAndConditions")
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    @NotNull
     private List<GxSOTermsAndConditions> termsAndConditions;
 
     @JsonProperty("gx:policy")
@@ -59,6 +61,7 @@ public class GxServiceOfferingCredentialSubject extends PojoCredentialSubject {
 
     @JsonProperty("gx:dataAccountExport")
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
+    @NotNull
     private List<GxDataAccountExport> dataAccountExport;
 
     @JsonProperty("gx:name")

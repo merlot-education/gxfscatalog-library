@@ -1,7 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.models.participants;
 
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescription;
 import lombok.Getter;
 import lombok.Setter;
 

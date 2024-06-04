@@ -211,8 +211,8 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
+     * Given a list of PojoCredentialSubject that correspond to a gx:ServiceOffering,
+     * wrap them in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
      * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
@@ -226,8 +226,8 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
+     * Given a list of PojoCredentialSubject that correspond to a gx:ServiceOffering,
+     * wrap them in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
      * The verification method must reference the certificate associated with the default key.
      *
      * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
@@ -243,8 +243,8 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
+     * Given a list of PojoCredentialSubject that correspond to a gx:ServiceOffering,
+     * wrap them in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
      * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
@@ -263,7 +263,7 @@ public class GxfsCatalogService {
                 findFirstCredentialSubjectByType(credentialSubjects, GxServiceOfferingCredentialSubject.class);
         if (offeringCredentialSubject == null) {
             throw new CredentialPresentationException(
-                    "Could not find Legal participant in list of credential subjects.");
+                    "Could not find " + GxServiceOfferingCredentialSubject.TYPE + " in list of credential subjects.");
         }
 
         PrivateKey prk = buildPrivateKey(privateKey);
@@ -294,28 +294,9 @@ public class GxfsCatalogService {
                 complianceVcs, // insert credentials into vp
                 URI.create(credentialSubjects.get(0).getId() + "#complianceSd")); // set vp id to first cs id for now
 
-        // TODO check and store result of compliance
         VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
-        System.out.println(complianceVp);
         System.out.println(complianceResult);
 
-        // TODO add this once catalog accepts it (signature + shape)
-        /*try {
-            VerifiableCredential merlotVc = fullVcs.stream()
-                    .filter(vc -> vc.getCredentialSubject().getType().equals("merlot:MerlotLegalParticipant"))
-                    .findFirst().orElse(null);
-            if (complianceResult != null) {
-                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult",
-                        StringEscapeUtils.unescapeJson(objectMapper.writeValueAsString(complianceResult))); // TODO try unescape?
-            } else {
-                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult", "");
-            }
-            merlotVc.setJsonObjectKeyValue("proof", null);
-            gxfsSignerService
-                    .signVerifiableCredential(merlotVc, verificationMethod, prk, certificates); // resign vc
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }*/
         if (complianceResult == null) {
             if (enforceCompliance) {
                 throw new CredentialPresentationException("Provided credential subjects failed GXDCH compliance check.");
@@ -324,15 +305,12 @@ public class GxfsCatalogService {
             fullVcs.add(complianceResult);
         }
 
-
         VerifiablePresentation fullVp = gxfsSignerService.createVerifiablePresentation(
                 fullVcs, // insert credentials into vp
                 URI.create(credentialSubjects.get(0).getId() + "#sd")); // set vp id to first cs id for now
 
         // sign verifiable presentation for catalog storage
         gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
-
-        System.out.println(fullVp);
 
         return gxfsCatalogClient.postAddSelfDescription(fullVp);
     }
@@ -386,13 +364,13 @@ public class GxfsCatalogService {
         // make sure there is at least one legal participant CS
         if (findFirstCredentialSubjectByType(credentialSubjects, GxLegalParticipantCredentialSubject.class) == null) {
             throw new CredentialPresentationException(
-                    "Could not find Legal participant in list of credential subjects.");
+                    "Could not find " + GxLegalParticipantCredentialSubject.TYPE + " in list of credential subjects.");
         }
 
         // make sure there is at least one legal registration number CS
         if (findFirstCredentialSubjectByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class) == null) {
             throw new CredentialPresentationException(
-                    "Could not find registration number in list of credential subjects.");
+                    "Could not find " + GxLegalRegistrationNumberCredentialSubject.TYPE + " in list of credential subjects.");
         }
 
         PrivateKey prk = buildPrivateKey(privateKey);
@@ -453,28 +431,9 @@ public class GxfsCatalogService {
                 complianceVcs, // insert credentials into vp
                 complianceVcs.get(0).getId()); // set vp id to first cs id for now
 
-        // TODO check and store result of compliance
         VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
-        System.out.println(complianceVp);
         System.out.println(complianceResult);
 
-        // TODO add this once catalog accepts it (signature + shape)
-        /*try {
-            VerifiableCredential merlotVc = fullVcs.stream()
-                    .filter(vc -> vc.getCredentialSubject().getType().equals("merlot:MerlotLegalParticipant"))
-                    .findFirst().orElse(null);
-            if (complianceResult != null) {
-                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult",
-                        StringEscapeUtils.unescapeJson(objectMapper.writeValueAsString(complianceResult))); // TODO try unescape?
-            } else {
-                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult", "");
-            }
-            merlotVc.setJsonObjectKeyValue("proof", null);
-            gxfsSignerService
-                    .signVerifiableCredential(merlotVc, verificationMethod, prk, certificates); // resign vc
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }*/
         if (complianceResult == null) {
             if (enforceCompliance) {
                 throw new CredentialPresentationException("Provided credential subjects failed GXDCH compliance check.");
@@ -490,8 +449,6 @@ public class GxfsCatalogService {
 
         // sign verifiable presentation for catalog storage
         gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
-
-        System.out.println(fullVp);
 
         return this.gxfsCatalogClient.postAddParticipant(fullVp);
     }
@@ -618,28 +575,9 @@ public class GxfsCatalogService {
                 complianceVcs, // insert credentials into vp
                 complianceVcs.get(0).getId()); // set vp id to first cs id for now
 
-        // TODO check and store result of compliance
         VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
-        System.out.println(complianceVp);
         System.out.println(complianceResult);
 
-        // TODO add this once catalog accepts it (signature + shape)
-        /*try {
-            VerifiableCredential merlotVc = fullVcs.stream()
-                    .filter(vc -> vc.getCredentialSubject().getType().equals("merlot:MerlotLegalParticipant"))
-                    .findFirst().orElse(null);
-            if (complianceResult != null) {
-                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult",
-                        StringEscapeUtils.unescapeJson(objectMapper.writeValueAsString(complianceResult))); // TODO try unescape?
-            } else {
-                merlotVc.getCredentialSubject().setJsonObjectKeyValue("merlot:gxdchComplianceResult", "");
-            }
-            merlotVc.setJsonObjectKeyValue("proof", null);
-            gxfsSignerService
-                    .signVerifiableCredential(merlotVc, verificationMethod, prk, certificates); // resign vc
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }*/
         if (complianceResult == null) {
             if (enforceCompliance) {
                 throw new CredentialPresentationException("Provided credential subjects failed GXDCH compliance check.");
@@ -655,8 +593,6 @@ public class GxfsCatalogService {
 
         // sign verifiable presentation for catalog storage
         gxfsSignerService.signVerifiablePresentation(fullVp, verificationMethod, prk, certificates);
-
-        System.out.println(fullVp);
 
         return this.gxfsCatalogClient.putUpdateParticipant(
                 fullVp.getId().toString(),
@@ -739,61 +675,6 @@ public class GxfsCatalogService {
 
         return objectMapper.convertValue(response, new TypeReference<>() {
         });
-    }
-
-    private VerifiablePresentation createSignedVerifiablePresentation(
-            List<PojoCredentialSubject> subjects,
-            String verificationMethod,
-            String privateKey) throws CredentialSignatureException, CredentialPresentationException {
-
-        boolean isParticipant = subjects.stream().anyMatch(GxLegalParticipantCredentialSubject.class::isInstance);
-
-        PrivateKey prk = buildPrivateKey(privateKey);
-        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
-
-        List<VerifiableCredential> credentials = new ArrayList<>();
-
-        for (PojoCredentialSubject cs : subjects) {
-            VerifiableCredential vc;
-            if (isParticipant) {
-                vc = gxfsSignerService.createVerifiableCredential(
-                        cs,
-                        URI.create(cs.getId()), // set issuer to cs id
-                        URI.create(cs.getId())); // set vc id to cs id
-            } else {
-                vc = gxfsSignerService.createVerifiableCredential(
-                        cs,
-                        // TODO fix offerings issuer
-                        URI.create("TODO"), // set issuer to offered by
-                        URI.create(cs.getId())); // set vc id to cs id
-            }
-            gxfsSignerService.signVerifiableCredential(vc, verificationMethod, prk, certificates); // sign vc
-            credentials.add(vc);
-        }
-
-        VerifiablePresentation vp = gxfsSignerService.createVerifiablePresentation(
-                credentials, // insert credentials into vp
-                credentials.get(0).getId()); // set vp id to first cs id for now
-
-        // if participant, request Gaia-X TnC as well as validate registration number with notary
-        if (isParticipant) {
-            gxdchService.getGxTnCs();
-
-            subjects.stream()
-                    .filter(GxLegalRegistrationNumberCredentialSubject.class::isInstance)
-                    .map(s -> (GxLegalRegistrationNumberCredentialSubject) s)
-                    .findFirst().ifPresent(gxdchService::verifyRegistrationNumber);
-
-        }
-
-        // regardless of type check for compliance
-        gxdchService.checkCompliance(vp);
-
-        // reset vc of vp to single object for now for catalog use
-        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, credentials.get(0).getJsonObject());
-        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
-
-        return vp;
     }
 
     private String listToString(List<String> stringList) {

@@ -1,22 +1,28 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.CastableCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxDataAccountExport;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxSOTermsAndConditions;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.NodeKindIRITypeId;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxVcard;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalParticipantCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.GxServiceOfferingCredentialSubject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.net.URI;
+import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,9 +33,28 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
     private final List<ParticipantItem> participantItems = new ArrayList<>();
 
+    private GxServiceOfferingCredentialSubject generateGxOfferingCs(String id,
+                                                                    String providedBy) {
+        GxServiceOfferingCredentialSubject cs = new GxServiceOfferingCredentialSubject();
+        cs.setId(id);
+        cs.setName("Some Offering");
+        cs.setProvidedBy(new NodeKindIRITypeId(providedBy));
+        GxSOTermsAndConditions tnc = new GxSOTermsAndConditions();
+        tnc.setUrl("http://example.com");
+        tnc.setHash("1234");
+        cs.setTermsAndConditions(List.of(tnc));
+        cs.setPolicy(List.of("policy"));
+        GxDataAccountExport accountExport = new GxDataAccountExport();
+        accountExport.setAccessType("digital");
+        accountExport.setRequestType("API");
+        accountExport.setFormatType("application/json");
+        cs.setDataAccountExport(List.of(accountExport));
+        return cs;
+    }
+
     private SelfDescriptionItem generateBasicOfferingSdItem(String id,
                                                         String issuer,
-                                                        String offeredBy,
+                                                        String providedBy,
                                                         SelfDescriptionStatus status) {
         SelfDescriptionItem item = new SelfDescriptionItem();
         item.setMeta(new SelfDescriptionMeta());
@@ -37,18 +62,27 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         item.getMeta().setSdHash(id);
         item.getMeta().setIssuer(issuer);
         item.getMeta().setStatus(status.getValue());
-        item.getMeta().setContent(new SelfDescription());
-        item.getMeta().getContent().setId(id);
 
-        ServiceOfferingCredentialSubject credentialSubject = new ServiceOfferingCredentialSubject();
-        credentialSubject.setId(id);
-        credentialSubject.setType("gx:ServiceOffering");
-        credentialSubject.setProvidedBy(new NodeKindIRITypeId(offeredBy));
+        PojoCredentialSubject gxOfferingCs = generateGxOfferingCs(id, issuer);
+        CastableCredentialSubject cs;
+        try {
+            cs = CastableCredentialSubject.fromPojo(gxOfferingCs);
+        } catch (JsonProcessingException e) {
+            cs = new CastableCredentialSubject();
+        }
+        VerifiableCredential vc = VerifiableCredential
+                .builder()
+                .id(URI.create(id))
+                .issuanceDate(Date.from(Instant.now()))
+                .credentialSubject(cs)
+                .issuer(URI.create(issuer))
+                .build();
+        ExtendedVerifiableCredential extendedVc = ExtendedVerifiableCredential.fromMap(vc.getJsonObject());
+        ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
+        vp.setVerifiableCredentials(List.of(extendedVc));
 
-        SelfDescriptionVerifiableCredential vc = new SelfDescriptionVerifiableCredential();
-        vc.setCredentialSubject(credentialSubject);
+        item.getMeta().setContent(vp);
 
-        item.getMeta().getContent().setVerifiableCredential(List.of(vc));
         return item;
     }
 
@@ -142,12 +176,20 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
     @Override
     public SelfDescriptionMeta postAddSelfDescription(VerifiablePresentation body) {
-        SelfDescriptionItem item = generateBasicOfferingSdItem(
-                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("id").toString(),
-                body.getVerifiableCredential().getIssuer().toString(),
-                body.getVerifiableCredential().getIssuer().toString(),
-                SelfDescriptionStatus.ACTIVE
-        );
+        SelfDescriptionItem item;
+        if (body instanceof ExtendedVerifiablePresentation extendedVp) {
+            item = generateBasicOfferingSdItem(
+                    extendedVp.getVerifiableCredentials().get(0).getCredentialSubject().getId().toString(),
+                    extendedVp.getVerifiableCredentials().get(0).getIssuer().toString(),
+                    extendedVp.getVerifiableCredentials().get(0).getIssuer().toString(),
+                    SelfDescriptionStatus.ACTIVE);
+        } else {
+            item = generateBasicOfferingSdItem(
+                    body.getVerifiableCredential().getCredentialSubject().getId().toString(),
+                    body.getVerifiableCredential().getIssuer().toString(),
+                    body.getVerifiableCredential().getIssuer().toString(),
+                    SelfDescriptionStatus.ACTIVE);
+        }
         selfDescriptionItems.add(item);
         return item.getMeta();
     }
