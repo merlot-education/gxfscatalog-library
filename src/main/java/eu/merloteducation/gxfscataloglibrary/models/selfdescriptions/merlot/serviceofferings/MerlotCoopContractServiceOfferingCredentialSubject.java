@@ -13,12 +13,12 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true, value={ "type", "@context" }, allowGetters=true)
 public class MerlotCoopContractServiceOfferingCredentialSubject extends PojoCredentialSubject {
     // does not have any special fields on its own, inherits everything from general offering
 
-    @JsonProperty("@context")
-    private Map<String, String> context = Map.of(
+    @Getter(AccessLevel.NONE)
+    public static final Map<String, String> CONTEXT = Map.of(
             "merlot", "http://w3id.org/gaia-x/merlot#",
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
@@ -30,6 +30,12 @@ public class MerlotCoopContractServiceOfferingCredentialSubject extends PojoCred
     @Override
     public String getType() {
         return TYPE;
+    }
+
+    @JsonProperty("@context")
+    @Override
+    public Map<String, String> getContext() {
+        return CONTEXT;
     }
 
     public static String getTypeNoPrefix() {

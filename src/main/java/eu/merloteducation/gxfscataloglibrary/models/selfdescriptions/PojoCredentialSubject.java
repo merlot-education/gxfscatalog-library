@@ -11,7 +11,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true, value={ "type", "@context" }, allowGetters=true)
 public class PojoCredentialSubject {
     // base fields
     @JsonAlias("@id")
@@ -20,12 +20,17 @@ public class PojoCredentialSubject {
     @Getter(AccessLevel.NONE)
     public static final String TYPE = "context:type";
 
-    @JsonProperty("@context")
-    private Map<String, String> context;
+    @Getter(AccessLevel.NONE)
+    public static final Map<String, String> CONTEXT = Map.of();
 
     @JsonProperty("type")
     public String getType() {
         return TYPE;
+    }
+
+    @JsonProperty("@context")
+    public Map<String, String> getContext() {
+        return CONTEXT;
     }
 
     public static String getTypeNoPrefix() {

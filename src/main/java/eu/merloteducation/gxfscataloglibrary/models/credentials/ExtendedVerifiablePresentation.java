@@ -2,13 +2,34 @@ package eu.merloteducation.gxfscataloglibrary.models.credentials;
 
 import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ExtendedVerifiablePresentation extends VerifiablePresentation {
+
+    @JsonCreator
+    public ExtendedVerifiablePresentation() {
+    }
+
+    protected ExtendedVerifiablePresentation(Map<String, Object> jsonObject) {
+        super(jsonObject);
+    }
+
+    private ExtendedVerifiableCredential getExtendedVerifiableCredentialFromObject(Object o) {
+        if (o instanceof Map map) {
+            return ExtendedVerifiableCredential.fromMap(map);
+        } else if (o instanceof ExtendedVerifiableCredential evc){
+            return evc;
+        } else if (o instanceof VerifiableCredential vc) {
+            return ExtendedVerifiableCredential.fromMap(vc.getJsonObject());
+        }
+        return null;
+    }
 
     /**
      * Extends the VerifiablePresentation base class to allow for multiple VCs in a single VP.
@@ -20,18 +41,22 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         // get credential object
         Object credentials = getJsonObject().get(VerifiableCredential.DEFAULT_JSONLD_PREDICATE);
         if (credentials == null) {
-            return null;
+            return Collections.emptyList();
         }
 
         // check if we have multiple credentials
         if (credentials instanceof List<?> credentialList) {
             return credentialList.stream()
-                    .filter(Map.class::isInstance)
-                    .map(o -> ExtendedVerifiableCredential.fromMap((Map) o))
+                    .map(this::getExtendedVerifiableCredentialFromObject)
+                    .filter(Objects::nonNull)
                     .toList();
         }
         // otherwise we wrap a single element into a list
-        return List.of(ExtendedVerifiableCredential.fromMap((Map) credentials));
+        ExtendedVerifiableCredential singleCred = getExtendedVerifiableCredentialFromObject(credentials);
+        if (singleCred != null) {
+            return List.of(singleCred);
+        }
+        return Collections.emptyList();
     }
 
     /**
@@ -82,5 +107,9 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
             return null;
         }
         return pojoCredentialSubjects.get(0);
+    }
+
+    public static ExtendedVerifiablePresentation fromMap(Map<String, Object> jsonObject) {
+        return new ExtendedVerifiablePresentation(jsonObject);
     }
 }

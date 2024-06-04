@@ -33,7 +33,6 @@ class GxfsSignerServiceTests {
     private PojoCredentialSubject generateCredentialSubject() {
         PojoCredentialSubject subject = new PojoCredentialSubject();
         subject.setId("did:web:subject.example.com");
-        subject.setContext(Map.of("context", "http://example.com"));
         return subject;
     }
 

@@ -13,11 +13,8 @@ import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxDataAccountExport;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxSOTermsAndConditions;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.NodeKindIRITypeId;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes.GxVcard;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.GxServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalParticipantCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
@@ -33,28 +30,45 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
     private final List<ParticipantItem> participantItems = new ArrayList<>();
 
-    private GxServiceOfferingCredentialSubject generateGxOfferingCs(String id,
-                                                                    String providedBy) {
-        GxServiceOfferingCredentialSubject cs = new GxServiceOfferingCredentialSubject();
-        cs.setId(id);
-        cs.setName("Some Offering");
-        cs.setProvidedBy(new NodeKindIRITypeId(providedBy));
-        GxSOTermsAndConditions tnc = new GxSOTermsAndConditions();
-        tnc.setUrl("http://example.com");
-        tnc.setHash("1234");
-        cs.setTermsAndConditions(List.of(tnc));
-        cs.setPolicy(List.of("policy"));
-        GxDataAccountExport accountExport = new GxDataAccountExport();
-        accountExport.setAccessType("digital");
-        accountExport.setRequestType("API");
-        accountExport.setFormatType("application/json");
-        cs.setDataAccountExport(List.of(accountExport));
-        return cs;
+    private ExtendedVerifiablePresentation createVpFromCsList(List<PojoCredentialSubject> csList, URI issuer) {
+        List<ExtendedVerifiableCredential> vcList = new ArrayList<>();
+
+        for (PojoCredentialSubject pojoCs : csList) {
+            CastableCredentialSubject cs;
+            try {
+                cs = CastableCredentialSubject.fromPojo(pojoCs);
+            } catch (JsonProcessingException e) {
+                cs = new CastableCredentialSubject();
+            }
+            VerifiableCredential vc = VerifiableCredential
+                    .builder()
+                    .id(URI.create(cs.getId() + "#" + pojoCs.getType()))
+                    .issuanceDate(Date.from(Instant.now()))
+                    .credentialSubject(cs)
+                    .issuer(issuer)
+                    .build();
+            ExtendedVerifiableCredential evc = ExtendedVerifiableCredential.fromMap(vc.getJsonObject());
+            vcList.add(evc);
+        }
+        ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
+        vp.setVerifiableCredentials(vcList);
+        vp.setJsonObjectKeyValue("id", csList.get(0).getId() + "#vp");
+        return vp;
+    }
+
+    private ExtendedVerifiablePresentation getExtendedVerifiablePresentation(VerifiablePresentation vp) {
+        ExtendedVerifiablePresentation extendedVp;
+        if (vp instanceof ExtendedVerifiablePresentation evp) {
+            extendedVp = evp;
+        } else {
+            extendedVp = ExtendedVerifiablePresentation.fromMap(vp.getJsonObject());
+        }
+        return extendedVp;
     }
 
     private SelfDescriptionItem generateBasicOfferingSdItem(String id,
                                                         String issuer,
-                                                        String providedBy,
+                                                        VerifiablePresentation vp,
                                                         SelfDescriptionStatus status) {
         SelfDescriptionItem item = new SelfDescriptionItem();
         item.setMeta(new SelfDescriptionMeta());
@@ -63,60 +77,16 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         item.getMeta().setIssuer(issuer);
         item.getMeta().setStatus(status.getValue());
 
-        PojoCredentialSubject gxOfferingCs = generateGxOfferingCs(id, issuer);
-        CastableCredentialSubject cs;
-        try {
-            cs = CastableCredentialSubject.fromPojo(gxOfferingCs);
-        } catch (JsonProcessingException e) {
-            cs = new CastableCredentialSubject();
-        }
-        VerifiableCredential vc = VerifiableCredential
-                .builder()
-                .id(URI.create(id))
-                .issuanceDate(Date.from(Instant.now()))
-                .credentialSubject(cs)
-                .issuer(URI.create(issuer))
-                .build();
-        ExtendedVerifiableCredential extendedVc = ExtendedVerifiableCredential.fromMap(vc.getJsonObject());
-        ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
-        vp.setVerifiableCredentials(List.of(extendedVc));
-
-        item.getMeta().setContent(vp);
+        item.getMeta().setContent(getExtendedVerifiablePresentation(vp));
 
         return item;
     }
 
-    private ParticipantItem generateParticipantItem(String id, String name) {
+    private ParticipantItem generateParticipantItem(String id, String name, VerifiablePresentation vp) {
         ParticipantItem item = new ParticipantItem();
         item.setId(id);
         item.setName(name);
-        item.setSelfDescription(new ExtendedVerifiablePresentation());
-        item.getSelfDescription().setId(id);
-
-        LegalParticipantCredentialSubject participantCs = new LegalParticipantCredentialSubject();
-        participantCs.setId(id + "#legalParticipant");
-        participantCs.setName(name);
-        participantCs.setLegalRegistrationNumber(List.of(new NodeKindIRITypeId("did:web:1234")));
-        GxVcard address = new GxVcard();
-        address.setCountryCode("DE");
-        address.setCountrySubdivisionCode("DE-BER");
-        address.setLocality("Berlin");
-        address.setStreetAddress("Some Street 3");
-        address.setPostalCode("12345");
-        participantCs.setLegalAddress(address);
-        participantCs.setHeadquarterAddress(address);
-        SelfDescriptionVerifiableCredential participantVc = new SelfDescriptionVerifiableCredential();
-        participantVc.setId(id);
-        participantVc.setCredentialSubject(participantCs);
-
-        LegalRegistrationNumberCredentialSubject registrationNumberCs = new LegalRegistrationNumberCredentialSubject();
-        registrationNumberCs.setId(id + "#legalRegistrationNumber");
-        registrationNumberCs.setVatID("FR79537407926");
-        SelfDescriptionVerifiableCredential registrationNumberVc = new SelfDescriptionVerifiableCredential();
-        registrationNumberVc.setId(id);
-        registrationNumberVc.setCredentialSubject(registrationNumberCs);
-
-        item.getSelfDescription().setVerifiableCredential(List.of(participantVc, registrationNumberVc));
+        item.setSelfDescription(getExtendedVerifiablePresentation(vp));
 
         return item;
     }
@@ -181,13 +151,13 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
             item = generateBasicOfferingSdItem(
                     extendedVp.getVerifiableCredentials().get(0).getCredentialSubject().getId().toString(),
                     extendedVp.getVerifiableCredentials().get(0).getIssuer().toString(),
-                    extendedVp.getVerifiableCredentials().get(0).getIssuer().toString(),
+                    extendedVp,
                     SelfDescriptionStatus.ACTIVE);
         } else {
             item = generateBasicOfferingSdItem(
                     body.getVerifiableCredential().getCredentialSubject().getId().toString(),
                     body.getVerifiableCredential().getIssuer().toString(),
-                    body.getVerifiableCredential().getIssuer().toString(),
+                    body,
                     SelfDescriptionStatus.ACTIVE);
         }
         selfDescriptionItems.add(item);
@@ -225,7 +195,8 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
 
             List<GXFSQueryLegalNameItem> legalNames = participantItems.stream().filter(pi -> pi.getId().equals(id))
                 .map(pi -> {
-                    LegalParticipantCredentialSubject cs = getLegalParticipantCredentialSubject(pi);
+                    GxLegalParticipantCredentialSubject cs = pi.getSelfDescription()
+                            .findFirstCredentialSubjectByType(GxLegalParticipantCredentialSubject.class);
                     GXFSQueryLegalNameItem legalNameItem = new GXFSQueryLegalNameItem();
                     if (cs != null) {
                         legalNameItem.setLegalName(cs.getName());
@@ -267,9 +238,9 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     @Override
     public ParticipantItem postAddParticipant(VerifiablePresentation body) {
         ParticipantItem item = generateParticipantItem(
-                body.getVerifiableCredential().getCredentialSubject().getJsonObject().get("id").toString(),
-                ((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
-                        .get("gax-trust-framework:legalName")).get("@value"));
+                getLegalParticipantCredentialSubject(body).getId(),
+                getLegalParticipantCredentialSubject(body).getName(),
+                body);
         participantItems.add(item);
         return item;
     }
@@ -284,10 +255,14 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     public ParticipantItem putUpdateParticipant(String participantId, VerifiablePresentation body) {
         checkError(participantId);
         ParticipantItem item = findParticipantItemById(participantId);
-        LegalParticipantCredentialSubject cs = getLegalParticipantCredentialSubject(item);
-        if (cs != null) {
-            cs.setName(((Map<String, String>) body.getVerifiableCredential().getCredentialSubject().getClaims()
-                    .get("gx:name")).get("@value"));
+        GxLegalParticipantCredentialSubject cs = getLegalParticipantCredentialSubject(item.getSelfDescription());
+        GxLegalRegistrationNumberCredentialSubject regCs =
+                getLegalRegistrationNumberCredentialSubject(item.getSelfDescription());
+        if (cs != null && regCs != null) {
+            cs.setName(getLegalParticipantCredentialSubject(body).getName());
+            ExtendedVerifiablePresentation vp = createVpFromCsList(List.of(cs, regCs),
+                    item.getSelfDescription().getVerifiableCredentials().get(0).getIssuer());
+            item.setSelfDescription(vp);
         }
         return item;
     }
@@ -331,11 +306,14 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         return ids.get(0);
     }
 
-    private LegalParticipantCredentialSubject getLegalParticipantCredentialSubject(ParticipantItem pi) {
-        return pi.getSelfDescription().getVerifiableCredential().stream()
-                .filter(vc -> vc.getCredentialSubject() instanceof LegalParticipantCredentialSubject)
-                .map(vc -> (LegalParticipantCredentialSubject) vc.getCredentialSubject()).findFirst()
-                .orElse(null);
+    private GxLegalParticipantCredentialSubject getLegalParticipantCredentialSubject(VerifiablePresentation vp) {
+        ExtendedVerifiablePresentation evp = getExtendedVerifiablePresentation(vp);
+        return evp.findFirstCredentialSubjectByType(GxLegalParticipantCredentialSubject.class);
+    }
+
+    private GxLegalRegistrationNumberCredentialSubject getLegalRegistrationNumberCredentialSubject(VerifiablePresentation vp) {
+        ExtendedVerifiablePresentation evp = getExtendedVerifiablePresentation(vp);
+        return evp.findFirstCredentialSubjectByType(GxLegalRegistrationNumberCredentialSubject.class);
     }
 
 }

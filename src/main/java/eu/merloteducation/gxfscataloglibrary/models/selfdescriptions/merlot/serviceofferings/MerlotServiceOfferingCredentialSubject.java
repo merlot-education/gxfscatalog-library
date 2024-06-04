@@ -21,11 +21,11 @@ import java.util.Map;
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties(ignoreUnknown = true, value={ "type", "@context" }, allowGetters=true)
 public class MerlotServiceOfferingCredentialSubject extends PojoCredentialSubject {
 
-    @JsonProperty("@context")
-    private Map<String, String> context = Map.of(
+    @Getter(AccessLevel.NONE)
+    public static final Map<String, String> CONTEXT = Map.of(
             "merlot", "http://w3id.org/gaia-x/merlot#",
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
@@ -52,13 +52,16 @@ public class MerlotServiceOfferingCredentialSubject extends PojoCredentialSubjec
     @JsonProperty("merlot:merlotTermsAndConditionsAccepted")
     private boolean merlotTermsAndConditionsAccepted;
 
-    /*@JsonProperty("merlot:gxdchComplianceResult")
-    private String gxdchComplianceResult;*/
-
     @JsonProperty("type")
     @Override
     public String getType() {
         return TYPE;
+    }
+
+    @JsonProperty("@context")
+    @Override
+    public Map<String, String> getContext() {
+        return CONTEXT;
     }
 
     public static String getTypeNoPrefix() {

@@ -1,9 +1,11 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -53,7 +55,7 @@ class GxdchServiceTests {
 
     @Test
     void checkComplianceSuccess() {
-        JsonNode result = gxdchService.checkCompliance(VerifiablePresentation.builder().id(URI.create("valid")).build());
+        VerifiableCredential result = gxdchService.checkCompliance(VerifiablePresentation.builder().id(URI.create("valid")).build());
         assertNotNull(result);
     }
 
@@ -64,7 +66,7 @@ class GxdchServiceTests {
             "badshape"
     })
     void checkComplianceBad(String shapeName) {
-        JsonNode result = gxdchService.checkCompliance(VerifiablePresentation.builder().id(URI.create(shapeName)).build());
+        VerifiableCredential result = gxdchService.checkCompliance(VerifiablePresentation.builder().id(URI.create(shapeName)).build());
         assertNull(result);
     }
 
@@ -75,24 +77,20 @@ class GxdchServiceTests {
     }
 
     @Test
-    void verifyRegistrationNumberSuccess() throws JsonProcessingException {
-        JsonNode number = objectMapper.readTree("""
-                {
-                    "id": "valid"
-                }
-                """);
-        JsonNode result = gxdchService.verifyRegistrationNumber(number);
+    void verifyRegistrationNumberSuccess() {
+        GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
+        cs.setLeiCode("1234");
+        cs.setId("valid");
+        VerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
         assertNotNull(result);
     }
 
     @Test
-    void verifyRegistrationNumberInvalid() throws JsonProcessingException {
-        JsonNode number = objectMapper.readTree("""
-                {
-                    "id": "invalid"
-                }
-                """);
-        JsonNode result = gxdchService.verifyRegistrationNumber(number);
+    void verifyRegistrationNumberInvalid() {
+        GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
+        cs.setLeiCode("1234");
+        cs.setId("invalid");
+        VerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
         assertNull(result);
     }
 
