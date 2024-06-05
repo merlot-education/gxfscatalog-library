@@ -286,7 +286,7 @@ public class GxfsCatalogService {
 
         // generate compliance vc potentially containing compliance credential
         ExtendedVerifiablePresentation vp = getComplianceVp(offeringCredentialSubjects,
-                verificationMethod, providerId, prk, certificates);
+                providerId, verificationMethod, prk, certificates);
 
         // copy credential list as it is likely immutable
         List<ExtendedVerifiableCredential> credentialList = new ArrayList<>(vp.getVerifiableCredentials());
