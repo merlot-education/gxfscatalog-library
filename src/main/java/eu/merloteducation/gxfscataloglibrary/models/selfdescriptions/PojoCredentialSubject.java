@@ -18,7 +18,11 @@ public class PojoCredentialSubject {
     private String id;
 
     @Getter(AccessLevel.NONE)
-    public static final String TYPE = "context:type";
+    public static final String TYPE_NAMESPACE = "context";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE_CLASS = "type";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = TYPE_NAMESPACE + ":" + TYPE_CLASS;
 
     @Getter(AccessLevel.NONE)
     public static final Map<String, String> CONTEXT = Map.of();
@@ -31,10 +35,6 @@ public class PojoCredentialSubject {
     @JsonProperty("@context")
     public Map<String, String> getContext() {
         return CONTEXT;
-    }
-
-    public static String getTypeNoPrefix() {
-        return TYPE.replaceAll(".+:", "");
     }
 
 }
