@@ -461,7 +461,7 @@ class GxfsCatalogServiceTests {
     @Test
     void updateNonExistentParticipant() {
         List<PojoCredentialSubject> participant = List.of(
-                generateParticipantCredentialSubject("missing", "MyParticipant", "missing#regId"),
+                generateParticipantCredentialSubject("missing", "MyParticipant", "missing-regId"),
                 generateRegistrationNumberCredentialSubject("missing-regId"));
         WebClientResponseException e = assertThrows(WebClientResponseException.class,
                 () -> gxfsCatalogService.updateParticipant(participant));
@@ -473,7 +473,7 @@ class GxfsCatalogServiceTests {
         for (int i = 0; i < 3; i++) {
             List<PojoCredentialSubject> participant = List.of(
                     generateParticipantCredentialSubject("" + i, "MyParticipant" + i, "2345-regId"),
-                    generateRegistrationNumberCredentialSubject(i + "#regId"));
+                    generateRegistrationNumberCredentialSubject(i + "-regId"));
             gxfsCatalogService
                     .addParticipant(participant);
         }
@@ -489,7 +489,7 @@ class GxfsCatalogServiceTests {
         for (int i = 0; i < 3; i++) {
             List<PojoCredentialSubject> participant = List.of(
                     generateParticipantCredentialSubject("" + i, "MyParticipant" + i, "2345-regId"),
-                    generateRegistrationNumberCredentialSubject(i + "#regId"));
+                    generateRegistrationNumberCredentialSubject(i + "-regId"));
             gxfsCatalogService
                 .addParticipant(participant);
         }
@@ -505,7 +505,7 @@ class GxfsCatalogServiceTests {
         for (int i = 0; i < 3; i++) {
             List<PojoCredentialSubject> participant = List.of(
                     generateParticipantCredentialSubject("" + i, "MyParticipant" + i, "2345-regId"),
-                    generateRegistrationNumberCredentialSubject(i + "#regId"));
+                    generateRegistrationNumberCredentialSubject(i + "-regId"));
             gxfsCatalogService
                 .addParticipant(participant);
         }

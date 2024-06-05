@@ -4,6 +4,7 @@ import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
+import foundation.identity.jsonld.JsonLDObject;
 
 import java.util.Collections;
 import java.util.List;
@@ -66,7 +67,8 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
      * @param credentials list of credentials to set
      */
     public void setVerifiableCredentials(List<ExtendedVerifiableCredential> credentials) {
-        setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, credentials);
+        setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE,
+                credentials.stream().map(JsonLDObject::getJsonObject).toList());
     }
 
     /**
