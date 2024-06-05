@@ -26,14 +26,18 @@ import java.util.Map;
 public class GxLegalParticipantCredentialSubject extends PojoCredentialSubject {
 
     @Getter(AccessLevel.NONE)
+    public static final String TYPE_NAMESPACE = "gx";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE_CLASS = "LegalParticipant";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = TYPE_NAMESPACE + ":" + TYPE_CLASS;
+
+    @Getter(AccessLevel.NONE)
     public static final Map<String, String> CONTEXT = Map.of(
-            "gx", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+            TYPE_NAMESPACE, "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
             "vcard", "http://www.w3.org/2006/vcard/ns#",
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
-
-    @Getter(AccessLevel.NONE)
-    public static final String TYPE = "gx:LegalParticipant";
 
     // Tagus
     @NotNull
@@ -83,10 +87,6 @@ public class GxLegalParticipantCredentialSubject extends PojoCredentialSubject {
     @Override
     public Map<String, String> getContext() {
         return CONTEXT;
-    }
-
-    public static String getTypeNoPrefix() {
-        return TYPE.replaceAll(".+:", "");
     }
 
 }

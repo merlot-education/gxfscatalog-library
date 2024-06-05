@@ -11,8 +11,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
-
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)

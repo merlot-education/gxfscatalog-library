@@ -24,13 +24,17 @@ import java.util.Map;
 public class MerlotSaasServiceOfferingCredentialSubject extends PojoCredentialSubject {
 
     @Getter(AccessLevel.NONE)
-    public static final Map<String, String> CONTEXT = Map.of(
-            "merlot", "http://w3id.org/gaia-x/merlot#",
-            "xsd", "http://www.w3.org/2001/XMLSchema#"
-    );
+    public static final String TYPE_NAMESPACE = "merlot";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE_CLASS = "MerlotSaasServiceOffering";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = TYPE_NAMESPACE + ":" + TYPE_CLASS;
 
     @Getter(AccessLevel.NONE)
-    public static final String TYPE = "merlot:MerlotSaasServiceOffering";
+    public static final Map<String, String> CONTEXT = Map.of(
+            TYPE_NAMESPACE, "http://w3id.org/gaia-x/merlot#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
 
     @JsonProperty("merlot:hardwareRequirements")
     @JsonSerialize(using = StringSerializer.class)
@@ -51,9 +55,5 @@ public class MerlotSaasServiceOfferingCredentialSubject extends PojoCredentialSu
     @Override
     public Map<String, String> getContext() {
         return CONTEXT;
-    }
-
-    public static String getTypeNoPrefix() {
-        return TYPE.replaceAll(".+:", "");
     }
 }

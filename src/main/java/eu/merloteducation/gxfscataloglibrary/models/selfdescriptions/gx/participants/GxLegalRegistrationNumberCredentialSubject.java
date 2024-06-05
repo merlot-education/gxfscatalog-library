@@ -21,13 +21,17 @@ import java.util.Map;
 public class GxLegalRegistrationNumberCredentialSubject extends PojoCredentialSubject {
 
     @Getter(AccessLevel.NONE)
-    public static final Map<String, String> CONTEXT = Map.of(
-            "gx", "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
-            "xsd", "http://www.w3.org/2001/XMLSchema#"
-    );
+    public static final String TYPE_NAMESPACE = "gx";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE_CLASS = "legalRegistrationNumber";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = TYPE_NAMESPACE + ":" + TYPE_CLASS;
 
     @Getter(AccessLevel.NONE)
-    public static final String TYPE = "gx:legalRegistrationNumber";
+    public static final Map<String, String> CONTEXT = Map.of(
+            TYPE_NAMESPACE, "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
 
     @JsonProperty("gx:taxID")
     @JsonSerialize(using = StringSerializer.class)
@@ -66,7 +70,4 @@ public class GxLegalRegistrationNumberCredentialSubject extends PojoCredentialSu
         return CONTEXT;
     }
 
-    public static String getTypeNoPrefix() {
-        return TYPE.replaceAll(".+:", "");
-    }
 }

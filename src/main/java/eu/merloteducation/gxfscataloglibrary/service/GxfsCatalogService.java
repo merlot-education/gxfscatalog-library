@@ -70,6 +70,8 @@ public class GxfsCatalogService {
 
     private final ObjectMapper objectMapper;
 
+    private static final String TYPE_NOT_FOUND_MESSAGE = "Could not find %s in list of credential subjects.";
+
     public GxfsCatalogService(@Autowired GxfsCatalogClient gxfsCatalogClient,
                               @Autowired GxfsSignerService gxfsSignerService,
                               @Autowired GxdchService gxdchService,
@@ -268,7 +270,7 @@ public class GxfsCatalogService {
                 findAllCredentialSubjectsByType(credentialSubjects, GxServiceOfferingCredentialSubject.class);
         if (offeringCredentialSubjects.isEmpty()) {
             throw new CredentialPresentationException(
-                    "Could not find " + GxServiceOfferingCredentialSubject.TYPE + " in list of credential subjects.");
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxServiceOfferingCredentialSubject.TYPE));
         }
 
         String providerId = offeringCredentialSubjects.stream()
@@ -798,7 +800,7 @@ public class GxfsCatalogService {
                 findAllCredentialSubjectsByType(credentialSubjects, GxLegalParticipantCredentialSubject.class);
         if (participantCsList.isEmpty()) {
             throw new CredentialPresentationException(
-                    "Could not find " + GxLegalParticipantCredentialSubject.TYPE + " in list of credential subjects.");
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalParticipantCredentialSubject.TYPE));
         }
 
         // make sure there is at least one legal registration number CS
@@ -806,7 +808,7 @@ public class GxfsCatalogService {
                 findAllCredentialSubjectsByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class);
         if (registrationNumberCsList.isEmpty()) {
             throw new CredentialPresentationException(
-                    "Could not find " + GxLegalRegistrationNumberCredentialSubject.TYPE + " in list of credential subjects.");
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalRegistrationNumberCredentialSubject.TYPE));
         }
 
         // create private key and certificate instances

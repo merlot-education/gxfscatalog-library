@@ -18,13 +18,17 @@ public class MerlotCoopContractServiceOfferingCredentialSubject extends PojoCred
     // does not have any special fields on its own, inherits everything from general offering
 
     @Getter(AccessLevel.NONE)
-    public static final Map<String, String> CONTEXT = Map.of(
-            "merlot", "http://w3id.org/gaia-x/merlot#",
-            "xsd", "http://www.w3.org/2001/XMLSchema#"
-    );
+    public static final String TYPE_NAMESPACE = "merlot";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE_CLASS = "MerlotCoopContractServiceOffering";
+    @Getter(AccessLevel.NONE)
+    public static final String TYPE = TYPE_NAMESPACE + ":" + TYPE_CLASS;
 
     @Getter(AccessLevel.NONE)
-    public static final String TYPE = "merlot:MerlotCoopContractServiceOffering";
+    public static final Map<String, String> CONTEXT = Map.of(
+            TYPE_NAMESPACE, "http://w3id.org/gaia-x/merlot#",
+            "xsd", "http://www.w3.org/2001/XMLSchema#"
+    );
 
     @JsonProperty("type")
     @Override
@@ -36,10 +40,6 @@ public class MerlotCoopContractServiceOfferingCredentialSubject extends PojoCred
     @Override
     public Map<String, String> getContext() {
         return CONTEXT;
-    }
-
-    public static String getTypeNoPrefix() {
-        return TYPE.replaceAll(".+:", "");
     }
 
 }
