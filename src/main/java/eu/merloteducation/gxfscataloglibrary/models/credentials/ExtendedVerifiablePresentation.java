@@ -9,7 +9,6 @@ import foundation.identity.jsonld.JsonLDObject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class ExtendedVerifiablePresentation extends VerifiablePresentation {
 

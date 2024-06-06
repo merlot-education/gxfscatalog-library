@@ -1,7 +1,4 @@
 # Gaia-X Federated Services (GXFS) Federated Catalogue (FC) client library
-[![Quality Gate Status](https://sonarqube.common.merlot-education.eu/api/project_badges/measure?project=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ&metric=alert_status&token=sqb_f2890eb5b13e8ddf59f2792cd7a7423258344abe)](https://sonarqube.common.merlot-education.eu/dashboard?id=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ)
-[![Lines of Code](https://sonarqube.common.merlot-education.eu/api/project_badges/measure?project=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ&metric=ncloc&token=sqb_f2890eb5b13e8ddf59f2792cd7a7423258344abe)](https://sonarqube.common.merlot-education.eu/dashboard?id=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ)
-[![Reliability Rating](https://sonarqube.common.merlot-education.eu/api/project_badges/measure?project=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ&metric=reliability_rating&token=sqb_f2890eb5b13e8ddf59f2792cd7a7423258344abe)](https://sonarqube.common.merlot-education.eu/dashboard?id=merlot-education_gxfscatalog-library_AY06oKlQZiESCnCck1FZ)
 
 ## Description
 This Java-Spring based library intends to simplify interaction with the [federated catalogue](https://gitlab.eclipse.org/eclipse/xfsc/cat/fc-service) (currently supported in version 1.0.1).
@@ -12,6 +9,7 @@ In particular, it provides the following features:
 - **Extensibility with custom models** building on top of the Gaia-X Trust Framework models
 - **Easy-to-use signature** of credentials to be published in the catalogue
 - **Optional [SD Creation Wizard API](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-api) pass-through** and interaction for easy [SD Creation Wizard Frontend](https://gitlab.eclipse.org/eclipse/xfsc/self-description-tooling/sd-creation-wizard-frontend) shape retrieval
+- **Optional [GXDCH](https://docs.gaia-x.eu/framework/?tab=clearing-house) Compliance Checks** and retrieval/storage of compliance credential within self-description
 
 ## Library structure
 
@@ -23,14 +21,15 @@ The most important parts for usage and extension of the library are summarized b
 │   │   ├── participants                 # models relevant to the /participants API endpoint
 │   │   ├── query                        # models relevant to the /query API endpoint
 │   │   ├── selfdescriptions             # models relevant to the /self-descriptions API endpoint
-│   │   │   ├── gax                      # data models of the participant/offering shapes as defined by Gaia-X
-│   │   │   ├── merlot                   # exemplary extension of the gax data models for the MERLOT project
+│   │   │   ├── gx                       # data models of the participant/offering shapes as defined by Gaia-X (Tagus/Loire)
+│   │   │   ├── merlot                   # exemplary extension of the gx data models for the MERLOT project
 │   │   │   ├── (...)             
 │   │   ├── (...)             
 │   ├── service   
 │   │   ├── GxfsCatalogService.java      # main exposed service for interacting with the catalogue
 │   │   ├── GxfsWizardApiClient.java     # main exposed service for interacting with the wizard          
-│   │   ├── *Client.java                 # internal client interfaces for the catalogue/wizard
+│   │   ├── *Client.java                 # internal client interfaces for the catalogue/wizard/clearing house
+│   │   ├── GxdchService.java            # internal service for validating compliance of credentials
 │   │   ├── GxfsSignerService.java       # internal service for signing credentials
 │   │   ├── GxfsCatalogAuthService.java  # internal service keeping the catalog user logged in
 │   ├── (...)
@@ -66,21 +65,26 @@ Some exemplary values can be found [here](https://github.com/merlot-education/gx
 
 The following table describes the expected values:
 
-| Key                               | Description                                                                                                                                                                                                                                                                                                                                                                                                                    |
-|-----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| gxfscatalog.base-uri              | The base url under which we can access the federated catalogue                                                                                                                                                                                                                                                                                                                                                                 |
-| gxfscatalog.cert-path             | If set to the path of a certificate PEM (e.g. generated by the steps from [here](https://gitlab.com/gaia-x/data-infrastructure-federation-services/cat/fc-tools/signer/#usage)), the internal signer service will use the provided certificate by default instead of the default GXFS one for signing self-descriptions. Alternatively, a key, certificate and verification method can be provided on a per-method-call basis. |
-| gxfscatalog.private-key-path      | See the previous parameter but with the default private key PEM.                                                                                                                                                                                                                                                                                                                                                               |
-| gxfscatalog.verification-method   | The default verification method that will reference the previously configured default certificate, e.g. a did:web. Alternatively, it can be provided on a per-method-call basis.                                                                                                                                                                                                                                               |
-| gxfswizardapi.base-uri            | Optional parameter pointing to the base url under which the SD creation wizard api can be reached if it should be used for pass-through.                                                                                                                                                                                                                                                                                       |
-| keycloak.client-id                | The client ID set in the Keycloak for the federated catalogue for authentication.                                                                                                                                                                                                                                                                                                                                              |
-| keycloak.authorization-grant-type | The grant type for authenticating at the keycloak, typically 'password'.                                                                                                                                                                                                                                                                                                                                                       |
-| keycloak.client-secret            | The client secret of the given client ID for the federated catalogue.                                                                                                                                                                                                                                                                                                                                                          |
-| keycloak.gxfscatalog-user         | The user that will interact with the catalogue through this library. This user needs sufficient permissions to access the respective endpoints (e.g. by assigning the role `Ro-MU-CA` within Keycloak for full access).                                                                                                                                                                                                        |
-| keycloak.gxfscatalog-pass         | See the previous parameter, the password of this user is required.                                                                                                                                                                                                                                                                                                                                                             |
-| keycloak.oidc-base-uri            | Can usually be left as default. Change this if the OIDC base url is configured differently in your Keycloak instance.                                                                                                                                                                                                                                                                                                          |
-| keycloak.logout-uri               | Can usually be left as default. Change this if the logout url is configured differently in your Keycloak instance.                                                                                                                                                                                                                                                                                                             |
-| gxfscatalog-library.ignore-ssl    | Disable SSL verification on HTTPS requests, false by default. Useful e.g. for debugging with a self-signed did:web endpoint.                                                                                                                                                                                                                                                                                                   |
+| Key                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                    |
+|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| gxfscatalog.base-uri                  | The base url under which we can access the federated catalogue                                                                                                                                                                                                                                                                                                                                                                 |
+| gxfscatalog.cert-path                 | If set to the path of a certificate PEM (e.g. generated by the steps from [here](https://gitlab.com/gaia-x/data-infrastructure-federation-services/cat/fc-tools/signer/#usage)), the internal signer service will use the provided certificate by default instead of the default GXFS one for signing self-descriptions. Alternatively, a key, certificate and verification method can be provided on a per-method-call basis. |
+| gxfscatalog.private-key-path          | See the previous parameter but with the default private key PEM.                                                                                                                                                                                                                                                                                                                                                               |
+| gxfscatalog.verification-method       | The default verification method that will reference the previously configured default certificate, e.g. a did:web. Alternatively, it can be provided on a per-method-call basis.                                                                                                                                                                                                                                               |
+| gxfswizardapi.base-uri                | Optional parameter pointing to the base url under which the SD creation wizard api can be reached if it should be used for pass-through.                                                                                                                                                                                                                                                                                       |
+| keycloak.client-id                    | The client ID set in the Keycloak for the federated catalogue for authentication.                                                                                                                                                                                                                                                                                                                                              |
+| keycloak.authorization-grant-type     | The grant type for authenticating at the keycloak, typically 'password'.                                                                                                                                                                                                                                                                                                                                                       |
+| keycloak.client-secret                | The client secret of the given client ID for the federated catalogue.                                                                                                                                                                                                                                                                                                                                                          |
+| keycloak.gxfscatalog-user             | The user that will interact with the catalogue through this library. This user needs sufficient permissions to access the respective endpoints (e.g. by assigning the role `Ro-MU-CA` within Keycloak for full access).                                                                                                                                                                                                        |
+| keycloak.gxfscatalog-pass             | See the previous parameter, the password of this user is required.                                                                                                                                                                                                                                                                                                                                                             |
+| keycloak.oidc-base-uri                | Can usually be left as default. Change this if the OIDC base url is configured differently in your Keycloak instance.                                                                                                                                                                                                                                                                                                          |
+| keycloak.logout-uri                   | Can usually be left as default. Change this if the logout url is configured differently in your Keycloak instance.                                                                                                                                                                                                                                                                                                             |
+| gxfscatalog-library.ignore-ssl        | Disable SSL verification on HTTPS requests, false by default. Useful e.g. for debugging with a self-signed did:web endpoint.                                                                                                                                                                                                                                                                                                   |
+| gxdch-services.enforce-compliance     | Optional flag to enforce compliance checks on all incoming credentials and throw an exception if the credential can not be attested by the clearing house                                                                                                                                                                                                                                                                      |
+| gxdch-services.enforce-notary         | Optional flag to enforce notary checks on incoming participant registration numbers and throw an exception if the notary cannot validate the registration number                                                                                                                                                                                                                                                               |
+| gxdch-services.compliance-base-uris   | List of compliance service base URLs of a clearing house to validate against during credential submission. Will be checked from first to last until a valid compliance credential was created. Leave empty to disable compliance checks.                                                                                                                                                                                       |
+| gxdch-services.registry-base-uris     | List of registry service base URLs of a clearing house to retrieve Gaia-X terms and conditions during credential submission. Will be checked from first to last until a valid response was created. Leave empty to disable registry checks.                                                                                                                                                                                    |
+| gxdch-services.notary-base-uris       | List of notary service base URLs of a clearing house to validate registration numbers against during credential submission. Will be checked from first to last until a valid registration number credential was created. Leave empty to disable notary checks.                                                                                                                                                                 |
 
 ### Service Usage
 
@@ -97,28 +101,39 @@ To understand how to use this service, let's consider a simple use case.
 
 Say we want to create a new Participant in the catalogue (which was initialized with the Gaia-X schemas).
 For this we can use the method `gxfsCatalogService.addParticipant(...)`.
-As we can see in the method signature, this method expects a credential subject of type `GaxTrustLegalPersonCredentialSubject`.
+As we can see in the method signature, this method expects a LList of Plain Old Java Object (POJO) credential subjects `List<PojoCredentialSubject>`.
+To generate a valid participant self-description, this list must at least contain a `GxLegalParticipantCredentialSubject` 
+as well as a `GxLegalRegistrationNumberCredentialSubject`, as well as optional additional dataspace-specific subjects.
 Hence, we could build and publish our participant to the catalogue like this:
 ```
 public class MyBusinessService {
     (...)
     
     public void addMyNewParticipant() {
-        GaxTrustLegalPersonCredentialSubject subject = new GaxTrustLegalPersonCredentialSubject();
-        subject.setType("gax-trust-framework:LegalPerson");
-        subject.setId("did:web:some-participant.example");
-        subject.setLegalName("My Participant Ltd.");
-        
+        GxLegalParticipantCredentialSubject participantCs = new GxLegalParticipantCredentialSubject();
+        participantCs.setId("did:web:some-participant.example");
+        participantCs.setLegalRegistrationNumber(
+            List.of(new NodeKindIRITypeId("did:web:some-participant.example-registrationNumber"))
+        );
+        participantCs.setName("My Participant Ltd.");
         (...) // set all other fields as required
         
-        gxfsCatalogService.addParticipant(subject);
+        GxLegalRegistrationNumberCredentialSubject regNumCs = new GxLegalRegistrationNumberCredentialSubject();
+        regNumCs.setId("did:web:some-participant.example-registrationNumber");
+        regNumCs.setLeiCode("123456");
+        (...) // set all other fields as required
+        
+        (...) // optionally add further credential subjects if needed
+        
+        gxfsCatalogService.addParticipant(List.of(participantCs, regNumCs));
     }
     
     (...)
 }
 ```
-That's it! At the library service call the credential subject will be automatically wrapped in a presentation, signed
-with the private key given to the library and sent to the catalogue.
+That's it! At the library service call the list of credential subjects will be automatically checked for compliance and
+registration number validity, wrapped in a presentation, signed with the private key given to the library and sent 
+to the catalogue.
 At this point we can easily retrieve the participant data again using the service:
 
 ```
@@ -130,10 +145,14 @@ public class MyBusinessService {
             .getParticipantById("did:web:some-participant.example");
         
         // since the item contains a generic self-description,
-        // we will need to cast in order to access the full credential subject
-        GaxTrustLegalPersonCredentialSubject credentialSubject = 
-            (GaxTrustLegalPersonCredentialSubject) item
-                .getSelfDescription().getVerifiableCredential().getCredentialSubject();
+        // we will need to retrieve the respective credential subjects by type
+        GxLegalParticipantCredentialSubject participantCs =
+            item.getSelfDescription().findFirstCredentialSubjectByType(GxLegalParticipantCredentialSubject.class)
+        GxLegalRegistrationNumberCredentialSubject participantCs =
+            item.getSelfDescription().findFirstCredentialSubjectByType(GxLegalRegistrationNumberCredentialSubject.class)
+            
+        // in case there are multiple credentials of each type in the SD, you can also use the 
+        // findAllCredentialSubjectByType() method instead of findFirstCredentialSubjectByType() to retrieve a list
         
         (...) // do something with the data
     }
@@ -149,16 +168,15 @@ and offerings and so on.
 ### Extension
 
 As we saw in the previous section, the library service methods typically accept some kind
-of credential subject type, e.g. a basic legal person as defined by Gaia-X or a general service offering.
-We can find the respective models for these types [here](https://github.com/merlot-education/gxfscatalog-library/tree/main/src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/gax).
+of list of credential subjects, e.g. for a legal participant as defined by Gaia-X or a general service offering.
+We can find the respective models for these types [here](https://github.com/merlot-education/gxfscatalog-library/tree/main/src/main/java/eu/merloteducation/gxfscataloglibrary/models/selfdescriptions/gx).
 
 Since the catalog allows to specify arbitrary schemas, we can easily extend upon this concept.
-For example, we could define our own schemas that extend the basic legal person found [here](https://gitlab.com/gaia-x/technical-committee/service-characteristics/-/blob/v22.10/single-point-of-truth/yaml/gax-trust-framework/gax-participant/legal-person.yaml?ref_type=tags) 
+For example, we could define our own schemas that extend the basic legal person found [here](https://registry.lab.gaia-x.eu/v1/api/trusted-shape-registry/v1/shapes/trustframework) 
 with an e-mail address field, generate the respective ttl files and upload them to the catalog. 
 
 Since the library has no knowledge of this field yet, we can use simple inheritance and extend upon the
-`GaxTrustLegalPersonCredentialSubject` model and add it to the annotation of the generic 
-`SelfDescriptionCredentialSubject` for automatic deserialization.
+`PojoCredentialSubject` model.
 
 Once we have done this we can use our custom class for all the existing library service methods due to the
 inheritance.
