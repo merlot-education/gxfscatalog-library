@@ -1,7 +1,9 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.databind.JsonNode;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,7 +27,7 @@ public class GxdchService {
         this.gxNotaryClients = gxNotaryClients;
     }
 
-    public JsonNode checkCompliance(VerifiablePresentation vp) {
+    public ExtendedVerifiableCredential checkCompliance(ExtendedVerifiablePresentation vp) {
         // go through compliance service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {
@@ -62,14 +64,14 @@ public class GxdchService {
         return null;
     }
 
-    public JsonNode verifyRegistrationNumber(JsonNode registrationNumber){
+    public ExtendedVerifiableCredential verifyRegistrationNumber(GxLegalRegistrationNumberCredentialSubject registrationNumber) {
         // go through notary service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxNotaryClient> clientEntry : gxNotaryClients.entrySet()) {
             log.info("Verifying registration number at Notary {}", clientEntry.getKey());
             log.debug("Registration number: {}", registrationNumber);
             try {
-                return clientEntry.getValue().postRegistrationNumber(null, registrationNumber);
+                return clientEntry.getValue().postRegistrationNumber(registrationNumber.getId(), registrationNumber);
             } catch (WebClientResponseException e) {
                 log.info("Failed to verify registration number at Notary {}: {} {}",
                         clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());

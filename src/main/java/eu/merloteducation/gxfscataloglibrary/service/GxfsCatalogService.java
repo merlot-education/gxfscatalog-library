@@ -1,7 +1,5 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiableCredential;
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,18 +7,20 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryLegalNameItem;
 import eu.merloteducation.gxfscataloglibrary.models.query.GXFSQueryUriItem;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionMeta;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.participants.GaxTrustLegalPersonCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.serviceofferings.GaxCoreServiceOfferingCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.*;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalParticipantCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.serviceofferings.GxServiceOfferingCredentialSubject;
+import foundation.identity.jsonld.ConfigurableDocumentLoader;
 import io.netty.util.internal.StringUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
@@ -40,8 +40,10 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
+@Slf4j
 public class GxfsCatalogService {
 
     private final Logger logger = LoggerFactory.getLogger(GxfsCatalogService.class);
@@ -51,6 +53,10 @@ public class GxfsCatalogService {
     private final String defaultCertPath;
 
     private final String defaultPrivateKey;
+
+    private final boolean enforceCompliance;
+
+    private final boolean enforceNotary;
 
     private final GxfsCatalogClient gxfsCatalogClient;
 
@@ -62,6 +68,8 @@ public class GxfsCatalogService {
 
     private final ObjectMapper objectMapper;
 
+    private static final String TYPE_NOT_FOUND_MESSAGE = "Could not find %s in list of credential subjects.";
+
     public GxfsCatalogService(@Autowired GxfsCatalogClient gxfsCatalogClient,
                               @Autowired GxfsSignerService gxfsSignerService,
                               @Autowired GxdchService gxdchService,
@@ -69,7 +77,9 @@ public class GxfsCatalogService {
                               @Autowired ObjectMapper objectMapper,
                               @Value("${gxfscatalog.verification-method:#{null}}") String defaultVerificationMethod,
                               @Value("${gxfscatalog.cert-path:#{null}}") String defaultCertPath,
-                              @Value("${gxfscatalog.private-key-path:#{null}}") String defaultPrivateKey) {
+                              @Value("${gxfscatalog.private-key-path:#{null}}") String defaultPrivateKey,
+                              @Value("${gxdch-services.enforce-compliance:#{false}}") boolean enforceCompliance,
+                              @Value("${gxdch-services.enforce-notary:#{false}}") boolean enforceNotary) {
         this.gxfsCatalogClient = gxfsCatalogClient;
         this.gxfsSignerService = gxfsSignerService;
         this.gxdchService = gxdchService;
@@ -78,6 +88,8 @@ public class GxfsCatalogService {
         this.defaultVerificationMethod = defaultVerificationMethod;
         this.defaultCertPath = defaultCertPath;
         this.defaultPrivateKey = defaultPrivateKey;
+        this.enforceCompliance = enforceCompliance;
+        this.enforceNotary = enforceNotary;
     }
 
     /**
@@ -204,42 +216,42 @@ public class GxfsCatalogService {
     }
 
     /**
-     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
+     * Given a list of PojoCredentialSubject that correspond to a gx:ServiceOffering,
+     * wrap them in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
-     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject)
+            List<PojoCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(serviceOfferingCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+        return addServiceOffering(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
-     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
+     * Given a list of PojoCredentialSubject that correspond to a gx:ServiceOffering,
+     * wrap them in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
      * The verification method must reference the certificate associated with the default key.
      *
-     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-        GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject, String verificationMethod)
+            List<PojoCredentialSubject> credentialSubjects, String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(serviceOfferingCredentialSubject, verificationMethod, getDefaultPrivateKey());
+        return addServiceOffering(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
-     * Given the credential subject of a self-description that inherits from gax-core:ServiceOffering,
-     * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
+     * Given a list of PojoCredentialSubject that correspond to a gx:ServiceOffering,
+     * wrap them in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
-     * @param serviceOfferingCredentialSubject service offering credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
@@ -247,12 +259,49 @@ public class GxfsCatalogService {
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            GaxCoreServiceOfferingCredentialSubject serviceOfferingCredentialSubject,
+            List<PojoCredentialSubject> credentialSubjects,
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(List.of(serviceOfferingCredentialSubject),
-                verificationMethod, privateKey);
+        // make sure there is at least one service offering CS
+        List<PojoCredentialSubject> offeringCredentialSubjects =
+                findAllCredentialSubjectsByType(credentialSubjects, GxServiceOfferingCredentialSubject.class);
+        if (offeringCredentialSubjects.isEmpty()) {
+            throw new CredentialPresentationException(
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxServiceOfferingCredentialSubject.TYPE));
+        }
+
+        String providerId = offeringCredentialSubjects.stream()
+                .filter(GxServiceOfferingCredentialSubject.class::isInstance)
+                .map(cs -> ((GxServiceOfferingCredentialSubject) cs).getProvidedBy().getId())
+                .filter(Objects::nonNull)
+                .findFirst().orElse("");
+
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
+
+        // remove credentials for compliance from overall list
+        List<PojoCredentialSubject> nonCompliantCsList = new ArrayList<>(credentialSubjects);
+        nonCompliantCsList.removeAll(offeringCredentialSubjects);
+
+        // generate compliance vc potentially containing compliance credential
+        ExtendedVerifiablePresentation vp = getComplianceVp(offeringCredentialSubjects,
+                providerId, verificationMethod, prk, certificates);
+
+        // copy credential list as it is likely immutable
+        List<ExtendedVerifiableCredential> credentialList = new ArrayList<>(vp.getVerifiableCredentials());
+
+        // handle remaining (non-compliant) credentials
+        for (PojoCredentialSubject cs : nonCompliantCsList) {
+            ExtendedVerifiableCredential vc = getSignedVc(cs, providerId, verificationMethod, prk, certificates);
+            credentialList.add(vc);
+        }
+
+        // update credentials in vp
+        vp.setVerifiableCredentials(credentialList);
+
+        // sign verifiable presentation for catalog storage
+        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates);
 
         return gxfsCatalogClient.postAddSelfDescription(vp);
     }
@@ -261,14 +310,14 @@ public class GxfsCatalogService {
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
      * wrap it in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
-     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
+    public ParticipantItem addParticipant(List<PojoCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+        return addParticipant(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -276,36 +325,34 @@ public class GxfsCatalogService {
      * wrap it in a verifiable presentation, sign it using the provided verification method and the default key and send it to the catalog.
      * The verification method must reference the certificate associated with the default key.
      *
-     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject, String verificationMethod)
+    public ParticipantItem addParticipant(List<PojoCredentialSubject> credentialSubjects,
+                                          String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return addParticipant(participantCredentialSubject, verificationMethod, getDefaultPrivateKey());
+        return addParticipant(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
      * Given the credential subject of a self-description that inherits from gax-trust-framework:LegalPerson,
      * wrap it in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
-     * @param participantCredentialSubject participant credential subject to insert into the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem addParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
+    public ParticipantItem addParticipant(List<PojoCredentialSubject> credentialSubjects,
                                           String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
-
-        VerifiablePresentation vp = createSignedVerifiablePresentation(List.of(participantCredentialSubject),
-                verificationMethod, privateKey);
-
-        return this.gxfsCatalogClient.postAddParticipant(vp);
+        return this.gxfsCatalogClient.postAddParticipant(
+                getSignedParticipantVp(credentialSubjects, verificationMethod, privateKey));
     }
 
     /**
@@ -314,14 +361,14 @@ public class GxfsCatalogService {
      * sign it using the default verification method and key and send it to the catalog
      * to update it.
      *
-     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject)
+    public ParticipantItem updateParticipant(List<PojoCredentialSubject> credentialSubjects)
             throws CredentialPresentationException, CredentialSignatureException {
-        return updateParticipant(participantCredentialSubject, defaultVerificationMethod, getDefaultPrivateKey());
+        return updateParticipant(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -331,15 +378,16 @@ public class GxfsCatalogService {
      * to update it.
      * The verification method must reference the certificate associated with the default key.
      *
-     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject, String verificationMethod)
+    public ParticipantItem updateParticipant(List<PojoCredentialSubject> credentialSubjects,
+                                             String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return updateParticipant(participantCredentialSubject, verificationMethod, getDefaultPrivateKey());
+        return updateParticipant(credentialSubjects, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -348,22 +396,28 @@ public class GxfsCatalogService {
      * sign it using the provided verification method and key and send it to the catalog
      * to update it.
      *
-     * @param participantCredentialSubject participant credential subject to update in the catalog
+     * @param credentialSubjects List of credential subjects for this participant to insert into the catalog
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return catalog content of the participant
      */
-    public ParticipantItem updateParticipant(GaxTrustLegalPersonCredentialSubject participantCredentialSubject,
+    public ParticipantItem updateParticipant(List<PojoCredentialSubject> credentialSubjects,
                                              String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
-        VerifiablePresentation vp = createSignedVerifiablePresentation(List.of(participantCredentialSubject),
-                verificationMethod, privateKey);
+        String subjectId
+                = findAllCredentialSubjectsByType(credentialSubjects, GxLegalParticipantCredentialSubject.class)
+                .stream()
+                .map(cs -> cs.getId())
+                .findFirst().orElse("");
+
+        ExtendedVerifiablePresentation vp
+                = getSignedParticipantVp(credentialSubjects, verificationMethod, privateKey);
 
         return this.gxfsCatalogClient.putUpdateParticipant(
-                participantCredentialSubject.getId(),
+                subjectId,
                 vp);
     }
 
@@ -441,57 +495,8 @@ public class GxfsCatalogService {
             true,
             query);
 
-        return objectMapper.convertValue(response, new TypeReference<GXFSCatalogListResponse<GXFSQueryLegalNameItem>>() {});
-    }
-
-    private VerifiablePresentation createSignedVerifiablePresentation(
-            List<SelfDescriptionCredentialSubject> subjects,
-            String verificationMethod,
-            String privateKey) throws CredentialSignatureException, CredentialPresentationException {
-
-        boolean isParticipant = subjects.get(0) instanceof GaxTrustLegalPersonCredentialSubject;
-
-        PrivateKey prk = buildPrivateKey(privateKey);
-        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
-
-        List<VerifiableCredential> credentials = new ArrayList<>();
-
-        for (SelfDescriptionCredentialSubject cs : subjects) {
-            VerifiableCredential vc;
-            if (isParticipant) {
-                vc = gxfsSignerService.createVerifiableCredential(
-                        cs,
-                        URI.create(cs.getId()), // set issuer to cs id
-                        URI.create(cs.getId())); // set vc id to cs id
-            } else {
-                vc = gxfsSignerService.createVerifiableCredential(
-                        cs,
-                        URI.create(((GaxCoreServiceOfferingCredentialSubject) cs).getOfferedBy().getId()), // set issuer to offered by
-                        URI.create(cs.getId())); // set vc id to cs id
-            }
-            gxfsSignerService.signVerifiableCredential(vc, verificationMethod, prk, certificates); // sign vc
-            credentials.add(vc);
-        }
-
-        VerifiablePresentation vp = gxfsSignerService.createVerifiablePresentation(
-                credentials, // insert credentials into vp
-                credentials.get(0).getId()); // set vp id to first cs id for now
-
-        // if participant, request Gaia-X TnC as well as validate registration number with notary
-        if (isParticipant) {
-            gxdchService.getGxTnCs();
-            gxdchService.verifyRegistrationNumber(objectMapper.valueToTree(
-                    ((GaxTrustLegalPersonCredentialSubject) subjects.get(0)).getRegistrationNumber()));
-        }
-
-        // regardless of type check for compliance
-        gxdchService.checkCompliance(vp);
-
-        // reset vc of vp to single object for now for catalog use
-        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, credentials.get(0).getJsonObject());
-        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates); // sign vp
-
-        return vp;
+        return objectMapper.convertValue(response, new TypeReference<>() {
+        });
     }
 
     private String listToString(List<String> stringList) {
@@ -682,5 +687,168 @@ public class GxfsCatalogService {
 
     private String getMatchParticipantTypeString(String participantType) {
         return "MATCH (p:" + participantType + ")";
+    }
+
+    public <T extends PojoCredentialSubject> List<PojoCredentialSubject> findAllCredentialSubjectsByType(
+            List<PojoCredentialSubject> credentialSubjects, Class<T> type) {
+        List<PojoCredentialSubject> matchingCsList = new ArrayList<>();
+        for (PojoCredentialSubject cs : credentialSubjects) {
+            if (type.isInstance(cs)) {
+                matchingCsList.add(cs);
+            }
+        }
+        return matchingCsList;
+    }
+
+    private ExtendedVerifiableCredential getSignedRegistrationNumberVc(GxLegalRegistrationNumberCredentialSubject cs,
+                                                                       String issuer,
+                                                                       String verificationMethod,
+                                                                       PrivateKey prk,
+                                                                       List<X509Certificate> certificates)
+            throws CredentialPresentationException, CredentialSignatureException {
+        // let notary sign registration number
+        ExtendedVerifiableCredential credential = gxdchService.verifyRegistrationNumber(cs);
+        if (credential == null) {
+            // if notary did not sign and we enforce, throw exception
+            if (enforceNotary) {
+                throw new CredentialPresentationException("Given registration number credential subject failed GXDCH Notary check");
+            }
+            // else notary has not attested registration number, we sign it ourselves
+            credential = getSignedVc(cs, issuer, verificationMethod, prk, certificates);
+        } else {
+            // notary has signed but we need to clean up the result
+            // remove @context from proof as it is wrong
+            Map<String, Object> proofObj = credential.getLdProof().getJsonObject();
+            proofObj.remove("@context");
+            credential.setJsonObjectKeyValue("proof", proofObj);
+            // patch for context, make it resolvable as it is disabled by default
+            ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttp(true);
+            ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttps(true);
+        }
+        return credential;
+    }
+
+    private ExtendedVerifiableCredential getSignedVc(PojoCredentialSubject cs,
+                                                     String issuer,
+                                                     String verificationMethod,
+                                                     PrivateKey prk,
+                                                     List<X509Certificate> certificates)
+            throws CredentialPresentationException, CredentialSignatureException {
+        // create credential from pojo CS and sign it
+        ExtendedVerifiableCredential credential = gxfsSignerService.createVerifiableCredential(
+                cs,
+                URI.create(issuer),
+                URI.create(cs.getId() + "#" + cs.getType())); // set vc id to cs id
+        gxfsSignerService
+                .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
+        return credential;
+    }
+
+    private ExtendedVerifiablePresentation getComplianceVp(List<PojoCredentialSubject> csList,
+                                                           String issuer,
+                                                           String verificationMethod,
+                                                           PrivateKey prk,
+                                                           List<X509Certificate> certificates)
+            throws CredentialSignatureException, CredentialPresentationException {
+
+        List<ExtendedVerifiableCredential> complianceVcs = new ArrayList<>();
+        String subjectId = "";
+        // iterate over given CS and handle them if relevant
+        for (PojoCredentialSubject cs : csList) {
+            if (cs instanceof GxLegalRegistrationNumberCredentialSubject registrationNumberCs) {
+                complianceVcs.add(
+                        getSignedRegistrationNumberVc(registrationNumberCs, issuer, verificationMethod, prk, certificates)
+                );
+            } else if (cs instanceof GxLegalParticipantCredentialSubject
+                    || cs instanceof GxServiceOfferingCredentialSubject) {
+                complianceVcs.add(
+                        getSignedVc(cs, issuer, verificationMethod, prk, certificates)
+                );
+                subjectId = cs.getId();
+            }
+        }
+
+        // set up a VP for the compliance service
+        ExtendedVerifiablePresentation complianceVp = gxfsSignerService.createVerifiablePresentation(
+                complianceVcs, // insert credentials into vp
+                URI.create(subjectId + "#sd")); // set vp id to first proper cs id for now
+
+        // verify compliance with compliance service
+        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
+
+        if (complianceResult == null) {
+            if (enforceCompliance) {
+                throw new CredentialPresentationException("Provided credential subjects failed GXDCH compliance check.");
+            }
+            log.warn("Compliance was not attested for the given VP.");
+        } else {
+            log.info("Received compliance credential result: {}", complianceResult);
+            complianceVp.getVerifiableCredentials()
+                    .add(complianceResult);
+        }
+
+        return complianceVp;
+    }
+
+    private ExtendedVerifiablePresentation getSignedParticipantVp(List<PojoCredentialSubject> credentialSubjects,
+                                                                  String verificationMethod, String privateKey)
+            throws CredentialPresentationException, CredentialSignatureException {
+        // make sure there is at least one legal participant CS
+        List<PojoCredentialSubject> participantCsList =
+                findAllCredentialSubjectsByType(credentialSubjects, GxLegalParticipantCredentialSubject.class);
+        if (participantCsList.isEmpty()) {
+            throw new CredentialPresentationException(
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalParticipantCredentialSubject.TYPE));
+        }
+
+        // make sure there is at least one legal registration number CS
+        List<PojoCredentialSubject> registrationNumberCsList =
+                findAllCredentialSubjectsByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class);
+        if (registrationNumberCsList.isEmpty()) {
+            throw new CredentialPresentationException(
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalRegistrationNumberCredentialSubject.TYPE));
+        }
+
+        // create private key and certificate instances
+        PrivateKey prk = buildPrivateKey(privateKey);
+        List<X509Certificate> certificates = resolveCertificates(verificationMethod);
+
+        // if needed incorporate Gaia-X TnC into SD, currently it is not enforced by the compliance service
+        gxdchService.getGxTnCs();
+
+        // get id of participant from first participant cs
+        String participantId = participantCsList.stream()
+                .map(PojoCredentialSubject::getId)
+                .filter(Objects::nonNull)
+                .findFirst().orElse("");
+
+        // collect all credentials that are relevant for the compliance service
+        List<PojoCredentialSubject> complianceVcs = Stream
+                .concat(participantCsList.stream(), registrationNumberCsList.stream()).toList();
+
+        // remove compliance credentials from overall list
+        List<PojoCredentialSubject> nonCompliantCsList = new ArrayList<>(credentialSubjects);
+        nonCompliantCsList.removeAll(participantCsList);
+        nonCompliantCsList.removeAll(registrationNumberCsList);
+
+        // create vp with compliance relevant credentials plus attestation if successful
+        ExtendedVerifiablePresentation vp
+                = getComplianceVp(complianceVcs, participantId, verificationMethod, prk, certificates);
+
+        // copy credential list as it is likely immutable
+        List<ExtendedVerifiableCredential> credentialList = new ArrayList<>(vp.getVerifiableCredentials());
+
+        // handle other (non-compliant) credentials
+        for (PojoCredentialSubject cs : nonCompliantCsList) {
+            ExtendedVerifiableCredential vc = getSignedVc(cs, participantId, verificationMethod, prk, certificates);
+            credentialList.add(vc);
+        }
+
+        // update credential list in vp
+        vp.setVerifiableCredentials(credentialList);
+
+        // sign verifiable presentation for catalog storage
+        gxfsSignerService.signVerifiablePresentation(vp, verificationMethod, prk, certificates);
+        return vp;
     }
 }

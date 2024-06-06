@@ -19,9 +19,6 @@ public class UriSerializer extends StdSerializer<String> {
     @Override
     public void serialize(String s, JsonGenerator jsonGenerator, SerializerProvider serializerProvider)
             throws IOException {
-        jsonGenerator.writeStartObject();
-        jsonGenerator.writeStringField("@type", "xsd:anyURI");
-        jsonGenerator.writeStringField("@value", s);
-        jsonGenerator.writeEndObject();
+        jsonGenerator.writeString(s);
     }
 }

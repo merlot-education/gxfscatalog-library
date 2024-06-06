@@ -45,10 +45,11 @@ public class GxfsWizardApiService {
     /**
      * Given a JSON file name, return the corresponding JSON shape file
      *
+     * @param ecosystem ecosystem of shape
      * @param jsonName JSON file name
      * @return JSON file
      */
-    public String getShapeByName(String jsonName) {
-        return gxfsWizardApiClient.getJSON(jsonName);
+    public String getShapeByName(String ecosystem, String jsonName) {
+        return gxfsWizardApiClient.getJSON(ecosystem, jsonName);
     }
 }

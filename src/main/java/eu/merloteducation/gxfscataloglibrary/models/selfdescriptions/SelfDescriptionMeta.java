@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions;
 
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,7 +10,7 @@ import java.util.List;
 @Setter
 public class SelfDescriptionMeta {
     private String expirationTime;
-    private SelfDescription content;
+    private ExtendedVerifiablePresentation content;
     private List<String> validators;
     private String subjectId;
     private String sdHash;

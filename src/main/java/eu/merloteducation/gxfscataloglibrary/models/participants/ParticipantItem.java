@@ -1,6 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.models.participants;
 
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescription;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -10,5 +10,5 @@ public class ParticipantItem {
     private String id;
     private String name;
     private PublicKey publicKey;
-    private SelfDescription selfDescription;
+    private ExtendedVerifiablePresentation selfDescription;
 }

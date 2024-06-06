@@ -1,9 +1,10 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +17,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.net.URI;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -53,7 +53,9 @@ class GxdchServiceTests {
 
     @Test
     void checkComplianceSuccess() {
-        JsonNode result = gxdchService.checkCompliance(VerifiablePresentation.builder().id(URI.create("valid")).build());
+        ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
+        vp.setJsonObjectKeyValue("id", "valid");
+        ExtendedVerifiableCredential result = gxdchService.checkCompliance(vp);
         assertNotNull(result);
     }
 
@@ -64,7 +66,9 @@ class GxdchServiceTests {
             "badshape"
     })
     void checkComplianceBad(String shapeName) {
-        JsonNode result = gxdchService.checkCompliance(VerifiablePresentation.builder().id(URI.create(shapeName)).build());
+        ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
+        vp.setJsonObjectKeyValue("id", shapeName);
+        ExtendedVerifiableCredential result = gxdchService.checkCompliance(vp);
         assertNull(result);
     }
 
@@ -75,24 +79,20 @@ class GxdchServiceTests {
     }
 
     @Test
-    void verifyRegistrationNumberSuccess() throws JsonProcessingException {
-        JsonNode number = objectMapper.readTree("""
-                {
-                    "id": "valid"
-                }
-                """);
-        JsonNode result = gxdchService.verifyRegistrationNumber(number);
+    void verifyRegistrationNumberSuccess() {
+        GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
+        cs.setLeiCode("1234");
+        cs.setId("valid");
+        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
         assertNotNull(result);
     }
 
     @Test
-    void verifyRegistrationNumberInvalid() throws JsonProcessingException {
-        JsonNode number = objectMapper.readTree("""
-                {
-                    "id": "invalid"
-                }
-                """);
-        JsonNode result = gxdchService.verifyRegistrationNumber(number);
+    void verifyRegistrationNumberInvalid() {
+        GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
+        cs.setLeiCode("1234");
+        cs.setId("invalid");
+        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
         assertNull(result);
     }
 

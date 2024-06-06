@@ -1,9 +1,9 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.GXFSCatalogListResponse;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionItem;
@@ -36,7 +36,7 @@ public interface GxfsCatalogClient {
     );
 
     @PostExchange("/self-descriptions")
-    SelfDescriptionMeta postAddSelfDescription(@RequestBody VerifiablePresentation body);
+    SelfDescriptionMeta postAddSelfDescription(@RequestBody ExtendedVerifiablePresentation body);
 
     @GetExchange("/self-descriptions/{sdHash}")
     SelfDescriptionItem getSelfDescriptionByHash(@PathVariable String sdHash);
@@ -67,7 +67,7 @@ public interface GxfsCatalogClient {
     );
 
     @PostExchange("/participants")
-    ParticipantItem postAddParticipant(@RequestBody VerifiablePresentation body);
+    ParticipantItem postAddParticipant(@RequestBody ExtendedVerifiablePresentation body);
 
     @GetExchange("/participants/{participantId}")
     ParticipantItem getParticipantById(@PathVariable String participantId);
@@ -75,7 +75,7 @@ public interface GxfsCatalogClient {
     @PutExchange("/participants/{participantId}")
     ParticipantItem putUpdateParticipant(
             @PathVariable String participantId,
-            @RequestBody VerifiablePresentation body
+            @RequestBody ExtendedVerifiablePresentation body
     );
 
     @DeleteExchange("/participants/{participantId}")

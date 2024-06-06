@@ -1,41 +1,46 @@
-package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gax.datatypes;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.datatypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class RegistrationNumber {
-    @JsonProperty("@type")
-    private String type;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class GxVcard {
 
-    @JsonProperty("gax-trust-framework:local")
+    @JsonProperty("gx:countryCode")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String local;
+    @NotNull
+    private String countryCode;
 
-    @JsonProperty("gax-trust-framework:EUID")
+    @JsonProperty("gx:countrySubdivisionCode")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String euid;
+    @NotNull
+    private String countrySubdivisionCode;
 
-    @JsonProperty("gax-trust-framework:EORI")
+    @JsonProperty("vcard:street-address")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String eori;
+    private String streetAddress;
 
-    @JsonProperty("gax-trust-framework:vatID")
+    @JsonProperty("vcard:locality")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String vatId;
+    private String locality;
 
-    @JsonProperty("gax-trust-framework:leiCode")
+    @JsonProperty("vcard:postal-code")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String leiCode;
+    private String postalCode;
 }

@@ -1,60 +1,62 @@
-package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.serviceofferings;
+package eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.merlot.datatypes.OfferingRuntime;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringDeserializer;
 import eu.merloteducation.gxfscataloglibrary.models.serialization.StringSerializer;
-import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
 import java.util.Map;
 
 @Getter
 @Setter
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true, value={ "type", "@context" }, allowGetters=true)
-public class MerlotServiceOfferingCredentialSubject extends PojoCredentialSubject {
+public class GxLegalRegistrationNumberCredentialSubject extends PojoCredentialSubject {
 
     @Getter(AccessLevel.NONE)
-    public static final String TYPE_NAMESPACE = "merlot";
+    public static final String TYPE_NAMESPACE = "gx";
     @Getter(AccessLevel.NONE)
-    public static final String TYPE_CLASS = "MerlotServiceOffering";
+    public static final String TYPE_CLASS = "legalRegistrationNumber";
     @Getter(AccessLevel.NONE)
     public static final String TYPE = TYPE_NAMESPACE + ":" + TYPE_CLASS;
 
     @Getter(AccessLevel.NONE)
     public static final Map<String, String> CONTEXT = Map.of(
-            TYPE_NAMESPACE, "http://w3id.org/gaia-x/merlot#",
+            TYPE_NAMESPACE, "https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#",
             "xsd", "http://www.w3.org/2001/XMLSchema#"
     );
 
-    @NotNull
-    @JsonProperty("merlot:creationDate")
+    @JsonProperty("gx:taxID")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String creationDate;
+    private String taxID;
 
-    @JsonProperty("merlot:exampleCosts")
+    @JsonProperty("gx:EUID")
     @JsonSerialize(using = StringSerializer.class)
     @JsonDeserialize(using = StringDeserializer.class)
-    private String exampleCosts;
+    private String euid;
 
-    @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)
-    @JsonProperty("merlot:runtimeOption")
-    private List<OfferingRuntime> runtimeOptions;
+    @JsonProperty("gx:EORI")
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String eori;
 
-    @NotNull
-    @JsonProperty("merlot:merlotTermsAndConditionsAccepted")
-    private boolean merlotTermsAndConditionsAccepted;
+    @JsonProperty("gx:vatID")
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String vatID;
+
+    @JsonProperty("gx:leiCode")
+    @JsonSerialize(using = StringSerializer.class)
+    @JsonDeserialize(using = StringDeserializer.class)
+    private String leiCode;
 
     @JsonProperty("type")
     @Override

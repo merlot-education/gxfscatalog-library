@@ -10,9 +10,11 @@ import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
-import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.SelfDescriptionCredentialSubject;
+import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.PojoCredentialSubject;
 import foundation.identity.jsonld.JsonLDException;
 import foundation.identity.jsonld.JsonLDObject;
 import info.weboftrust.ldsignatures.LdProof;
@@ -57,18 +59,18 @@ public class GxfsSignerService {
      * @return verifiable credential
      * @throws CredentialPresentationException error during creation of credential
      */
-    public VerifiableCredential createVerifiableCredential(SelfDescriptionCredentialSubject credentialSubject,
-                                                           URI issuer,
-                                                           URI id) throws CredentialPresentationException {
+    public ExtendedVerifiableCredential createVerifiableCredential(PojoCredentialSubject credentialSubject,
+                                                                   URI issuer,
+                                                                   URI id) throws CredentialPresentationException {
         try {
             CredentialSubject cs = CredentialSubject.fromJson(mapper.writeValueAsString(credentialSubject));
-            return VerifiableCredential
+            return ExtendedVerifiableCredential.fromMap(VerifiableCredential
                     .builder()
                     .id(id)
                     .issuanceDate(Date.from(Instant.now()))
                     .credentialSubject(cs)
                     .issuer(issuer)
-                    .build();
+                    .build().getJsonObject());
         } catch (JsonProcessingException e) {
             throw new CredentialPresentationException(e.getMessage());
         }
@@ -80,16 +82,13 @@ public class GxfsSignerService {
      * @param vcs list of credential subjects to wrap
      * @param id id of the presentation
      */
-    public VerifiablePresentation createVerifiablePresentation(List<VerifiableCredential> vcs,
-                                                               URI id) {
-
-        // Map vcs to Map to allow signature later on (VerifiableCredential class is unsupported)
-        List<Map<String, Object>> vcsJsonLd = vcs.stream().map(JsonLDObject::getJsonObject).toList();
-        VerifiablePresentation vp = VerifiablePresentation
+    public ExtendedVerifiablePresentation createVerifiablePresentation(List<ExtendedVerifiableCredential> vcs,
+                                                                       URI id) {
+        ExtendedVerifiablePresentation vp = ExtendedVerifiablePresentation.fromMap(VerifiablePresentation
                 .builder()
                 .id(id)
-                .build();
-        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vcsJsonLd); // done outside of builder to support lists
+                .build().getJsonObject());
+        vp.setVerifiableCredentials(vcs);
         return vp;
     }
 
