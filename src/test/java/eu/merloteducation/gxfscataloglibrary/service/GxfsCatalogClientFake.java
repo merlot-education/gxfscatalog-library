@@ -1,7 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
 import com.danubetech.verifiablecredentials.VerifiableCredential;
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryLanguage;
 import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
@@ -56,19 +55,9 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         return vp;
     }
 
-    private ExtendedVerifiablePresentation getExtendedVerifiablePresentation(VerifiablePresentation vp) {
-        ExtendedVerifiablePresentation extendedVp;
-        if (vp instanceof ExtendedVerifiablePresentation evp) {
-            extendedVp = evp;
-        } else {
-            extendedVp = ExtendedVerifiablePresentation.fromMap(vp.getJsonObject());
-        }
-        return extendedVp;
-    }
-
     private SelfDescriptionItem generateBasicOfferingSdItem(String id,
                                                         String issuer,
-                                                        VerifiablePresentation vp,
+                                                            ExtendedVerifiablePresentation vp,
                                                         SelfDescriptionStatus status) {
         SelfDescriptionItem item = new SelfDescriptionItem();
         item.setMeta(new SelfDescriptionMeta());
@@ -77,16 +66,16 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         item.getMeta().setIssuer(issuer);
         item.getMeta().setStatus(status.getValue());
 
-        item.getMeta().setContent(getExtendedVerifiablePresentation(vp));
+        item.getMeta().setContent(vp);
 
         return item;
     }
 
-    private ParticipantItem generateParticipantItem(String id, String name, VerifiablePresentation vp) {
+    private ParticipantItem generateParticipantItem(String id, String name, ExtendedVerifiablePresentation vp) {
         ParticipantItem item = new ParticipantItem();
         item.setId(id);
         item.setName(name);
-        item.setSelfDescription(getExtendedVerifiablePresentation(vp));
+        item.setSelfDescription(vp);
 
         return item;
     }
@@ -145,21 +134,13 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public SelfDescriptionMeta postAddSelfDescription(VerifiablePresentation body) {
+    public SelfDescriptionMeta postAddSelfDescription(ExtendedVerifiablePresentation body) {
         SelfDescriptionItem item;
-        if (body instanceof ExtendedVerifiablePresentation extendedVp) {
             item = generateBasicOfferingSdItem(
-                    extendedVp.getVerifiableCredentials().get(0).getCredentialSubject().getId().toString(),
-                    extendedVp.getVerifiableCredentials().get(0).getIssuer().toString(),
-                    extendedVp,
-                    SelfDescriptionStatus.ACTIVE);
-        } else {
-            item = generateBasicOfferingSdItem(
-                    body.getVerifiableCredential().getCredentialSubject().getId().toString(),
-                    body.getVerifiableCredential().getIssuer().toString(),
+                    body.getVerifiableCredentials().get(0).getCredentialSubject().getId().toString(),
+                    body.getVerifiableCredentials().get(0).getIssuer().toString(),
                     body,
                     SelfDescriptionStatus.ACTIVE);
-        }
         selfDescriptionItems.add(item);
         return item.getMeta();
     }
@@ -236,7 +217,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public ParticipantItem postAddParticipant(VerifiablePresentation body) {
+    public ParticipantItem postAddParticipant(ExtendedVerifiablePresentation body) {
         ParticipantItem item = generateParticipantItem(
                 getLegalParticipantCredentialSubject(body).getId(),
                 getLegalParticipantCredentialSubject(body).getName(),
@@ -252,7 +233,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public ParticipantItem putUpdateParticipant(String participantId, VerifiablePresentation body) {
+    public ParticipantItem putUpdateParticipant(String participantId, ExtendedVerifiablePresentation body) {
         checkError(participantId);
         ParticipantItem item = findParticipantItemById(participantId);
         GxLegalParticipantCredentialSubject cs = getLegalParticipantCredentialSubject(item.getSelfDescription());
@@ -306,14 +287,12 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
         return ids.get(0);
     }
 
-    private GxLegalParticipantCredentialSubject getLegalParticipantCredentialSubject(VerifiablePresentation vp) {
-        ExtendedVerifiablePresentation evp = getExtendedVerifiablePresentation(vp);
-        return evp.findFirstCredentialSubjectByType(GxLegalParticipantCredentialSubject.class);
+    private GxLegalParticipantCredentialSubject getLegalParticipantCredentialSubject(ExtendedVerifiablePresentation vp) {
+        return vp.findFirstCredentialSubjectByType(GxLegalParticipantCredentialSubject.class);
     }
 
-    private GxLegalRegistrationNumberCredentialSubject getLegalRegistrationNumberCredentialSubject(VerifiablePresentation vp) {
-        ExtendedVerifiablePresentation evp = getExtendedVerifiablePresentation(vp);
-        return evp.findFirstCredentialSubjectByType(GxLegalRegistrationNumberCredentialSubject.class);
+    private GxLegalRegistrationNumberCredentialSubject getLegalRegistrationNumberCredentialSubject(ExtendedVerifiablePresentation vp) {
+        return vp.findFirstCredentialSubjectByType(GxLegalRegistrationNumberCredentialSubject.class);
     }
 
 }

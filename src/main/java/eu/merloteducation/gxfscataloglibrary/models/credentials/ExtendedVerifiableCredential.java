@@ -23,4 +23,8 @@ public class ExtendedVerifiableCredential extends VerifiableCredential {
     public static ExtendedVerifiableCredential fromMap(Map<String, Object> map) {
         return new ExtendedVerifiableCredential(map);
     }
+
+    public static ExtendedVerifiableCredential fromJson(String json) {
+        return new ExtendedVerifiableCredential(readJson(json));
+    }
 }

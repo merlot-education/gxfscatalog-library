@@ -82,18 +82,14 @@ public class GxfsSignerService {
      * @param vcs list of credential subjects to wrap
      * @param id id of the presentation
      */
-    public ExtendedVerifiablePresentation createVerifiablePresentation(List<VerifiableCredential> vcs,
+    public ExtendedVerifiablePresentation createVerifiablePresentation(List<ExtendedVerifiableCredential> vcs,
                                                                        URI id) {
-
-        // Map vcs to Map to allow signature later on (VerifiableCredential class is unsupported)
-        // TODO use ExtendedVP instead
-        List<Map<String, Object>> vcsJsonLd = vcs.stream().map(JsonLDObject::getJsonObject).toList();
-        VerifiablePresentation vp = VerifiablePresentation
+        ExtendedVerifiablePresentation vp = ExtendedVerifiablePresentation.fromMap(VerifiablePresentation
                 .builder()
                 .id(id)
-                .build();
-        vp.setJsonObjectKeyValue(VerifiableCredential.DEFAULT_JSONLD_PREDICATE, vcsJsonLd); // done outside of builder to support lists
-        return ExtendedVerifiablePresentation.fromMap(vp.getJsonObject());
+                .build().getJsonObject());
+        vp.setVerifiableCredentials(vcs);
+        return vp;
     }
 
     /**

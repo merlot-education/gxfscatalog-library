@@ -1,7 +1,5 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiableCredential;
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -295,8 +293,8 @@ public class GxfsCatalogService {
 
         // handle remaining (non-compliant) credentials
         for (PojoCredentialSubject cs : nonCompliantCsList) {
-            VerifiableCredential vc = getSignedVc(cs, providerId, verificationMethod, prk, certificates);
-            credentialList.add(ExtendedVerifiableCredential.fromMap(vc.getJsonObject()));
+            ExtendedVerifiableCredential vc = getSignedVc(cs, providerId, verificationMethod, prk, certificates);
+            credentialList.add(vc);
         }
 
         // update credentials in vp
@@ -709,7 +707,7 @@ public class GxfsCatalogService {
                                                                        List<X509Certificate> certificates)
             throws CredentialPresentationException, CredentialSignatureException {
         // let notary sign registration number
-        VerifiableCredential credential = gxdchService.verifyRegistrationNumber(cs);
+        ExtendedVerifiableCredential credential = gxdchService.verifyRegistrationNumber(cs);
         if (credential == null) {
             // if notary did not sign and we enforce, throw exception
             if (enforceNotary) {
@@ -727,7 +725,7 @@ public class GxfsCatalogService {
             ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttp(true);
             ((ConfigurableDocumentLoader) credential.getDocumentLoader()).setEnableHttps(true);
         }
-        return ExtendedVerifiableCredential.fromMap(credential.getJsonObject());
+        return credential;
     }
 
     private ExtendedVerifiableCredential getSignedVc(PojoCredentialSubject cs,
@@ -737,13 +735,13 @@ public class GxfsCatalogService {
                                                      List<X509Certificate> certificates)
             throws CredentialPresentationException, CredentialSignatureException {
         // create credential from pojo CS and sign it
-        VerifiableCredential credential = gxfsSignerService.createVerifiableCredential(
+        ExtendedVerifiableCredential credential = gxfsSignerService.createVerifiableCredential(
                 cs,
                 URI.create(issuer),
                 URI.create(cs.getId() + "#" + cs.getType())); // set vc id to cs id
         gxfsSignerService
                 .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
-        return ExtendedVerifiableCredential.fromMap(credential.getJsonObject());
+        return credential;
     }
 
     private ExtendedVerifiablePresentation getComplianceVp(List<PojoCredentialSubject> csList,
@@ -753,7 +751,7 @@ public class GxfsCatalogService {
                                                            List<X509Certificate> certificates)
             throws CredentialSignatureException, CredentialPresentationException {
 
-        List<VerifiableCredential> complianceVcs = new ArrayList<>();
+        List<ExtendedVerifiableCredential> complianceVcs = new ArrayList<>();
         String subjectId = "";
         // iterate over given CS and handle them if relevant
         for (PojoCredentialSubject cs : csList) {
@@ -776,7 +774,7 @@ public class GxfsCatalogService {
                 URI.create(subjectId + "#sd")); // set vp id to first proper cs id for now
 
         // verify compliance with compliance service
-        VerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
+        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
 
         if (complianceResult == null) {
             if (enforceCompliance) {
@@ -786,7 +784,7 @@ public class GxfsCatalogService {
         } else {
             log.info("Received compliance credential result: {}", complianceResult);
             complianceVp.getVerifiableCredentials()
-                    .add(ExtendedVerifiableCredential.fromMap(complianceResult.getJsonObject()));
+                    .add(complianceResult);
         }
 
         return complianceVp;
@@ -842,8 +840,8 @@ public class GxfsCatalogService {
 
         // handle other (non-compliant) credentials
         for (PojoCredentialSubject cs : nonCompliantCsList) {
-            VerifiableCredential vc = getSignedVc(cs, participantId, verificationMethod, prk, certificates);
-            credentialList.add(ExtendedVerifiableCredential.fromMap(vc.getJsonObject()));
+            ExtendedVerifiableCredential vc = getSignedVc(cs, participantId, verificationMethod, prk, certificates);
+            credentialList.add(vc);
         }
 
         // update credential list in vp

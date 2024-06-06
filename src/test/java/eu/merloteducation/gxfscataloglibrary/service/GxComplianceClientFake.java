@@ -1,19 +1,16 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiableCredential;
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.nio.charset.StandardCharsets;
 
 public class GxComplianceClientFake implements GxComplianceClient {
     @Override
-    public VerifiableCredential postCredentialOffer(String vcid, VerifiablePresentation body) {
+    public ExtendedVerifiableCredential postCredentialOffer(String vcid, ExtendedVerifiablePresentation body) {
         return switch (body.getId().toString()) {
-            case "valid" -> VerifiableCredential.fromJson("""
+            case "valid" -> ExtendedVerifiableCredential.fromJson("""
                     {
                       "@context": [
                         "https://www.w3.org/2018/credentials/v1",

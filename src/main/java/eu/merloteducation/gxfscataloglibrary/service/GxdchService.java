@@ -1,8 +1,8 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiableCredential;
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
 import com.fasterxml.jackson.databind.JsonNode;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class GxdchService {
         this.gxNotaryClients = gxNotaryClients;
     }
 
-    public VerifiableCredential checkCompliance(VerifiablePresentation vp) {
+    public ExtendedVerifiableCredential checkCompliance(ExtendedVerifiablePresentation vp) {
         // go through compliance service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {
@@ -64,7 +64,7 @@ public class GxdchService {
         return null;
     }
 
-    public VerifiableCredential verifyRegistrationNumber(GxLegalRegistrationNumberCredentialSubject registrationNumber) {
+    public ExtendedVerifiableCredential verifyRegistrationNumber(GxLegalRegistrationNumberCredentialSubject registrationNumber) {
         // go through notary service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxNotaryClient> clientEntry : gxNotaryClients.entrySet()) {

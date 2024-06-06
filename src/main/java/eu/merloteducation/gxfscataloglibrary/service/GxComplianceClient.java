@@ -1,8 +1,7 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiableCredential;
-import com.danubetech.verifiablecredentials.VerifiablePresentation;
-import com.fasterxml.jackson.databind.JsonNode;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
+import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -13,8 +12,8 @@ public interface GxComplianceClient {
 
   // Credential Offer
   @PostExchange("/api/credential-offers")
-  VerifiableCredential postCredentialOffer(
+  ExtendedVerifiableCredential postCredentialOffer(
       @RequestParam(name = "vcid", required = false) String vcid,
-      @RequestBody VerifiablePresentation body
+      @RequestBody ExtendedVerifiablePresentation body
   );
 }

@@ -12,9 +12,9 @@ import java.nio.charset.StandardCharsets;
 
 public class GxNotaryClientFake implements GxNotaryClient {
     @Override
-    public VerifiableCredential postRegistrationNumber(String vcid, GxLegalRegistrationNumberCredentialSubject body) {
+    public ExtendedVerifiableCredential postRegistrationNumber(String vcid, GxLegalRegistrationNumberCredentialSubject body) {
         return switch (body.getId()) {
-            case "valid" -> VerifiableCredential.fromJson("""
+            case "valid" -> ExtendedVerifiableCredential.fromJson("""
                 {
                   "@context": [
                     "https://www.w3.org/2018/credentials/v1",
