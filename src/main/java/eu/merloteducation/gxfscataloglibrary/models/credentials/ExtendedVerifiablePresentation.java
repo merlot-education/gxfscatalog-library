@@ -21,17 +21,6 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         super(jsonObject);
     }
 
-    private ExtendedVerifiableCredential getExtendedVerifiableCredentialFromObject(Object o) {
-        if (o instanceof Map map) {
-            return ExtendedVerifiableCredential.fromMap(map);
-        } else if (o instanceof ExtendedVerifiableCredential evc){
-            return evc;
-        } else if (o instanceof VerifiableCredential vc) {
-            return ExtendedVerifiableCredential.fromMap(vc.getJsonObject());
-        }
-        return null;
-    }
-
     /**
      * Extends the VerifiablePresentation base class to allow for multiple VCs in a single VP.
      * Retrieves the list of credentials in the VP object.
@@ -48,14 +37,11 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         // check if we have multiple credentials
         if (credentials instanceof List<?> credentialList) {
             return credentialList.stream()
-                    .map(this::getExtendedVerifiableCredentialFromObject)
-                    .filter(Objects::nonNull)
+                    .filter(Map.class::isInstance)
+                    .map(c -> ExtendedVerifiableCredential.fromMap((Map<String, Object>) c))
                     .toList();
-        }
-        // otherwise we wrap a single element into a list
-        ExtendedVerifiableCredential singleCred = getExtendedVerifiableCredentialFromObject(credentials);
-        if (singleCred != null) {
-            return List.of(singleCred);
+        } else if (credentials instanceof Map<?, ?> credMap) {
+            return List.of(ExtendedVerifiableCredential.fromMap((Map<String, Object>) credMap));
         }
         return Collections.emptyList();
     }
