@@ -43,7 +43,7 @@ public class GxServiceOfferingCredentialSubject extends PojoCredentialSubject {
     @NotNull
     private NodeKindIRITypeId providedBy;
 
-    // TODO support aggregationOf and dependsOn
+    // aggregationOf and dependsOn are not yet mapped as they are optional
 
     @JsonProperty("gx:termsAndConditions")
     @JsonFormat(with = JsonFormat.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY)

@@ -813,7 +813,7 @@ public class GxfsCatalogService {
         PrivateKey prk = buildPrivateKey(privateKey);
         List<X509Certificate> certificates = resolveCertificates(verificationMethod);
 
-        // TODO incorporate Gaia-X TnC into SD
+        // if needed incorporate Gaia-X TnC into SD, currently it is not enforced by the compliance service
         gxdchService.getGxTnCs();
 
         // get id of participant from first participant cs
