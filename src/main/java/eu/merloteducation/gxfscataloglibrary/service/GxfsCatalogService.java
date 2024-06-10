@@ -779,7 +779,7 @@ public class GxfsCatalogService {
                 URI.create(subjectId + "#sd")); // set vp id to first proper cs id for now
 
         // verify compliance with compliance service
-        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
+        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(subjectId, complianceVp);
 
         if (complianceResult == null) {
             if (enforceCompliance) {

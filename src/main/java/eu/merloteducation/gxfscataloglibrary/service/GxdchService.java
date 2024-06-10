@@ -27,14 +27,14 @@ public class GxdchService {
         this.gxNotaryClients = gxNotaryClients;
     }
 
-    public ExtendedVerifiableCredential checkCompliance(ExtendedVerifiablePresentation vp) {
+    public ExtendedVerifiableCredential checkCompliance(String credentialId, ExtendedVerifiablePresentation vp) {
         // go through compliance service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {
             log.info("Checking compliance with Compliance Service {}", clientEntry.getKey());
             log.debug("VP: {}", vp);
             try {
-                return clientEntry.getValue().postCredentialOffer(null, vp);
+                return clientEntry.getValue().postCredentialOffer(credentialId, vp);
             } catch (WebClientResponseException e) {
                 log.info("Failed to check compliance at Compliance Service {}: {} {}",
                         clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());
