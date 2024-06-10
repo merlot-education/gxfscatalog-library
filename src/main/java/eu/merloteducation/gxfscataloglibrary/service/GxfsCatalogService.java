@@ -803,6 +803,8 @@ public class GxfsCatalogService {
             log.warn("Compliance was not attested for the given VP.");
         } else {
             log.info("Received compliance credential result: {}", complianceResult);
+            ((ConfigurableDocumentLoader) complianceResult.getDocumentLoader()).setEnableHttp(true);
+            ((ConfigurableDocumentLoader) complianceResult.getDocumentLoader()).setEnableHttps(true);
             List<ExtendedVerifiableCredential> updatedVcs
                     = new ArrayList<>(complianceVp.getVerifiableCredentials());
             updatedVcs.add(complianceResult);
