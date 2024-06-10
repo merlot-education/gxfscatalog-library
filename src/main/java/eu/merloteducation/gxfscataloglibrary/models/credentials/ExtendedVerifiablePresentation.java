@@ -9,6 +9,7 @@ import foundation.identity.jsonld.JsonLDObject;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ExtendedVerifiablePresentation extends VerifiablePresentation {
 
@@ -37,7 +38,14 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         if (credentials instanceof List<?> credentialList) {
             return credentialList.stream()
                     .filter(Map.class::isInstance)
-                    .map(c -> ExtendedVerifiableCredential.fromMap((Map<String, Object>) c))
+                    .map(c -> {
+                        try {
+                            return ExtendedVerifiableCredential.fromMap((Map<String, Object>) c);
+                        } catch (Exception ignored) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
                     .toList();
         } else if (credentials instanceof Map<?, ?> credMap) {
             return List.of(ExtendedVerifiableCredential.fromMap((Map<String, Object>) credMap));
@@ -74,7 +82,14 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
         }
 
         return getVerifiableCredentials().stream()
-                .map(ExtendedVerifiableCredential::getCredentialSubject)
+                .map(vc -> {
+                    try {
+                        return vc.getCredentialSubject();
+                    } catch (Exception e) {
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
                 .filter(cs -> cs.getType().equals(typeString))
                 .map(cs -> cs.toPojo(type)).toList();
     }
