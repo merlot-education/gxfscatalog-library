@@ -735,10 +735,14 @@ public class GxfsCatalogService {
                                                      List<X509Certificate> certificates)
             throws CredentialPresentationException, CredentialSignatureException {
         // create credential from pojo CS and sign it
+        String vcId = cs.getId();  // set vc id to cs id
+        if (!vcId.contains("#")) {
+            vcId += "#" + cs.getType(); // add type if not existent yet
+        }
         ExtendedVerifiableCredential credential = gxfsSignerService.createVerifiableCredential(
                 cs,
                 URI.create(issuer),
-                URI.create(cs.getId() + "#" + cs.getType())); // set vc id to cs id
+                URI.create(vcId)); // set vc id to cs id
         gxfsSignerService
                 .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
         return credential;
