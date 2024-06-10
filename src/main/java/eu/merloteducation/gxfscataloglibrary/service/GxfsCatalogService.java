@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -272,6 +273,22 @@ public class GxfsCatalogService {
                     String.format(TYPE_NOT_FOUND_MESSAGE, GxServiceOfferingCredentialSubject.TYPE));
         }
 
+        // for compliance we als need to have a valid participant in the SD
+        List<PojoCredentialSubject> participantCredentialSubjects =
+                findAllCredentialSubjectsByType(credentialSubjects, GxLegalParticipantCredentialSubject.class);
+        if (participantCredentialSubjects.isEmpty()) {
+            throw new CredentialPresentationException(
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalParticipantCredentialSubject.TYPE));
+        }
+
+        // for a valid participant we also need a valid registration number
+        List<PojoCredentialSubject> registrationNumberCredentialSubjects =
+                findAllCredentialSubjectsByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class);
+        if (registrationNumberCredentialSubjects.isEmpty()) {
+            throw new CredentialPresentationException(
+                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalRegistrationNumberCredentialSubject.TYPE));
+        }
+
         String providerId = offeringCredentialSubjects.stream()
                 .filter(GxServiceOfferingCredentialSubject.class::isInstance)
                 .map(cs -> ((GxServiceOfferingCredentialSubject) cs).getProvidedBy().getId())
@@ -284,13 +301,31 @@ public class GxfsCatalogService {
         // remove credentials for compliance from overall list
         List<PojoCredentialSubject> nonCompliantCsList = new ArrayList<>(credentialSubjects);
         nonCompliantCsList.removeAll(offeringCredentialSubjects);
+        nonCompliantCsList.removeAll(participantCredentialSubjects);
+        nonCompliantCsList.removeAll(registrationNumberCredentialSubjects);
+
+        // collect all credentials that are relevant for the compliance service
+        List<PojoCredentialSubject> complianceVcs = new ArrayList<>();
+        complianceVcs.addAll(offeringCredentialSubjects);
+        complianceVcs.addAll(participantCredentialSubjects);
+        complianceVcs.addAll(registrationNumberCredentialSubjects);
 
         // generate compliance vc potentially containing compliance credential
-        ExtendedVerifiablePresentation vp = getComplianceVp(offeringCredentialSubjects,
+        ExtendedVerifiablePresentation vp = getComplianceVp(complianceVcs,
                 providerId, verificationMethod, prk, certificates);
 
         // copy credential list as it is likely immutable
         List<ExtendedVerifiableCredential> credentialList = new ArrayList<>(vp.getVerifiableCredentials());
+        List<ExtendedVerifiableCredential> credentialsToRemove = credentialList.stream().filter(vc -> {
+            try {
+                return vc.getCredentialSubject().getType().equals(GxLegalParticipantCredentialSubject.TYPE)
+                        || vc.getCredentialSubject().getType().equals(GxLegalRegistrationNumberCredentialSubject.TYPE);
+            } catch (Exception ignored) {
+                return false;
+            }
+        })
+                .toList();
+        credentialList.removeAll(credentialsToRemove); // remove participant/registration number credential for catalog
 
         // handle remaining (non-compliant) credentials
         for (PojoCredentialSubject cs : nonCompliantCsList) {
@@ -744,7 +779,7 @@ public class GxfsCatalogService {
         ExtendedVerifiableCredential credential = gxfsSignerService.createVerifiableCredential(
                 cs,
                 URI.create(issuer),
-                URI.create(vcId)); // set vc id to cs id
+                URI.create(vcId));
         gxfsSignerService
                 .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
         return credential;
@@ -765,9 +800,11 @@ public class GxfsCatalogService {
                 complianceVcs.add(
                         getSignedRegistrationNumberVc(registrationNumberCs, issuer, verificationMethod, prk, certificates)
                 );
-            } else if (cs instanceof GxLegalParticipantCredentialSubject
-                    || cs instanceof GxServiceOfferingCredentialSubject) {
+            } else if (cs instanceof GxLegalParticipantCredentialSubject) {
                 complianceVcs.add(getSignedVc(cs.getId(), cs, issuer, verificationMethod, prk, certificates));
+                subjectId = cs.getId();
+            } else if (cs instanceof GxServiceOfferingCredentialSubject) {
+                complianceVcs.add(getSignedVc(issuer, cs, issuer, verificationMethod, prk, certificates));
                 subjectId = cs.getId();
             }
         }
