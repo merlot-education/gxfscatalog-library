@@ -118,6 +118,7 @@ class GxfsCatalogServiceTests {
                         Map.of("http://example.com", new GxComplianceClientFake()),
                         Map.of("http://example.com", new GxRegistryClientFake()),
                         Map.of("http://example.com", new GxNotaryClientFake()),
+                        0,
                         0
                 ));
 
