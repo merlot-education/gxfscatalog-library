@@ -25,7 +25,7 @@ public class GxdchService {
     public GxdchService(@Autowired Map<String, GxComplianceClient> gxComplianceClients,
                         @Autowired Map<String, GxRegistryClient> gxRegistryClients,
                         @Autowired Map<String, GxNotaryClient> gxNotaryClients,
-                        @Value("${gxfscatalog.max-retries:#{0}}") int maxRetries) {
+                        @Value("${gxdch-services.max-retries:#{0}}") int maxRetries) {
         this.gxComplianceClients = gxComplianceClients;
         this.gxRegistryClients = gxRegistryClients;
         this.gxNotaryClients = gxNotaryClients;
