@@ -15,6 +15,7 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.support.WebClientAdapter;
 import org.springframework.web.service.invoker.HttpServiceProxyFactory;
@@ -48,9 +49,15 @@ public class GxfsCatalogLibConfig {
     @Value("${gxdch-services.notary-base-uris:}")
     private List<String> notaryServiceUris;
 
+    private static final int EXCHANGE_STRATEGY_SIZE = 16 * 1024 * 1024;
+    private static final ExchangeStrategies EXCHANGE_STRATEGIES = ExchangeStrategies.builder()
+            .codecs(codecs -> codecs.defaultCodecs().maxInMemorySize(EXCHANGE_STRATEGY_SIZE))
+            .build();
+
     @Bean
     public GxfsCatalogClient gxfsCatalogClient(@Autowired GxfsCatalogAuthService gxfsCatalogAuthService) {
         WebClient webClient = WebClient.builder()
+                .exchangeStrategies(EXCHANGE_STRATEGIES)
                 .defaultHeader("Content-Type", MediaType.APPLICATION_JSON.toString())
                 .defaultHeader("Accept", MediaType.APPLICATION_JSON.toString())
                 .baseUrl(gxfsCatalogBaseUri)
@@ -85,6 +92,7 @@ public class GxfsCatalogLibConfig {
     @Bean
     public GxfsWizardApiClient gxfsWizardApiClient() {
         WebClient webClient = WebClient.builder()
+                .exchangeStrategies(EXCHANGE_STRATEGIES)
                 .baseUrl(gxfsWizardApiBaseUri)
                 .build();
         HttpServiceProxyFactory httpServiceProxyFactory = HttpServiceProxyFactory
@@ -104,6 +112,7 @@ public class GxfsCatalogLibConfig {
 
             webClientBuilder.clientConnector(new ReactorClientHttpConnector(httpClient));
         }
+        webClientBuilder.exchangeStrategies(EXCHANGE_STRATEGIES);
         return webClientBuilder.build();
     }
 
@@ -139,6 +148,7 @@ public class GxfsCatalogLibConfig {
 
     private HttpServiceProxyFactory getHttpServiceProxyFactory(String uri) {
         WebClient webClient = WebClient.builder()
+                .exchangeStrategies(EXCHANGE_STRATEGIES)
                 .baseUrl(uri)
                 // Set connection and read timeouts
                 .clientConnector(new ReactorClientHttpConnector(HttpClient.create().responseTimeout(Duration.ofSeconds(30))))
