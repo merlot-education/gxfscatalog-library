@@ -39,6 +39,7 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.sql.Array;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -787,8 +788,10 @@ public class GxfsCatalogService {
             log.warn("Compliance was not attested for the given VP.");
         } else {
             log.info("Received compliance credential result: {}", complianceResult);
-            complianceVp.getVerifiableCredentials()
-                    .add(complianceResult);
+            List<ExtendedVerifiableCredential> updatedVcs
+                    = new ArrayList<>(complianceVp.getVerifiableCredentials());
+            updatedVcs.add(complianceResult);
+            complianceVp.setVerifiableCredentials(updatedVcs);
         }
 
         return complianceVp;
