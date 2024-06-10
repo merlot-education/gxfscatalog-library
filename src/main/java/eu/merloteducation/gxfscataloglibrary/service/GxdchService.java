@@ -21,15 +21,18 @@ public class GxdchService {
     private final Map<String, GxNotaryClient> gxNotaryClients;
 
     private final int maxRetries;
+    private final int retryDelay;
 
     public GxdchService(@Autowired Map<String, GxComplianceClient> gxComplianceClients,
                         @Autowired Map<String, GxRegistryClient> gxRegistryClients,
                         @Autowired Map<String, GxNotaryClient> gxNotaryClients,
-                        @Value("${gxdch-services.max-retries:#{0}}") int maxRetries) {
+                        @Value("${gxdch-services.max-retries:#{0}}") int maxRetries,
+                        @Value("${gxdch-services.retry-delay:#{1000}}") int retryDelay) {
         this.gxComplianceClients = gxComplianceClients;
         this.gxRegistryClients = gxRegistryClients;
         this.gxNotaryClients = gxNotaryClients;
         this.maxRetries = maxRetries;
+        this.retryDelay = retryDelay;
     }
 
     public ExtendedVerifiableCredential checkCompliance(String credentialId, ExtendedVerifiablePresentation vp) {
@@ -50,6 +53,11 @@ public class GxdchService {
                     log.info("Failed to check compliance at Compliance Service {}: {}", clientEntry.getKey(), e.getMessage());
                 }
                 retries += 1;
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
 
@@ -73,6 +81,11 @@ public class GxdchService {
                     log.info("Failed to retrieve Gaia-X TnC at Registry {}: {}", clientEntry.getKey(), e.getMessage());
                 }
                 retries += 1;
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
             }
 
         }
@@ -99,6 +112,11 @@ public class GxdchService {
                             clientEntry.getKey(), e.getMessage());
                 }
                 retries += 1;
+                try {
+                    Thread.sleep(retryDelay);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
             }
 
         }
