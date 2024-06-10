@@ -1,6 +1,5 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
-import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,7 +39,6 @@ import java.security.PrivateKey;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
-import java.sql.Array;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -222,14 +220,15 @@ public class GxfsCatalogService {
      * wrap them in a verifiable presentation, sign it using the default verification method and key and send it to the catalog.
      *
      * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
+     * @param participantCredentials List of credential of the participant submitting this offering. Required to obtain compliance, pass empty list if not needed.
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            List<PojoCredentialSubject> credentialSubjects)
+            List<PojoCredentialSubject> credentialSubjects, List<ExtendedVerifiableCredential> participantCredentials)
             throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(credentialSubjects, defaultVerificationMethod, getDefaultPrivateKey());
+        return addServiceOffering(credentialSubjects, participantCredentials, defaultVerificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -238,15 +237,16 @@ public class GxfsCatalogService {
      * The verification method must reference the certificate associated with the default key.
      *
      * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
+     * @param participantCredentials List of credential of the participant submitting this offering. Required to obtain compliance, pass empty list if not needed.
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @throws CredentialPresentationException exception during the presentation of the credential
      * @throws CredentialSignatureException exception during the signature of the presentation
      * @return SD meta response of the catalog
      */
     public SelfDescriptionMeta addServiceOffering(
-            List<PojoCredentialSubject> credentialSubjects, String verificationMethod)
+            List<PojoCredentialSubject> credentialSubjects, List<ExtendedVerifiableCredential> participantCredentials, String verificationMethod)
         throws CredentialPresentationException, CredentialSignatureException {
-        return addServiceOffering(credentialSubjects, verificationMethod, getDefaultPrivateKey());
+        return addServiceOffering(credentialSubjects, participantCredentials, verificationMethod, getDefaultPrivateKey());
     }
 
     /**
@@ -254,6 +254,7 @@ public class GxfsCatalogService {
      * wrap them in a verifiable presentation, sign it using the provided verification method and key and send it to the catalog.
      *
      * @param credentialSubjects List of credential subjects for this offering to insert into the catalog
+     * @param participantCredentials List of credential of the participant submitting this offering. Required to obtain compliance, pass empty list if not needed.
      * @param verificationMethod method (e.g. a particular did) that can be used to verify the signature
      * @param privateKey string representation of private key to sign the SD with
      * @throws CredentialPresentationException exception during the presentation of the credential
@@ -262,6 +263,7 @@ public class GxfsCatalogService {
      */
     public SelfDescriptionMeta addServiceOffering(
             List<PojoCredentialSubject> credentialSubjects,
+            List<ExtendedVerifiableCredential> participantCredentials,
             String verificationMethod, String privateKey)
             throws CredentialPresentationException, CredentialSignatureException {
 
@@ -273,20 +275,8 @@ public class GxfsCatalogService {
                     String.format(TYPE_NOT_FOUND_MESSAGE, GxServiceOfferingCredentialSubject.TYPE));
         }
 
-        // for compliance we als need to have a valid participant in the SD
-        List<PojoCredentialSubject> participantCredentialSubjects =
-                findAllCredentialSubjectsByType(credentialSubjects, GxLegalParticipantCredentialSubject.class);
-        if (participantCredentialSubjects.isEmpty()) {
-            throw new CredentialPresentationException(
-                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalParticipantCredentialSubject.TYPE));
-        }
-
-        // for a valid participant we also need a valid registration number
-        List<PojoCredentialSubject> registrationNumberCredentialSubjects =
-                findAllCredentialSubjectsByType(credentialSubjects, GxLegalRegistrationNumberCredentialSubject.class);
-        if (registrationNumberCredentialSubjects.isEmpty()) {
-            throw new CredentialPresentationException(
-                    String.format(TYPE_NOT_FOUND_MESSAGE, GxLegalRegistrationNumberCredentialSubject.TYPE));
+        if (enforceCompliance && participantCredentials.isEmpty()) {
+            throw new CredentialPresentationException("No participant credentials were provided, which are needed to achieve compliance.");
         }
 
         String providerId = offeringCredentialSubjects.stream()
@@ -301,31 +291,17 @@ public class GxfsCatalogService {
         // remove credentials for compliance from overall list
         List<PojoCredentialSubject> nonCompliantCsList = new ArrayList<>(credentialSubjects);
         nonCompliantCsList.removeAll(offeringCredentialSubjects);
-        nonCompliantCsList.removeAll(participantCredentialSubjects);
-        nonCompliantCsList.removeAll(registrationNumberCredentialSubjects);
 
         // collect all credentials that are relevant for the compliance service
-        List<PojoCredentialSubject> complianceVcs = new ArrayList<>();
-        complianceVcs.addAll(offeringCredentialSubjects);
-        complianceVcs.addAll(participantCredentialSubjects);
-        complianceVcs.addAll(registrationNumberCredentialSubjects);
+        List<PojoCredentialSubject> complianceVcs = new ArrayList<>(offeringCredentialSubjects);
 
         // generate compliance vc potentially containing compliance credential
-        ExtendedVerifiablePresentation vp = getComplianceVp(complianceVcs,
+        ExtendedVerifiablePresentation vp = getComplianceVp(complianceVcs, participantCredentials,
                 providerId, verificationMethod, prk, certificates);
 
         // copy credential list as it is likely immutable
         List<ExtendedVerifiableCredential> credentialList = new ArrayList<>(vp.getVerifiableCredentials());
-        List<ExtendedVerifiableCredential> credentialsToRemove = credentialList.stream().filter(vc -> {
-            try {
-                return vc.getCredentialSubject().getType().equals(GxLegalParticipantCredentialSubject.TYPE)
-                        || vc.getCredentialSubject().getType().equals(GxLegalRegistrationNumberCredentialSubject.TYPE);
-            } catch (Exception ignored) {
-                return false;
-            }
-        })
-                .toList();
-        credentialList.removeAll(credentialsToRemove); // remove participant/registration number credential for catalog
+        credentialList.removeAll(participantCredentials); // remove participant credentials for catalog storage
 
         // handle remaining (non-compliant) credentials
         for (PojoCredentialSubject cs : nonCompliantCsList) {
@@ -786,13 +762,14 @@ public class GxfsCatalogService {
     }
 
     private ExtendedVerifiablePresentation getComplianceVp(List<PojoCredentialSubject> csList,
+                                                           List<ExtendedVerifiableCredential> initialCredentials,
                                                            String issuer,
                                                            String verificationMethod,
                                                            PrivateKey prk,
                                                            List<X509Certificate> certificates)
             throws CredentialSignatureException, CredentialPresentationException {
 
-        List<ExtendedVerifiableCredential> complianceVcs = new ArrayList<>();
+        List<ExtendedVerifiableCredential> complianceVcs = new ArrayList<>(initialCredentials);
         String subjectId = "";
         // iterate over given CS and handle them if relevant
         for (PojoCredentialSubject cs : csList) {
@@ -803,8 +780,10 @@ public class GxfsCatalogService {
             } else if (cs instanceof GxLegalParticipantCredentialSubject) {
                 complianceVcs.add(getSignedVc(cs.getId(), cs, issuer, verificationMethod, prk, certificates));
                 subjectId = cs.getId();
-            } else if (cs instanceof GxServiceOfferingCredentialSubject) {
-                complianceVcs.add(getSignedVc(issuer, cs, issuer, verificationMethod, prk, certificates));
+            } else if (cs instanceof GxServiceOfferingCredentialSubject offeringCs) {
+                // VC ID of offering must be the ID of the offering provider for compliance
+                complianceVcs.add(getSignedVc(offeringCs.getProvidedBy().getId(),
+                        cs, issuer, verificationMethod, prk, certificates));
                 subjectId = cs.getId();
             }
         }
@@ -876,7 +855,8 @@ public class GxfsCatalogService {
 
         // create vp with compliance relevant credentials plus attestation if successful
         ExtendedVerifiablePresentation vp
-                = getComplianceVp(complianceVcs, participantId, verificationMethod, prk, certificates);
+                = getComplianceVp(complianceVcs, Collections.emptyList(),
+                participantId, verificationMethod, prk, certificates);
 
         // copy credential list as it is likely immutable
         List<ExtendedVerifiableCredential> credentialList = new ArrayList<>(vp.getVerifiableCredentials());

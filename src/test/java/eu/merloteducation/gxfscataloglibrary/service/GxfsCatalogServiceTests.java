@@ -158,7 +158,8 @@ class GxfsCatalogServiceTests {
     void revokeValidSelfDescriptionByHash() throws Exception {
         String offeringId = "1234";
         SelfDescriptionMeta meta =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject(offeringId, "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject(offeringId, "2345")),
+                        Collections.emptyList());
 
         GXFSCatalogListResponse<SelfDescriptionItem> items =
                 gxfsCatalogService.getSelfDescriptionsByIds(new String[]{meta.getId()});
@@ -189,7 +190,8 @@ class GxfsCatalogServiceTests {
     void deleteValidSelfDescriptionByHash() throws Exception {
         String offeringId = "1234";
         SelfDescriptionMeta meta =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject(offeringId, "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject(offeringId, "2345")),
+                        Collections.emptyList());
 
         GXFSCatalogListResponse<SelfDescriptionItem> items =
                 gxfsCatalogService.getSelfDescriptionsByIds(new String[]{meta.getId()});
@@ -219,9 +221,12 @@ class GxfsCatalogServiceTests {
 
     @Test
     void getExistingSelfDescriptionsByIds() throws Exception {
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")));
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")));
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")));
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                Collections.emptyList());
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")),
+                Collections.emptyList());
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")),
+                Collections.emptyList());
 
         GXFSCatalogListResponse<SelfDescriptionItem> items =
                 gxfsCatalogService.getSelfDescriptionsByIds(new String[]{"1", "2"});
@@ -230,10 +235,13 @@ class GxfsCatalogServiceTests {
 
     @Test
     void getExistingRevokedSelfDescriptionsByIds() throws Exception {
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")));
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                Collections.emptyList());
         SelfDescriptionMeta meta =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")));
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")),
+                        Collections.emptyList());
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")),
+                Collections.emptyList());
 
         gxfsCatalogService.revokeSelfDescriptionByHash(meta.getSdHash());
 
@@ -246,10 +254,13 @@ class GxfsCatalogServiceTests {
     @Test
     void getExistingSelfDescriptionsByHashes() throws Exception {
         SelfDescriptionMeta meta1 =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                        Collections.emptyList());
         SelfDescriptionMeta meta2 =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")));
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")),
+                        Collections.emptyList());
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")),
+                Collections.emptyList());
 
         GXFSCatalogListResponse<SelfDescriptionItem> items =
                 gxfsCatalogService.getSelfDescriptionsByHashes(new String[]{
@@ -261,10 +272,13 @@ class GxfsCatalogServiceTests {
     @Test
     void getExistingRevokedSelfDescriptionsByHashes() throws Exception {
         SelfDescriptionMeta meta1 =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                        Collections.emptyList());
         SelfDescriptionMeta meta2 =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")));
-        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("2", "2345")),
+                        Collections.emptyList());
+        gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("3", "2345")),
+                Collections.emptyList());
 
         gxfsCatalogService.revokeSelfDescriptionByHash(meta2.getSdHash());
 
@@ -279,7 +293,8 @@ class GxfsCatalogServiceTests {
     @Test
     void addValidServiceOffering() throws Exception {
         SelfDescriptionMeta meta =
-                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")));
+                gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                        Collections.emptyList());
         assertNotNull(meta);
     }
 
@@ -287,6 +302,7 @@ class GxfsCatalogServiceTests {
     void addValidServiceOfferingExternalKey() throws Exception {
         SelfDescriptionMeta meta =
                 gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                        Collections.emptyList(),
                         "did:web:localhost%3A8101:1234#JWK2020", privateKey);
         assertNotNull(meta);
     }
@@ -295,6 +311,7 @@ class GxfsCatalogServiceTests {
     void addValidServiceOfferingMerlotVerificationMethod() throws Exception {
         SelfDescriptionMeta meta =
             gxfsCatalogService.addServiceOffering(List.of(generateOfferingCredentialSubject("1", "2345")),
+                    Collections.emptyList(),
                 "did:web:localhost%3A8101:1234#MERLOTJWK2020");
         assertNotNull(meta);
     }
@@ -302,7 +319,8 @@ class GxfsCatalogServiceTests {
     @Test
     void addInvalidServiceOffering() {
         assertThrows(CredentialPresentationException.class, () ->
-                gxfsCatalogService.addServiceOffering(Collections.emptyList()));
+                gxfsCatalogService.addServiceOffering(Collections.emptyList(),
+                        Collections.emptyList()));
     }
 
     @Test
