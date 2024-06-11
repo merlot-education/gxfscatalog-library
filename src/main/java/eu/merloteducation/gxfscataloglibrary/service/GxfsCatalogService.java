@@ -723,14 +723,14 @@ public class GxfsCatalogService {
                                                                        List<X509Certificate> certificates)
             throws CredentialPresentationException, CredentialSignatureException {
         // let notary sign registration number
-        ExtendedVerifiableCredential credential = gxdchService.verifyRegistrationNumber(cs);
+        ExtendedVerifiableCredential credential = gxdchService.verifyRegistrationNumber(issuer, cs);
         if (credential == null) {
             // if notary did not sign and we enforce, throw exception
             if (enforceNotary) {
                 throw new CredentialPresentationException("Given registration number credential subject failed GXDCH Notary check");
             }
             // else notary has not attested registration number, we sign it ourselves
-            credential = getSignedVc(cs.getId(), cs, issuer, verificationMethod, prk, certificates);
+            credential = getSignedVc(issuer, cs, issuer, verificationMethod, prk, certificates);
         } else {
             // notary has signed but we need to clean up the result
             // remove @context from proof as it is wrong
