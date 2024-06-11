@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.Map;
+import java.util.UUID;
+
+import static eu.merloteducation.gxfscataloglibrary.service.GxfsCatalogService.URN_UUID_PREFIX;
 
 @Service
 @Slf4j
@@ -35,7 +38,7 @@ public class GxdchService {
         this.retryDelay = retryDelay;
     }
 
-    public ExtendedVerifiableCredential checkCompliance(String credentialId, ExtendedVerifiablePresentation vp) {
+    public ExtendedVerifiableCredential checkCompliance(ExtendedVerifiablePresentation vp) {
         // go through compliance service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {
@@ -45,7 +48,7 @@ public class GxdchService {
                 log.info("VP: {}", vp);
                 log.info("Attempt #{}", retries);
                 try {
-                    return clientEntry.getValue().postCredentialOffer(credentialId, vp);
+                    return clientEntry.getValue().postCredentialOffer(URN_UUID_PREFIX + UUID.randomUUID(), vp);
                 } catch (WebClientResponseException e) {
                     log.info("Failed to check compliance at Compliance Service {}: {} {}",
                             clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());
@@ -103,7 +106,8 @@ public class GxdchService {
                 log.debug("Registration number: {}", registrationNumber);
                 log.info("Attempt #{}", retries);
                 try {
-                    return clientEntry.getValue().postRegistrationNumber(registrationNumber.getId(), registrationNumber);
+                    return clientEntry.getValue().postRegistrationNumber(URN_UUID_PREFIX + UUID.randomUUID(),
+                            registrationNumber);
                 } catch (WebClientResponseException e) {
                     log.info("Failed to verify registration number at Notary {}: {} {}",
                             clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());

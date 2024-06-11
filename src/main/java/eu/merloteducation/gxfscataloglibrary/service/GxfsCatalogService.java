@@ -70,6 +70,8 @@ public class GxfsCatalogService {
 
     private static final String TYPE_NOT_FOUND_MESSAGE = "Could not find %s in list of credential subjects.";
 
+    static final String URN_UUID_PREFIX = "urn:uuid:";
+
     public GxfsCatalogService(@Autowired GxfsCatalogClient gxfsCatalogClient,
                               @Autowired GxfsSignerService gxfsSignerService,
                               @Autowired GxdchService gxdchService,
@@ -305,11 +307,7 @@ public class GxfsCatalogService {
 
         // handle remaining (non-compliant) credentials
         for (PojoCredentialSubject cs : nonCompliantCsList) {
-            String vcId = cs.getId();  // set vc id to cs id
-            if (!vcId.contains("#")) {
-                vcId += "#" + cs.getType(); // add type if not existent yet
-            }
-            ExtendedVerifiableCredential vc = getSignedVc(vcId, cs, providerId, verificationMethod, prk, certificates);
+            ExtendedVerifiableCredential vc = getSignedVc(cs, providerId, verificationMethod, prk, certificates);
             credentialList.add(vc);
         }
 
@@ -730,7 +728,7 @@ public class GxfsCatalogService {
                 throw new CredentialPresentationException("Given registration number credential subject failed GXDCH Notary check");
             }
             // else notary has not attested registration number, we sign it ourselves
-            credential = getSignedVc(cs.getId(), cs, issuer, verificationMethod, prk, certificates);
+            credential = getSignedVc(cs, issuer, verificationMethod, prk, certificates);
         } else {
             // notary has signed but we need to clean up the result
             // remove @context from proof as it is wrong
@@ -744,8 +742,7 @@ public class GxfsCatalogService {
         return credential;
     }
 
-    private ExtendedVerifiableCredential getSignedVc(String vcId,
-                                                     PojoCredentialSubject cs,
+    private ExtendedVerifiableCredential getSignedVc(PojoCredentialSubject cs,
                                                      String issuer,
                                                      String verificationMethod,
                                                      PrivateKey prk,
@@ -755,7 +752,7 @@ public class GxfsCatalogService {
         ExtendedVerifiableCredential credential = gxfsSignerService.createVerifiableCredential(
                 cs,
                 URI.create(issuer),
-                URI.create(vcId));
+                URI.create(URN_UUID_PREFIX + UUID.randomUUID()));
         gxfsSignerService
                 .signVerifiableCredential(credential, verificationMethod, prk, certificates); // sign vc
         return credential;
@@ -777,13 +774,9 @@ public class GxfsCatalogService {
                 complianceVcs.add(
                         getSignedRegistrationNumberVc(registrationNumberCs, issuer, verificationMethod, prk, certificates)
                 );
-            } else if (cs instanceof GxLegalParticipantCredentialSubject) {
-                complianceVcs.add(getSignedVc(cs.getId(), cs, issuer, verificationMethod, prk, certificates));
-                subjectId = cs.getId();
-            } else if (cs instanceof GxServiceOfferingCredentialSubject offeringCs) {
-                // VC ID of offering must be the ID of the offering provider for compliance
-                complianceVcs.add(getSignedVc(offeringCs.getProvidedBy().getId(),
-                        cs, issuer, verificationMethod, prk, certificates));
+            } else if (cs instanceof GxLegalParticipantCredentialSubject
+                    || cs instanceof GxServiceOfferingCredentialSubject) {
+                complianceVcs.add(getSignedVc(cs, issuer, verificationMethod, prk, certificates));
                 subjectId = cs.getId();
             }
         }
@@ -791,10 +784,10 @@ public class GxfsCatalogService {
         // set up a VP for the compliance service
         ExtendedVerifiablePresentation complianceVp = gxfsSignerService.createVerifiablePresentation(
                 complianceVcs, // insert credentials into vp
-                URI.create(subjectId + "#sd")); // set vp id to first proper cs id for now
+                URI.create(URN_UUID_PREFIX + UUID.randomUUID())); // set vp id to first proper cs id for now
 
         // verify compliance with compliance service
-        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(subjectId + "#compliance", complianceVp);
+        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
 
         if (complianceResult == null) {
             if (enforceCompliance) {
@@ -865,11 +858,7 @@ public class GxfsCatalogService {
 
         // handle other (non-compliant) credentials
         for (PojoCredentialSubject cs : nonCompliantCsList) {
-            String vcId = cs.getId();  // set vc id to cs id
-            if (!vcId.contains("#")) {
-                vcId += "#" + cs.getType(); // add type if not existent yet
-            }
-            ExtendedVerifiableCredential vc = getSignedVc(vcId, cs, participantId, verificationMethod, prk, certificates);
+            ExtendedVerifiableCredential vc = getSignedVc(cs, participantId, verificationMethod, prk, certificates);
             credentialList.add(vc);
         }
 

@@ -55,7 +55,7 @@ class GxdchServiceTests {
     void checkComplianceSuccess() {
         ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
         vp.setJsonObjectKeyValue("id", "valid");
-        ExtendedVerifiableCredential result = gxdchService.checkCompliance("valid", vp);
+        ExtendedVerifiableCredential result = gxdchService.checkCompliance(vp);
         assertNotNull(result);
     }
 
@@ -68,7 +68,7 @@ class GxdchServiceTests {
     void checkComplianceBad(String shapeName) {
         ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
         vp.setJsonObjectKeyValue("id", shapeName);
-        ExtendedVerifiableCredential result = gxdchService.checkCompliance(shapeName, vp);
+        ExtendedVerifiableCredential result = gxdchService.checkCompliance(vp);
         assertNull(result);
     }
 
