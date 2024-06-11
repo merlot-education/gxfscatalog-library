@@ -83,7 +83,7 @@ class GxdchServiceTests {
         GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
         cs.setLeiCode("1234");
         cs.setId("valid");
-        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber("someissuer", cs);
+        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
         assertNotNull(result);
     }
 
@@ -92,7 +92,7 @@ class GxdchServiceTests {
         GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
         cs.setLeiCode("1234");
         cs.setId("invalid");
-        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber("someissuer", cs);
+        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
         assertNull(result);
     }
 

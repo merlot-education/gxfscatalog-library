@@ -93,8 +93,7 @@ public class GxdchService {
         return null;
     }
 
-    public ExtendedVerifiableCredential verifyRegistrationNumber(String credentialId,
-                                                                 GxLegalRegistrationNumberCredentialSubject registrationNumber) {
+    public ExtendedVerifiableCredential verifyRegistrationNumber(GxLegalRegistrationNumberCredentialSubject registrationNumber) {
         // go through notary service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxNotaryClient> clientEntry : gxNotaryClients.entrySet()) {
@@ -104,7 +103,7 @@ public class GxdchService {
                 log.debug("Registration number: {}", registrationNumber);
                 log.info("Attempt #{}", retries);
                 try {
-                    return clientEntry.getValue().postRegistrationNumber(credentialId, registrationNumber);
+                    return clientEntry.getValue().postRegistrationNumber(registrationNumber.getId(), registrationNumber);
                 } catch (WebClientResponseException e) {
                     log.info("Failed to verify registration number at Notary {}: {} {}",
                             clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());
