@@ -1,9 +1,11 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.danubetech.verifiablecredentials.VerifiableCredential;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
+import eu.merloteducation.gxfscataloglibrary.models.exception.ClearingHouseException;
 import eu.merloteducation.gxfscataloglibrary.models.selfdescriptions.gx.participants.GxLegalRegistrationNumberCredentialSubject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,7 +56,7 @@ class GxdchServiceTests {
     }
 
     @Test
-    void checkComplianceSuccess() {
+    void checkComplianceSuccess() throws ClearingHouseException {
         ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
         vp.setJsonObjectKeyValue("id", "valid");
         ExtendedVerifiableCredential result = gxdchService.checkCompliance(vp);
@@ -65,11 +69,14 @@ class GxdchServiceTests {
             "badcert",
             "badshape"
     })
-    void checkComplianceBad(String shapeName) {
+    void checkComplianceBad(String shapeName) throws ClearingHouseException {
         ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
+        vp.setVerifiableCredentials(List.of(
+                ExtendedVerifiableCredential.fromMap(
+                        VerifiableCredential.builder()
+                                .issuer(URI.create("http://example.com")).build().getJsonObject())));
         vp.setJsonObjectKeyValue("id", shapeName);
-        ExtendedVerifiableCredential result = gxdchService.checkCompliance(vp);
-        assertNull(result);
+        assertThrows(ClearingHouseException.class, () -> gxdchService.checkCompliance(vp));
     }
 
     @Test
@@ -79,7 +86,7 @@ class GxdchServiceTests {
     }
 
     @Test
-    void verifyRegistrationNumberSuccess() {
+    void verifyRegistrationNumberSuccess() throws ClearingHouseException {
         GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
         cs.setLeiCode("1234");
         cs.setId("valid");
@@ -88,12 +95,11 @@ class GxdchServiceTests {
     }
 
     @Test
-    void verifyRegistrationNumberInvalid() {
+    void verifyRegistrationNumberInvalid() throws ClearingHouseException {
         GxLegalRegistrationNumberCredentialSubject cs = new GxLegalRegistrationNumberCredentialSubject();
         cs.setLeiCode("1234");
         cs.setId("invalid");
-        ExtendedVerifiableCredential result = gxdchService.verifyRegistrationNumber(cs);
-        assertNull(result);
+        assertThrows(ClearingHouseException.class, () -> gxdchService.verifyRegistrationNumber(cs));
     }
 
 

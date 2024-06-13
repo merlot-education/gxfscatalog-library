@@ -1,5 +1,6 @@
 package eu.merloteducation.gxfscataloglibrary.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
@@ -118,6 +119,7 @@ class GxfsCatalogServiceTests {
                         Map.of("http://example.com", new GxComplianceClientFake()),
                         Map.of("http://example.com", new GxRegistryClientFake()),
                         Map.of("http://example.com", new GxNotaryClientFake()),
+                        new ObjectMapper(),
                         0,
                         0
                 ));

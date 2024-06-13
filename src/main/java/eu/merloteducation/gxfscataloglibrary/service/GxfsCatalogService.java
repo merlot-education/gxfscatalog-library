@@ -9,6 +9,7 @@ import eu.merloteducation.gxfscataloglibrary.models.client.QueryRequest;
 import eu.merloteducation.gxfscataloglibrary.models.client.SelfDescriptionStatus;
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiableCredential;
 import eu.merloteducation.gxfscataloglibrary.models.credentials.ExtendedVerifiablePresentation;
+import eu.merloteducation.gxfscataloglibrary.models.exception.ClearingHouseException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialPresentationException;
 import eu.merloteducation.gxfscataloglibrary.models.exception.CredentialSignatureException;
 import eu.merloteducation.gxfscataloglibrary.models.participants.ParticipantItem;
@@ -721,7 +722,14 @@ public class GxfsCatalogService {
                                                                        List<X509Certificate> certificates)
             throws CredentialPresentationException, CredentialSignatureException {
         // let notary sign registration number
-        ExtendedVerifiableCredential credential = gxdchService.verifyRegistrationNumber(cs);
+        ExtendedVerifiableCredential credential = null;
+        try {
+            credential = gxdchService.verifyRegistrationNumber(cs);
+        } catch (ClearingHouseException e) {
+            if (enforceNotary) {
+                throw new CredentialPresentationException("Error from Notary: " + e.getMessage());
+            }
+        }
         if (credential == null) {
             // if notary did not sign and we enforce, throw exception
             if (enforceNotary) {
@@ -787,7 +795,14 @@ public class GxfsCatalogService {
                 URI.create(URN_UUID_PREFIX + UUID.randomUUID())); // set vp id to first proper cs id for now
 
         // verify compliance with compliance service
-        ExtendedVerifiableCredential complianceResult = gxdchService.checkCompliance(complianceVp);
+        ExtendedVerifiableCredential complianceResult = null;
+        try {
+            complianceResult = gxdchService.checkCompliance(complianceVp);
+        } catch (ClearingHouseException e) {
+            if (enforceCompliance) {
+                throw new CredentialPresentationException("Error from compliance: " + e.getMessage());
+            }
+        }
 
         if (complianceResult == null) {
             if (enforceCompliance) {
