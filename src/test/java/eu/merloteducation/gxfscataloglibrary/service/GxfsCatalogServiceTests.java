@@ -119,9 +119,7 @@ class GxfsCatalogServiceTests {
                         Map.of("http://example.com", new GxComplianceClientFake()),
                         Map.of("http://example.com", new GxRegistryClientFake()),
                         Map.of("http://example.com", new GxNotaryClientFake()),
-                        new ObjectMapper(),
-                        0,
-                        0
+                        new ObjectMapper()
                 ));
 
         String didJson = "";
