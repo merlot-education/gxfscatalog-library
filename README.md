@@ -101,7 +101,7 @@ To understand how to use this service, let's consider a simple use case.
 
 Say we want to create a new Participant in the catalogue (which was initialized with the Gaia-X schemas).
 For this we can use the method `gxfsCatalogService.addParticipant(...)`.
-As we can see in the method signature, this method expects a LList of Plain Old Java Object (POJO) credential subjects `List<PojoCredentialSubject>`.
+As we can see in the method signature, this method expects a List of Plain Old Java Object (POJO) credential subjects `List<PojoCredentialSubject>`.
 To generate a valid participant self-description, this list must at least contain a `GxLegalParticipantCredentialSubject` 
 as well as a `GxLegalRegistrationNumberCredentialSubject`, as well as optional additional dataspace-specific subjects.
 Hence, we could build and publish our participant to the catalogue like this:

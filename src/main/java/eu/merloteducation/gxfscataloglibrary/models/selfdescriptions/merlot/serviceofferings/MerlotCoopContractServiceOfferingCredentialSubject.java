@@ -15,7 +15,7 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true, value={ "type", "@context" }, allowGetters=true)
 public class MerlotCoopContractServiceOfferingCredentialSubject extends PojoCredentialSubject {
-    // does not have any special fields on its own, inherits everything from general offering
+    // does not have any special fields on its own
 
     @Getter(AccessLevel.NONE)
     public static final String TYPE_NAMESPACE = "merlot";

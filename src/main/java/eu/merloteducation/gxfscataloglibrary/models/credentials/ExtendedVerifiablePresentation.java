@@ -73,7 +73,7 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
      * @return list of pojo credential subjects
      * @param <T> type of the class to search for must extend pojo credential subjects and have a TYPE attribute
      */
-    public <T extends PojoCredentialSubject> List<T> findAllCredentialSubjectByType(Class<T> type) {
+    public <T extends PojoCredentialSubject> List<T> findAllCredentialSubjectsByType(Class<T> type) {
         String typeString;
         try {
             typeString = (String) type.getField("TYPE").get(null);
@@ -104,7 +104,7 @@ public class ExtendedVerifiablePresentation extends VerifiablePresentation {
      * @param <T> type of the class to search for must extend pojo credential subjects and have a TYPE attribute
      */
     public <T extends PojoCredentialSubject> T findFirstCredentialSubjectByType(Class<T> type) {
-        List<T> pojoCredentialSubjects = findAllCredentialSubjectByType(type);
+        List<T> pojoCredentialSubjects = findAllCredentialSubjectsByType(type);
         if (pojoCredentialSubjects.isEmpty()) {
             return null;
         }

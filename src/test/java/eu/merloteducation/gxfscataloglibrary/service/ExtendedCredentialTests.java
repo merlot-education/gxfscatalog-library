@@ -96,7 +96,7 @@ class ExtendedCredentialTests {
 
         // extract participant claims from VP
         List<GxLegalParticipantCredentialSubject> foundParticipants =
-                evp.findAllCredentialSubjectByType(GxLegalParticipantCredentialSubject.class);
+                evp.findAllCredentialSubjectsByType(GxLegalParticipantCredentialSubject.class);
         assertEquals(1, foundParticipants.size());
         assertEquals(participantCs.getId(), foundParticipants.get(0).getId());
         assertEquals(participantCs.getName(), foundParticipants.get(0).getName());
@@ -113,7 +113,7 @@ class ExtendedCredentialTests {
 
         // extract registration number claims from VP
         List<GxLegalRegistrationNumberCredentialSubject> foundRegNums =
-                evp.findAllCredentialSubjectByType(GxLegalRegistrationNumberCredentialSubject.class);
+                evp.findAllCredentialSubjectsByType(GxLegalRegistrationNumberCredentialSubject.class);
         assertEquals(1, foundRegNums.size());
         assertEquals(regNumCs.getId(), foundRegNums.get(0).getId());
         assertEquals(regNumCs.getLeiCode(), foundRegNums.get(0).getLeiCode());
@@ -125,7 +125,7 @@ class ExtendedCredentialTests {
 
         // expect to find no offering credentials
         List<GxServiceOfferingCredentialSubject> foundOfferings =
-                evp.findAllCredentialSubjectByType(GxServiceOfferingCredentialSubject.class);
+                evp.findAllCredentialSubjectsByType(GxServiceOfferingCredentialSubject.class);
         assertTrue(foundOfferings.isEmpty());
 
         GxServiceOfferingCredentialSubject foundOffering =
