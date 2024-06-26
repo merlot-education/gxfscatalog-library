@@ -492,7 +492,7 @@ class GxfsCatalogServiceTests {
     void getParticipantsUriPage() throws Exception {
         for (int i = 0; i < 3; i++) {
             List<PojoCredentialSubject> participant = List.of(
-                    generateParticipantCredentialSubject("" + i, "MyParticipant" + i, "2345-regId"),
+                    generateParticipantCredentialSubject("" + i, "MyParticipant" + i, i + "-regId"),
                     generateRegistrationNumberCredentialSubject(i + "-regId"));
             gxfsCatalogService
                     .addParticipant(participant);
@@ -508,7 +508,7 @@ class GxfsCatalogServiceTests {
     void getParticipantsUriPageWithExcludedUris() throws Exception {
         for (int i = 0; i < 3; i++) {
             List<PojoCredentialSubject> participant = List.of(
-                    generateParticipantCredentialSubject("" + i, "MyParticipant" + i, "2345-regId"),
+                    generateParticipantCredentialSubject("" + i, "MyParticipant" + i, i + "-regId"),
                     generateRegistrationNumberCredentialSubject(i + "-regId"));
             gxfsCatalogService
                 .addParticipant(participant);
@@ -524,7 +524,7 @@ class GxfsCatalogServiceTests {
     void getParticipantLegalNameByUri() throws Exception {
         for (int i = 0; i < 3; i++) {
             List<PojoCredentialSubject> participant = List.of(
-                    generateParticipantCredentialSubject("" + i, "MyParticipant" + i, "2345-regId"),
+                    generateParticipantCredentialSubject("" + i, "MyParticipant" + i, i + "-regId"),
                     generateRegistrationNumberCredentialSubject(i + "-regId"));
             gxfsCatalogService
                 .addParticipant(participant);

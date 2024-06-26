@@ -152,7 +152,7 @@ public class MyBusinessService {
             item.getSelfDescription().findFirstCredentialSubjectByType(GxLegalRegistrationNumberCredentialSubject.class)
             
         // in case there are multiple credentials of each type in the SD, you can also use the 
-        // findAllCredentialSubjectByType() method instead of findFirstCredentialSubjectByType() to retrieve a list
+        // findAllCredentialSubjectsByType() method instead of findFirstCredentialSubjectByType() to retrieve a list
         
         (...) // do something with the data
     }
