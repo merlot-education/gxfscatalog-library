@@ -163,15 +163,27 @@ public class GxdchService {
 
     private void handleComplianceErrorResponse(WebClientResponseException e)
             throws ClearingHouseException {
-        JsonNode errorResponse = null;
+        JsonNode errorResponse;
         try {
             errorResponse = objectMapper.readTree(e.getResponseBodyAsString());
         } catch (Exception ignored) {
-            // unknown error
+            throw new ClearingHouseException("Unknown error");
         }
-        throw new ClearingHouseException(errorResponse == null
-                ? "Unknown error"
-                : errorResponse.get("message").asText());
+
+        JsonNode errorMessage = errorResponse.get("message");
+        String errorText;
+        if (errorMessage.isTextual()) {
+            errorText = errorMessage.asText(); // get text content
+        } else if (errorMessage.isObject()) {
+            String fullError = errorMessage.toString(); // get node as json string
+            int start = fullError.indexOf("ERROR:");
+            int end = fullError.indexOf("DETAILS:");
+            errorText = fullError.substring(start, end); // only present the error message, skip details as they are not helpful
+        } else {
+            errorText = errorMessage.toString(); // get node as json string
+        }
+
+        throw new ClearingHouseException(errorText);
     }
 
     private void handleNotaryErrorResponse(WebClientResponseException e)
