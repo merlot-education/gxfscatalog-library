@@ -37,7 +37,7 @@ public interface GxfsCatalogClient {
 
     // SelfDescriptions
     @GetExchange("/self-descriptions")
-    GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionList(
+    GXFSCatalogListResponse<SelfDescriptionItem> getSelfDescriptionList( // NOSONAR nothing we can do about the parameter count...
             @RequestParam(name = "uploadTimerange", required = false) String uploadTimerange,
             @RequestParam(name = "statusTimerange", required = false) String statusTimerange,
             @RequestParam(name = "issuers", required = false) String[] issuers,
@@ -45,10 +45,10 @@ public interface GxfsCatalogClient {
             @RequestParam(name = "statuses", required = false) SelfDescriptionStatus[] statuses,
             @RequestParam(name = "ids", required = false) String[] ids,
             @RequestParam(name = "hashes", required = false) String[] hashes,
-            @RequestParam(name = "withMeta", required = false) boolean withMeta,
-            @RequestParam(name = "withContent", required = false) boolean withContent,
-            @RequestParam(name = "offset", required = false) int offset,
-            @RequestParam(name = "limit", required = false) int limit
+            @RequestParam(name = "withMeta", required = false) Boolean withMeta,
+            @RequestParam(name = "withContent", required = false) Boolean withContent,
+            @RequestParam(name = "offset", required = false) Integer offset,
+            @RequestParam(name = "limit", required = false) Integer limit
     );
 
     @PostExchange("/self-descriptions")
@@ -67,19 +67,19 @@ public interface GxfsCatalogClient {
     @PostExchange("/query")
     <T> GXFSCatalogListResponse<T> postQuery(
             @RequestParam(name = "queryLanguage", required = false) QueryLanguage queryLanguage,
-            @RequestParam(name = "timeout", required = false) int timeout,
-            @RequestParam(name = "withTotalCount", required = false) boolean withTotalCount,
+            @RequestParam(name = "timeout", required = false) Integer timeout,
+            @RequestParam(name = "withTotalCount", required = false) Boolean withTotalCount,
             @RequestBody QueryRequest query
     );
 
-    // TODO Schemas
-    // TODO Verification
+    // not implemented: Schemas
+    // not implemented: Verification
 
     // Participants
     @GetExchange("/participants")
     GXFSCatalogListResponse<ParticipantItem> getParticipants(
-            @RequestParam(name = "offset", required = false) int offset,
-            @RequestParam(name = "limit", required = false) int limit
+            @RequestParam(name = "offset", required = false) Integer offset,
+            @RequestParam(name = "limit", required = false) Integer limit
     );
 
     @PostExchange("/participants")
@@ -97,9 +97,9 @@ public interface GxfsCatalogClient {
     @DeleteExchange("/participants/{participantId}")
     ParticipantItem deleteParticipant(@PathVariable String participantId);
 
-    // TODO GET /participants/{participantId}/users
+    // not implemented: GET /participants/{participantId}/users
 
-    // TODO Users
-    // TODO Roles
-    // TODO Session
+    // not implemented: Users
+    // not implemented: Roles
+    // not implemented: Session
 }

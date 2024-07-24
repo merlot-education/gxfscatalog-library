@@ -29,7 +29,7 @@ public interface GxfsWizardApiClient {
     @GetExchange("/getJSON")
     String getJSON(@RequestParam(name = "ecosystem") String ecosystem, @RequestParam(name = "name") String name);
 
-    // TODO GET "/getAvailableShapes"
-    // TODO POST "/convertFile"
-    // TODO GET "/getSearchQuery/{ecoSystem}/{query}"
+    // not implemented: GET "/getAvailableShapes"
+    // not implemented: POST "/convertFile"
+    // not implemented: GET "/getSearchQuery/{ecoSystem}/{query}"
 }

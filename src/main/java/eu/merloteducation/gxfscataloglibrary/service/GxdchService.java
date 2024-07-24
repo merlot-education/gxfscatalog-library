@@ -27,6 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -55,21 +57,23 @@ public class GxdchService {
     public ExtendedVerifiableCredential checkCompliance(ExtendedVerifiablePresentation vp) throws ClearingHouseException {
         // go through compliance service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
-        ClearingHouseException clearingHouseException = null;
+        List<ClearingHouseException> encounteredExceptions = new ArrayList<>();
+
         for (Map.Entry<String, GxComplianceClient> clientEntry : gxComplianceClients.entrySet()) {
             ExtendedVerifiableCredential vc = null;
             try {
                 vc = checkCompliance(vp, clientEntry);
             } catch (ClearingHouseException e) {
-                clearingHouseException = e;
+                encounteredExceptions.add(e);
             }
             if (vc != null) {
                 return vc;
             }
         }
 
-        if (clearingHouseException != null) {
-            throw clearingHouseException;
+        if (!encounteredExceptions.isEmpty()) {
+            // currently we only consider the last exception
+            throw encounteredExceptions.get(encounteredExceptions.size() - 1);
         }
 
         return null;
@@ -91,7 +95,7 @@ public class GxdchService {
         return null;
     }
 
-    public JsonNode getGxTnCs() {
+    public JsonNode getGxTnCs() { // NOSONAR this does not always return the same value, regardless of sonar nagging
         // go through registry service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
         for (Map.Entry<String, GxRegistryClient> clientEntry : gxRegistryClients.entrySet()) {
@@ -120,23 +124,23 @@ public class GxdchService {
     public ExtendedVerifiableCredential verifyRegistrationNumber(GxLegalRegistrationNumberCredentialSubject registrationNumber) throws ClearingHouseException {
         // go through notary service uris
         // -> try one uri, then if timeout occurs (an exception is thrown) try next uri
-
-        ClearingHouseException clearingHouseException = null;
+        List<ClearingHouseException> encounteredExceptions = new ArrayList<>();
 
         for (Map.Entry<String, GxNotaryClient> clientEntry : gxNotaryClients.entrySet()) {
             ExtendedVerifiableCredential vc = null;
             try {
                 vc = verifyRegistrationNumber(registrationNumber, clientEntry);
             } catch (ClearingHouseException e) {
-                clearingHouseException = e;
+                encounteredExceptions.add(e);
             }
             if (vc != null) {
                 return vc;
             }
         }
 
-        if (clearingHouseException != null) {
-            throw clearingHouseException;
+        if (!encounteredExceptions.isEmpty()) {
+            // currently we only consider the last exception
+            throw encounteredExceptions.get(encounteredExceptions.size() - 1);
         }
 
         return null;

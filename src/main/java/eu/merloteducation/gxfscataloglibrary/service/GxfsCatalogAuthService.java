@@ -79,7 +79,7 @@ public class GxfsCatalogAuthService {
 
     @Scheduled(fixedDelay = 120 * 1000)
     public void refreshLogin() {
-        // TODO compute delay dynamically from token
+        // maybe compute delay dynamically from token
         if (active) {
             try {
                 loginAsGXFSCatalog();

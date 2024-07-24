@@ -129,10 +129,10 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
             SelfDescriptionStatus[] statuses,
             String[] ids,
             String[] hashes,
-            boolean withMeta,
-            boolean withContent,
-            int offset,
-            int limit) {
+            Boolean withMeta,
+            Boolean withContent,
+            Integer offset,
+            Integer limit) {
 
         GXFSCatalogListResponse<SelfDescriptionItem> response = new GXFSCatalogListResponse<>();
         List<String> reqIds = ids == null ? Collections.emptyList() : Arrays.asList(ids);
@@ -183,7 +183,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public <T> GXFSCatalogListResponse<T> postQuery(QueryLanguage queryLanguage, int timeout, boolean withTotalCount,
+    public <T> GXFSCatalogListResponse<T> postQuery(QueryLanguage queryLanguage, Integer timeout, Boolean withTotalCount,
         QueryRequest query) {
         String statement = query.getStatement();
 
@@ -225,7 +225,7 @@ public class GxfsCatalogClientFake implements GxfsCatalogClient {
     }
 
     @Override
-    public GXFSCatalogListResponse<ParticipantItem> getParticipants(int offset, int limit) {
+    public GXFSCatalogListResponse<ParticipantItem> getParticipants(Integer offset, Integer limit) {
         GXFSCatalogListResponse<ParticipantItem> response = new GXFSCatalogListResponse<>();
         response.setItems(participantItems);
         response.setTotalCount(participantItems.size());

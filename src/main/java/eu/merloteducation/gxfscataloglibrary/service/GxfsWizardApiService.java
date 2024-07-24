@@ -24,9 +24,11 @@ import java.util.Map;
 
 @Service
 public class GxfsWizardApiService {
+    private final GxfsWizardApiClient gxfsWizardApiClient;
 
-    @Autowired
-    private GxfsWizardApiClient gxfsWizardApiClient;
+    public GxfsWizardApiService(@Autowired GxfsWizardApiClient gxfsWizardApiClient) {
+        this.gxfsWizardApiClient = gxfsWizardApiClient;
+    }
 
     /**
      * Return the map of shape-type:filename for a given ecosystem.
