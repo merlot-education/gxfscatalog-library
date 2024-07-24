@@ -89,8 +89,6 @@ public class GxdchService {
             log.info("Failed to check compliance at Compliance Service {}: {} {}",
                     clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());
             handleComplianceErrorResponse(e);
-        } catch (Exception e) {
-            log.info("Failed to check compliance at Compliance Service {}: {}", clientEntry.getKey(), e.getMessage());
         }
         return null;
     }
@@ -115,8 +113,6 @@ public class GxdchService {
         } catch (WebClientResponseException e) {
             log.info("Failed to retrieve Gaia-X TnC at Registry {}: {} {}",
                     clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());
-        } catch (Exception e) {
-            log.info("Failed to retrieve Gaia-X TnC at Registry {}: {}", clientEntry.getKey(), e.getMessage());
         }
         return null;
     }
@@ -158,9 +154,6 @@ public class GxdchService {
             log.info("Failed to verify registration number at Notary {}: {} {}",
                     clientEntry.getKey(), e.getStatusCode(), e.getResponseBodyAsString());
             handleNotaryErrorResponse(e);
-        } catch (Exception e) {
-            log.info("Failed to verify registration number at Notary {}: {}",
-                    clientEntry.getKey(), e.getMessage());
         }
         return null;
     }

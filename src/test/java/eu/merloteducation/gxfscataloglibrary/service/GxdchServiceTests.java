@@ -83,9 +83,10 @@ class GxdchServiceTests {
     @CsvSource({
             "badsignature",
             "badcert",
-            "badshape"
+            "badshape",
+            "badsemantics"
     })
-    void checkComplianceBad(String shapeName) throws ClearingHouseException {
+    void checkComplianceBad(String shapeName) {
         ExtendedVerifiablePresentation vp = new ExtendedVerifiablePresentation();
         vp.setVerifiableCredentials(List.of(
                 ExtendedVerifiableCredential.fromMap(

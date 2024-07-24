@@ -108,6 +108,19 @@ public class GxComplianceClientFake implements GxComplianceClient {
                             """).getBytes(StandardCharsets.UTF_8),
                     null
             );
+            case "badsemantics" -> throw new WebClientResponseException(
+                    409,
+                    "",
+                    null,
+                    ("""
+                            {
+                                "statusCode":409,
+                                "message":{"conforms":false,"results":["ERROR: did:web:marketplace.dev.merlot-education.eu:participant:14e2471b-a276-3349-8a6e-caa941f9369b https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#headquarterAddress: Value does not have shape <https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#PostalAddressShape>; DETAILS: https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#taxID: Less than 1 values; https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#EUID: Less than 1 values; https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#EORI: Less than 1 values; https://registry.lab.gaia-x.eu/development/api/trusted-shape-registry/v1/shapes/jsonld/trustframework#countrySubdivisionCode: an ISO 3166-2 format value is expected.;"]},
+                                "error":"Conflict"
+                            }
+                            """).getBytes(StandardCharsets.UTF_8),
+                    null
+            );
             default -> null;
         };
     }
